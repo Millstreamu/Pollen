@@ -28,7 +28,6 @@ Before significant work, read:
 - `docs/ai/completion-status.md`
 - `docs/ai/known-issues.md`
 - `docs/ai/do-not-build-yet.md`
-- `docs/ai/project-roadmap.md`
 
 Then read task-specific files:
 
