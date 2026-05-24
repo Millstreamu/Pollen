@@ -1,32 +1,30 @@
 # Completion Status
 
-Tracks the current milestone/release finish line to prevent endless asymptotic development.
-
 ## Current Milestone
-Name: Not set  
+Name: Milestone 1 — App Shell and Navigation (Definition Only)
 Status: not-started
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
-## Required Scope Checklist
-- [ ] Item one
-- [ ] Item two
+## V1 Milestone Checklist
+- [ ] Milestone 1: App shell, navigation, basic layout, placeholder pages
+- [ ] Milestone 2: Orders foundation (reserve → pack → ship)
+- [ ] Milestone 3: Products and finished stock foundation
+- [ ] Milestone 4: Materials and purchasing foundation
+- [ ] Milestone 5: Make/batch workflow foundation
+- [ ] Milestone 6: Today dashboard attention views
+- [ ] Milestone 7: Money page simple estimated sales/profit
+- [ ] Milestone 8: Stabilization and V1 release readiness
 
 ## Required Verification Checklist
 - [ ] Typecheck
 - [ ] Lint
 - [ ] Unit tests
-- [ ] Relevant service/integration tests
-- [ ] Journey tests if applicable
 - [ ] Build
-- [ ] Environment-specific checks or exceptions documented
-- [ ] Release smoke test if applicable
+- [ ] Environment-specific exceptions documented if needed
 
 ## Remaining Required Work
-Only true blockers.
+All milestones are pending.
 
 ## Optional Post-Milestone Work
-Useful but not required.
-
-## Deferred / Do Not Build
-See `docs/ai/do-not-build-yet.md`.
+See deferred items in `docs/ai/do-not-build-yet.md`.
