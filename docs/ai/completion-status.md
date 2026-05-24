@@ -3,8 +3,8 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 1.1 — App Shell  
-Status: complete
+Name: Milestone 1.2 — Managed Auth and Shop Ownership  
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -25,10 +25,10 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable
 
 ## Remaining Required Work
-None for Milestone 1.1.
+Milestone 1.2 implementation planning and execution.
 
 ## Optional Post-Milestone Work
-Move to Milestone 1.2 (Managed Auth and Shop Ownership).
+None yet.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
