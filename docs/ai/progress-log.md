@@ -35,6 +35,28 @@ Follow-up:
 
 Add entries below.
 
+### 2026-05-24 — Start Milestone 1.2 implementation planning
+
+Branch/PR/Issue:
+- local milestone planning update
+
+Completed:
+- Added startup planning report for `Milestone 1.2 — Managed Auth and Shop Ownership`.
+- Shifted completion tracking from Milestone 1.1 complete state to Milestone 1.2 in-progress state.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (package index access blocked; existing env already had pytest available)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This change starts planning/execution tracking only; Milestone 1.2 feature implementation remains pending.
+
+Follow-up:
+- Implement Milestone 1.2 auth and shop ownership scope per roadmap.
+
 ### 2026-05-24 — Mark Milestone 1.1 complete
 
 Branch/PR/Issue:
@@ -48,7 +70,7 @@ Completed:
 Checks run:
 - `python -m pip install --upgrade pip` — pass
 - `pip install -r requirements.txt` — pass
-- `pip install -r requirements-dev.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (package index access blocked; existing env already had pytest available)
 - `python -m compileall -q src tests` — pass
 - `pytest -q` — pass
 
