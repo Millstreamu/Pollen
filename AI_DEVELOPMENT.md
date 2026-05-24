@@ -125,3 +125,24 @@ If evidence files exist, read them before debugging or continuing work:
 - `docs/ai/completion-status.md`
 
 Evidence beats guesses.
+
+## Generic Kit Preservation Rule
+
+The generic AI development rule files are reusable operating rules.
+
+Codex must not:
+- simplify them
+- summarise them
+- compress them
+- replace them with shorter versions
+- remove sections because they seem repetitive
+
+Project-specific content belongs in:
+- docs/ai/project-rules.md
+- docs/ai/project-roadmap.md
+- docs/ai/completion-status.md
+- docs/ai/progress-log.md
+- docs/ai/known-issues.md
+- docs/ai/do-not-build-yet.md
+
+If Codex believes a generic rule file needs changing, it must propose the change in a report instead of editing it directly.
