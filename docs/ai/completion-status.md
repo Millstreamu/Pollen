@@ -3,30 +3,32 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Not set  
-Status: not-started
+Name: Milestone 1.1 — App Shell  
+Status: complete
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [ ] Item one
-- [ ] Item two
+- [x] Basic app shell layout is implemented.
+- [x] Primary navigation is implemented.
+- [x] Placeholder pages exist for Today, Orders, Products & Stock, Make / Buy, Money, and Settings.
+- [x] No business logic has been added in this milestone.
 
 ## Required Verification Checklist
-- [ ] Typecheck
-- [ ] Lint
-- [ ] Unit tests
-- [ ] Relevant service/integration tests
-- [ ] Journey tests if applicable
-- [ ] Build
-- [ ] Environment-specific checks or exceptions documented
-- [ ] Release smoke test if applicable
+- [x] Typecheck
+- [x] Lint
+- [x] Unit tests
+- [x] Relevant service/integration tests
+- [x] Journey tests if applicable
+- [x] Build
+- [x] Environment-specific checks or exceptions documented
+- [x] Release smoke test if applicable
 
 ## Remaining Required Work
-Only true blockers.
+None for Milestone 1.1.
 
 ## Optional Post-Milestone Work
-Useful but not required.
+Move to Milestone 1.2 (Managed Auth and Shop Ownership).
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
