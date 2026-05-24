@@ -1,6 +1,36 @@
 # Progress Log
 
-## 2026-05-24
-- Initialized AI project documentation set for small-seller ERP scope.
-- Defined Milestone 1 as app shell/navigation/layout/placeholders only.
-- No application feature implementation started.
+Records meaningful completed work. Update after feature completion, bug fix completion, milestone completion, release verification, important decision, or server-run evidence that changes status.
+
+## Current Status
+Project phase: Not set  
+Current milestone: Not set  
+Overall status: Not set
+
+## Latest Summary
+No project-specific summary yet.
+
+## Entry Format
+
+```md
+### YYYY-MM-DD — <Task / PR / Issue Title>
+
+Branch/PR/Issue:
+- ...
+
+Completed:
+- ...
+
+Checks run:
+- `<command>` — pass/fail/not run
+
+Notes:
+- ...
+
+Follow-up:
+- ...
+```
+
+## Entries
+
+Add entries below.
