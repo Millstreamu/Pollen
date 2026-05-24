@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pollen.auth import AuthService
+
 NAV_ITEMS: tuple[tuple[str, str], ...] = (
     ("Today", "/"),
     ("Orders", "/orders"),
@@ -20,6 +22,9 @@ class AppResponse:
     body: str
 
 
+PRIVATE_ROUTES: tuple[str, ...] = ("/", "/orders", "/products-stock", "/make-buy", "/money", "/settings")
+
+
 class AppShell:
     """Minimal app-shell router for placeholder milestone pages."""
 
@@ -32,10 +37,14 @@ class AppShell:
         "Settings": "Shop settings and preferences will appear here.",
     }
 
-    def __init__(self) -> None:
+    def __init__(self, auth_service: AuthService | None = None) -> None:
         self._routes = {url: title for title, url in NAV_ITEMS}
+        self._auth_service = auth_service or AuthService()
 
-    def get(self, path: str) -> AppResponse:
+    def get(self, path: str, *, authorization_header: str | None = None) -> AppResponse:
+        if path in PRIVATE_ROUTES and self._auth_service.resolve_context(authorization_header) is None:
+            return AppResponse(status_code=401, body="Unauthorized")
+
         page_title = self._routes.get(path)
         if page_title is None:
             return AppResponse(status_code=404, body="Not Found")
@@ -70,10 +79,15 @@ class AppShell:
 
 
 def create_app() -> AppShell:
-    """Create the Milestone 1.1 app shell."""
+    """Create the app shell with milestone auth enforcement."""
     return AppShell()
 
 
 def healthcheck() -> dict[str, str]:
     """Return a deterministic health payload for smoke tests."""
     return {"status": "ok", "service": "pollen"}
+
+
+def can_access_shop_record(authorization_header: str | None, shop_id: str) -> bool:
+    """Server-side ownership check helper for shop-scoped records."""
+    return AuthService().can_access_shop(authorization_header, shop_id)

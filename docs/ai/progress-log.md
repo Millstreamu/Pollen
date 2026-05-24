@@ -4,8 +4,8 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 1.1 — App Shell (complete)  
-Overall status: Milestone 1.1 complete; ready to begin Milestone 1.2.
+Current milestone: Milestone 1.2 — Managed Auth and Shop Ownership (in-progress)  
+Overall status: Milestone 1.2 implementation started with auth/ownership foundation in place.
 
 ## Latest Summary
 No project-specific summary yet.
@@ -34,6 +34,30 @@ Follow-up:
 ## Entries
 
 Add entries below.
+
+### 2026-05-24 — Milestone 1.2 implementation start (auth + ownership foundation)
+
+Branch/PR/Issue:
+- local milestone implementation update
+
+Completed:
+- Added managed-auth abstraction, user/shop/auth context models, shop auto-provisioning, and ownership checks.
+- Added protected-route enforcement in app shell for private pages.
+- Added Milestone 1.2 unit tests for route protection and cross-shop denial.
+- Added implementation report: `docs/ai/reports/milestone-1.2-implementation-report-2026-05-24.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — warning (index access retries; pip present)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (package index access blocked)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Implementation is initial Milestone 1.2 slice; production OAuth wiring and persistence integration are pending within milestone scope.
+
+Follow-up:
+- Continue Milestone 1.2 with persistent record scoping integration where records are created/queried.
 
 ### 2026-05-24 — Start Milestone 1.2 implementation planning
 
