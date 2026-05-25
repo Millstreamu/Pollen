@@ -241,3 +241,27 @@ Notes:
 
 Follow-up:
 - Continue Milestone 2.1 remaining UI polish/screen slices as requested.
+
+
+### 2026-05-25 — Milestone 1.2 release-candidate validation + Milestone 2.1 archived-product restore UI slice
+
+Branch/PR/Issue:
+- local validation + UI continuation update
+
+Completed:
+- Ran clean validation pass and promoted Milestone 1.2 status from `stabilising` to `release-candidate`.
+- Implemented next Milestone 2.1 UI slice: archived-products section and restore action in Products & Stock UI.
+- Added service/repository restore path and test coverage for product restore workflow and archived-section rendering.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Existing environment already had runnable `pytest`; full suite passed after code changes.
+
+Follow-up:
+- Continue remaining Milestone 2.1 UI polish/slices (filters, bulk actions, or richer status chips) as requested.

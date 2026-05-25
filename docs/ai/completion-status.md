@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 1.2 — Managed Auth and Shop Ownership  
-Status: stabilising
+Status: release-candidate
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -25,7 +25,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable
 
 ## Remaining Required Work
-Promote from stabilising to release-candidate after one more clean validation pass if requested.
+Milestone 1.2 promoted to release-candidate after clean validation pass on 2026-05-25.
 
 ## Optional Post-Milestone Work
 None yet.

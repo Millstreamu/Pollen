@@ -139,3 +139,11 @@ class ProductService:
             return None
 
         return self._product_repository.archive_for_shop(shop_id=context.shop.shop_id, product_id=product_id)
+
+
+    def restore_product(self, *, authorization_header: str | None, product_id: str) -> ProductRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+
+        return self._product_repository.restore_for_shop(shop_id=context.shop.shop_id, product_id=product_id)
