@@ -143,3 +143,28 @@ Notes:
 
 Follow-up:
 - None.
+
+### 2026-05-25 — Milestone 1.2 continuation implementation (shop-scoped persistence)
+
+Branch/PR/Issue:
+- local milestone continuation update
+
+Completed:
+- Added `OrderRecord` and `OrderRepository` for persistence-backed `shop_id` scoping.
+- Added `OrderService` that derives shop context server-side and ignores client-supplied `requested_shop_id`.
+- Added regression tests for create/list/get scoping, cross-shop denial, and unauthenticated denial.
+- Added continuation implementation report: `docs/ai/reports/milestone-1.2-continuation-report-2026-05-25.md`.
+- Updated milestone completion checklist to reflect Milestone 1.2 acceptance criteria.
+
+Checks run:
+- `python -m pip install --upgrade pip` — warning (proxy/index retries)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Milestone 1.2 continuation slice closes the previously documented gap where scoping was helper-level only.
+
+Follow-up:
+- Perform milestone closeout/stabilisation pass and status transition when requested.
