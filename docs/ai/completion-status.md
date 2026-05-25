@@ -9,10 +9,10 @@ Status: in-progress
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Basic app shell layout is implemented.
-- [x] Primary navigation is implemented.
-- [x] Placeholder pages exist for Today, Orders, Products & Stock, Make / Buy, Money, and Settings.
-- [x] No business logic has been added in this milestone.
+- [x] Logged-out users cannot access private pages.
+- [x] Logged-in user gets or creates a shop.
+- [x] Records are scoped by `shop_id` (persistence-backed order path).
+- [x] User cannot access another shop’s records.
 
 ## Required Verification Checklist
 - [x] Typecheck
@@ -25,7 +25,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable
 
 ## Remaining Required Work
-Milestone 1.2 implementation planning and execution.
+Milestone 1.2 closeout/stabilisation checks and final status transition when requested.
 
 ## Optional Post-Milestone Work
 None yet.
