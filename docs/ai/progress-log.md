@@ -4,8 +4,8 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 2.3 — Product Recipes / Materials Needed (stabilising)  
-Overall status: Milestone 2.2 is signed off as complete; Milestone 2.3 has started with startup planning documented.
+Current milestone: Milestone 2.3 — Product Recipes / Materials Needed (release-candidate)  
+Overall status: Milestone 2.2 is complete and Milestone 2.3 is validated at release-candidate status, pending final completion decision.
 
 ## Latest Summary
 No project-specific summary yet.
@@ -36,6 +36,30 @@ Follow-up:
 Add entries below.
 
 
+### 2026-05-25 — Milestone 2.3 release-candidate validation + sign-off
+
+Branch/PR/Issue:
+- local milestone status/reporting update
+
+Completed:
+- Executed Milestone 2.3 release-candidate validation pass and confirmed compile/tests are green.
+- Recorded release-candidate validation/sign-off report for Milestone 2.3.
+- Transitioned Milestone 2.3 status from `stabilising` to `release-candidate`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is release validation and tracking; no functional app behavior changes were introduced.
+
+Follow-up:
+- Perform final milestone completion/release decision when requested.
+
+
 
 ### 2026-05-25 — Milestone 2.2 sign-off complete + Milestone 2.3 startup
 
@@ -51,7 +75,7 @@ Completed:
 Checks run:
 - `python -m pip install --upgrade pip` — pass
 - `pip install -r requirements.txt` — pass
-- `pip install -r requirements-dev.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
 - `python -m compileall -q src tests` — pass
 - `pytest -q` — pass
 
@@ -100,7 +124,7 @@ Completed:
 Checks run:
 - `python -m pip install --upgrade pip` — pass
 - `pip install -r requirements.txt` — pass
-- `pip install -r requirements-dev.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
 - `python -m compileall -q src tests` — pass
 - `pytest -q` — pass
 
@@ -483,7 +507,7 @@ Completed:
 Checks run:
 - `python -m pip install --upgrade pip`
 - `pip install -r requirements.txt`
-- `pip install -r requirements-dev.txt`
+- `pip install -r requirements-dev.txt` *(environment-limited: proxy/index restriction for `pytest==8.4.2`)*
 - `python -m compileall -q src tests`
 - `pytest -q`
 
