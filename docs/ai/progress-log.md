@@ -365,3 +365,28 @@ Notes:
 
 Follow-up:
 - Implement the first Milestone 2.2 vertical slice (materials list + create/edit baseline + tests).
+
+### 2026-05-25 — Milestone 2.2 slice 1 (materials list + create/edit baseline)
+
+Branch/PR/Issue:
+- local milestone 2.2 implementation update
+
+Completed:
+- Added `MaterialRecord` and `MaterialRepository` for shop-scoped material persistence.
+- Added `MaterialService` create/list/get/update operations with server-side ownership scoping.
+- Added Make/Buy materials page vertical slice with empty state, create form, list table, query edit mode, and low-stock status chips.
+- Added tests for materials service behaviors and Make/Buy UI create/edit interactions.
+- Added implementation report: `docs/ai/reports/milestone-2.2-materials-slice-1-report-2026-05-25.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Environment cannot fetch pinned dev dependency from package index, but existing environment has runnable pytest and full suite passed.
+
+Follow-up:
+- Continue Milestone 2.2 with archive/deactivate + restore behavior and tests.

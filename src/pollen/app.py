@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from urllib.parse import parse_qs, urlsplit
 
 from pollen.auth import AuthService
-from pollen.services import ProductService
+from pollen.services import MaterialService, ProductService
 
 NAV_ITEMS: tuple[tuple[str, str], ...] = (
     ("Today", "/"),
@@ -43,10 +43,12 @@ class AppShell:
         self,
         auth_service: AuthService | None = None,
         product_service: ProductService | None = None,
+        material_service: MaterialService | None = None,
     ) -> None:
         self._routes = {url: title for title, url in NAV_ITEMS}
         self._auth_service = auth_service or AuthService()
         self._product_service = product_service or ProductService(auth_service=self._auth_service)
+        self._material_service = material_service or MaterialService(auth_service=self._auth_service)
 
     def get(self, path: str, *, authorization_header: str | None = None) -> AppResponse:
         parsed_path = urlsplit(path)
@@ -72,10 +74,13 @@ class AppShell:
         authorization_header: str | None = None,
         form_data: dict[str, str] | None = None,
     ) -> AppResponse:
-        if path != "/products-stock":
+        if path not in {"/products-stock", "/make-buy"}:
             return AppResponse(status_code=404, body="Not Found")
         if self._auth_service.resolve_context(authorization_header) is None:
             return AppResponse(status_code=401, body="Unauthorized")
+
+        if path == "/make-buy":
+            return self._handle_material_post(authorization_header=authorization_header, form_data=form_data)
 
         payload = form_data or {}
         action = payload.get("action")
@@ -132,6 +137,41 @@ class AppShell:
                 )
 
         return self.get(path, authorization_header=authorization_header)
+
+    def _handle_material_post(
+        self,
+        *,
+        authorization_header: str,
+        form_data: dict[str, str] | None,
+    ) -> AppResponse:
+        payload = form_data or {}
+        action = payload.get("action")
+        if action == "create":
+            self._material_service.create_material(
+                authorization_header=authorization_header,
+                name=payload.get("name", ""),
+                unit=payload.get("unit", ""),
+                stock_on_hand=int(payload.get("stock_on_hand", "0")),
+                reorder_point=int(payload.get("reorder_point", "0")),
+            )
+        elif action == "edit":
+            material_id = payload.get("material_id")
+            if material_id is not None:
+                current_material = self._material_service.get_material(
+                    authorization_header=authorization_header,
+                    material_id=material_id,
+                )
+                if current_material is not None:
+                    self._material_service.update_material(
+                        authorization_header=authorization_header,
+                        material_id=material_id,
+                        name=payload.get("name", current_material.name),
+                        unit=payload.get("unit", current_material.unit),
+                        stock_on_hand=int(payload.get("stock_on_hand", str(current_material.stock_on_hand))),
+                        reorder_point=int(payload.get("reorder_point", str(current_material.reorder_point))),
+                    )
+
+        return self.get("/make-buy", authorization_header=authorization_header)
 
 
     def _render_products_page(
@@ -281,6 +321,70 @@ class AppShell:
             "</tr>"
         )
 
+
+    def _render_materials_page(self, *, authorization_header: str, edit_material_id: str | None = None) -> str:
+        materials = self._material_service.list_materials(authorization_header=authorization_header)
+        create_form = (
+            "<section><h3>Create material</h3>"
+            "<form method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='create'>"
+            "<label>Name <input name='name' required></label>"
+            "<label>Unit <input name='unit' required></label>"
+            "<label>Stock <input name='stock_on_hand' type='number' min='0' required></label>"
+            "<label>Reorder <input name='reorder_point' type='number' min='0' required></label>"
+            "<button type='submit'>Create</button>"
+            "</form></section>"
+        )
+        if not materials:
+            return (
+                "<section><h2>Materials</h2>"
+                "<p>No materials yet. Add your first material to track supplies.</p>"
+                f"{create_form}</section>"
+            )
+
+        rows = "".join(self._render_material_row(material=material, edit_material_id=edit_material_id) for material in materials)
+        return (
+            "<section><h2>Materials</h2>"
+            "<p>Manage materials with simple create and per-row edit controls.</p>"
+            f"{create_form}"
+            "<table><thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th></tr></thead><tbody>"
+            f"{rows}"
+            "</tbody></table></section>"
+        )
+
+    def _render_material_row(self, *, material, edit_material_id: str | None) -> str:
+        if edit_material_id == material.material_id:
+            return (
+                "<tr>"
+                f"<td>{material.material_id}</td>"
+                "<td colspan='4'>"
+                "<form method='post' action='/make-buy'>"
+                "<input type='hidden' name='action' value='edit'>"
+                f"<input type='hidden' name='material_id' value='{material.material_id}'>"
+                f"<label>Name <input name='name' value='{material.name}' required></label>"
+                f"<label>Unit <input name='unit' value='{material.unit}' required></label>"
+                f"<label>Stock <input name='stock_on_hand' type='number' min='0' value='{material.stock_on_hand}' required></label>"
+                f"<label>Reorder <input name='reorder_point' type='number' min='0' value='{material.reorder_point}' required></label>"
+                "<button type='submit'>Save all fields</button>"
+                "</form>"
+                "</td>"
+                f"<td><strong>{'⚠️ Low stock' if material.is_low_stock else '✅ Healthy'}</strong></td>"
+                "<td><a href='/make-buy'>Cancel edit</a></td>"
+                "</tr>"
+            )
+
+        return (
+            "<tr>"
+            f"<td>{material.material_id}</td>"
+            f"<td>{material.name}</td>"
+            f"<td>{material.unit}</td>"
+            f"<td>{material.stock_on_hand}</td>"
+            f"<td>{material.reorder_point}</td>"
+            f"<td><strong>{'⚠️ Low stock' if material.is_low_stock else '✅ Healthy'}</strong></td>"
+            f"<td><a href='/make-buy?edit={material.material_id}'>Edit</a></td>"
+            "</tr>"
+        )
+
     def render_page(
         self,
         page_title: str,
@@ -304,6 +408,12 @@ class AppShell:
                 authorization_header=authorization_header,
                 view=view,
                 edit_product_id=edit_product_id,
+            )
+        if page_title == "Make / Buy" and authorization_header is not None:
+            edit_material_id = query.get("edit", [None])[0] if query is not None else None
+            page_content = self._render_materials_page(
+                authorization_header=authorization_header,
+                edit_material_id=edit_material_id,
             )
 
         return (

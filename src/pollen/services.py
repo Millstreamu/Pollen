@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pollen.auth import AuthService
+from pollen.materials import MaterialRecord, MaterialRepository
 from pollen.orders import OrderRecord, OrderRepository
 from pollen.products import ProductRecord, ProductRepository
 
@@ -147,3 +148,79 @@ class ProductService:
             return None
 
         return self._product_repository.restore_for_shop(shop_id=context.shop.shop_id, product_id=product_id)
+
+
+class MaterialService:
+    """CRUD operations for shop-scoped materials."""
+
+    def __init__(
+        self,
+        *,
+        auth_service: AuthService | None = None,
+        material_repository: MaterialRepository | None = None,
+    ) -> None:
+        self._auth_service = auth_service or AuthService()
+        self._material_repository = material_repository or MaterialRepository()
+
+    def create_material(
+        self,
+        *,
+        authorization_header: str | None,
+        name: str,
+        unit: str,
+        stock_on_hand: int,
+        reorder_point: int,
+        requested_shop_id: str | None = None,
+    ) -> MaterialRecord | None:
+        _ = requested_shop_id
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+
+        return self._material_repository.create(
+            shop_id=context.shop.shop_id,
+            name=name,
+            unit=unit,
+            stock_on_hand=stock_on_hand,
+            reorder_point=reorder_point,
+        )
+
+    def list_materials(self, *, authorization_header: str | None, include_archived: bool = False) -> list[MaterialRecord]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return []
+
+        return self._material_repository.list_for_shop(
+            shop_id=context.shop.shop_id,
+            include_archived=include_archived,
+        )
+
+    def get_material(self, *, authorization_header: str | None, material_id: str) -> MaterialRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+
+        return self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=material_id)
+
+    def update_material(
+        self,
+        *,
+        authorization_header: str | None,
+        material_id: str,
+        name: str,
+        unit: str,
+        stock_on_hand: int,
+        reorder_point: int,
+    ) -> MaterialRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+
+        return self._material_repository.update_for_shop(
+            shop_id=context.shop.shop_id,
+            material_id=material_id,
+            name=name,
+            unit=unit,
+            stock_on_hand=stock_on_hand,
+            reorder_point=reorder_point,
+        )
