@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 2.3 — Product Recipes / Materials Needed  
-Status: stabilising
+Status: release-candidate
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -25,7 +25,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable
 
 ## Remaining Required Work
-Milestone 2.3 core implementation and edge-case polish are complete for stabilisation. Next step is release-candidate validation/sign-off when requested.
+Milestone 2.3 release-candidate validation/sign-off is complete. Next step is final milestone completion decision when requested.
 
 ## Optional Post-Milestone Work
 - Any additional UX polish beyond Milestone 2.2 acceptance criteria should be deferred until milestone completion.
