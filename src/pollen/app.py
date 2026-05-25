@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from urllib.parse import parse_qs, urlsplit
 
 from pollen.auth import AuthService
-from pollen.services import MaterialService, ProductService
+from pollen.materials import MaterialRepository
+from pollen.products import ProductRepository
+from pollen.recipes import RecipeRepository
+from pollen.services import MaterialService, ProductService, RecipeService
 
 NAV_ITEMS: tuple[tuple[str, str], ...] = (
     ("Today", "/"),
@@ -47,8 +50,23 @@ class AppShell:
     ) -> None:
         self._routes = {url: title for title, url in NAV_ITEMS}
         self._auth_service = auth_service or AuthService()
-        self._product_service = product_service or ProductService(auth_service=self._auth_service)
-        self._material_service = material_service or MaterialService(auth_service=self._auth_service)
+        product_repository = ProductRepository()
+        material_repository = MaterialRepository()
+        recipe_repository = RecipeRepository()
+        self._product_service = product_service or ProductService(
+            auth_service=self._auth_service,
+            product_repository=product_repository,
+        )
+        self._material_service = material_service or MaterialService(
+            auth_service=self._auth_service,
+            material_repository=material_repository,
+        )
+        self._recipe_service = RecipeService(
+            auth_service=self._auth_service,
+            recipe_repository=recipe_repository,
+            product_repository=product_repository,
+            material_repository=material_repository,
+        )
 
     def get(self, path: str, *, authorization_header: str | None = None) -> AppResponse:
         parsed_path = urlsplit(path)
@@ -134,6 +152,29 @@ class AppShell:
                 self._product_service.restore_product(
                     authorization_header=authorization_header,
                     product_id=product_id,
+                )
+        elif action == "create_recipe_item":
+            self._recipe_service.create_recipe_item(
+                authorization_header=authorization_header,
+                product_id=payload.get("product_id", ""),
+                material_id=payload.get("material_id", ""),
+                quantity_per_unit=int(payload.get("quantity_per_unit", "0")),
+            )
+        elif action == "edit_recipe_item":
+            recipe_item_id = payload.get("recipe_item_id")
+            if recipe_item_id:
+                self._recipe_service.update_recipe_item(
+                    authorization_header=authorization_header,
+                    recipe_item_id=recipe_item_id,
+                    material_id=payload.get("material_id", ""),
+                    quantity_per_unit=int(payload.get("quantity_per_unit", "0")),
+                )
+        elif action == "archive_recipe_item":
+            recipe_item_id = payload.get("recipe_item_id")
+            if recipe_item_id:
+                self._recipe_service.archive_recipe_item(
+                    authorization_header=authorization_header,
+                    recipe_item_id=recipe_item_id,
                 )
 
         return self.get(path, authorization_header=authorization_header)
@@ -282,7 +323,9 @@ class AppShell:
             "<th>Select</th><th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th>"
             "</tr></thead><tbody>"
             f"{rows}"
-            "</tbody></table></section>"
+            "</tbody></table>"
+            f"{self._render_recipe_management(authorization_header=authorization_header)}"
+            "</section>"
             if show_active
             else ""
         )
@@ -401,7 +444,9 @@ class AppShell:
             f"{create_form}"
             "<table><thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th></tr></thead><tbody>"
             f"{rows}"
-            "</tbody></table></section>"
+            "</tbody></table>"
+            f"{self._render_recipe_management(authorization_header=authorization_header)}"
+            "</section>"
             if show_active
             else ""
         )
@@ -458,6 +503,47 @@ class AppShell:
             "</td>"
             "</tr>"
         )
+
+
+    def _render_recipe_management(self, *, authorization_header: str) -> str:
+        products = self._product_service.list_products(authorization_header=authorization_header)
+        materials = self._material_service.list_materials(authorization_header=authorization_header)
+        sections: list[str] = ["<section><h3>Product recipes</h3>"]
+        for product in products:
+            rows = self._recipe_service.list_recipe_items(authorization_header=authorization_header, product_id=product.product_id)
+            needed = self._recipe_service.materials_needed(
+                authorization_header=authorization_header,
+                product_id=product.product_id,
+                quantity=1,
+            )
+            item_rows = "".join(
+                "<li>"
+                f"{item['material_name']}: {item['needed']} {item['unit']}"
+                "<form method='post' action='/products-stock' style='display:inline'>"
+                "<input type='hidden' name='action' value='archive_recipe_item'>"
+                f"<input type='hidden' name='recipe_item_id' value='{item['recipe_item_id']}'>"
+                "<button type='submit'>Remove</button></form></li>"
+                for item in needed
+            )
+            material_options = "".join(
+                f"<option value='{material.material_id}'>{material.name}</option>" for material in materials
+            )
+            sections.append(
+                f"<article><h4>{product.name} recipe</h4>"
+                "<form method='post' action='/products-stock'>"
+                "<input type='hidden' name='action' value='create_recipe_item'>"
+                f"<input type='hidden' name='product_id' value='{product.product_id}'>"
+                f"<label>Material <select name='material_id'>{material_options}</select></label>"
+                "<label>Qty per unit <input name='quantity_per_unit' type='number' min='1' required></label>"
+                "<button type='submit'>Add recipe row</button></form>"
+                f"<ul>{item_rows}</ul>"
+                "<form method='get' action='/products-stock'>"
+                f"<input type='hidden' name='materials_needed_for' value='{product.product_id}'>"
+                "<label>Plan quantity <input name='quantity' type='number' min='1' value='1'></label>"
+                "<button type='submit'>Calculate materials needed</button></form></article>"
+            )
+        sections.append("</section>")
+        return "".join(sections)
 
     def render_page(
         self,
