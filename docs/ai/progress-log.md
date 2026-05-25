@@ -390,3 +390,28 @@ Notes:
 
 Follow-up:
 - Continue Milestone 2.2 with archive/deactivate + restore behavior and tests.
+
+### 2026-05-25 — Milestone 2.2 slice 2 (materials archive/deactivate + restore)
+
+Branch/PR/Issue:
+- local milestone 2.2 implementation update
+
+Completed:
+- Added material repository archive/restore operations and service-level wrappers with shop scoping.
+- Extended Make/Buy UI materials flow with archive and restore post actions.
+- Added material filter views (`active`, `archived`, `all`) and archived materials restore section.
+- Added tests for material archive/restore behavior across service and app UI layers.
+- Added implementation report: `docs/ai/reports/milestone-2.2-materials-archive-restore-report-2026-05-25.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip`
+- `pip install -r requirements.txt`
+- `pip install -r requirements-dev.txt`
+- `python -m compileall -q src tests`
+- `pytest -q`
+
+Notes:
+- Full validation suite for this slice passed in this environment.
+
+Follow-up:
+- Continue Milestone 2.2 with any remaining UX polish and additional edge-case tests as needed.

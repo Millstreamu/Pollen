@@ -438,3 +438,48 @@ def test_make_buy_ui_create_and_edit_material_interactions() -> None:
     )
     assert save_response.status_code == 200
     assert "✅ Healthy" in save_response.body
+
+
+def test_make_buy_ui_archive_restore_and_filter_views() -> None:
+    header = _auth_header("mat3", "mat3@example.com")
+    app = create_app()
+
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "create",
+            "name": "Archived Wax",
+            "unit": "kg",
+            "stock_on_hand": "3",
+            "reorder_point": "1",
+        },
+    )
+
+    archive_response = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "archive", "material_id": "mat-1"},
+    )
+    assert archive_response.status_code == 200
+    assert "Archived materials" not in archive_response.body
+
+    archived_view = app.get("/make-buy?view=archived", authorization_header=header)
+    assert archived_view.status_code == 200
+    assert "Archived materials" in archived_view.body
+    assert "<button type='submit'>Restore</button>" in archived_view.body
+    assert "Archived Wax" in archived_view.body
+
+    restored_response = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "restore", "material_id": "mat-1"},
+    )
+    assert restored_response.status_code == 200
+    assert "Archived Wax" in restored_response.body
+
+    active_view = app.get("/make-buy?view=active", authorization_header=header)
+    assert "Archived materials" not in active_view.body
+
+    all_view = app.get("/make-buy?view=all", authorization_header=header)
+    assert "Archived Wax" in all_view.body

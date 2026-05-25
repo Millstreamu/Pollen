@@ -101,3 +101,32 @@ def test_low_stock_status_appears_correctly_for_materials() -> None:
     assert healthy is not None and low is not None
     assert not healthy.is_low_stock
     assert low.is_low_stock
+
+
+def test_archive_restore_and_list_scoping_for_materials() -> None:
+    service = MaterialService()
+    owner_header = _auth_header("owner2", "owner2@example.com")
+    other_header = _auth_header("other2", "other2@example.com")
+
+    created = service.create_material(
+        authorization_header=owner_header,
+        name="Pigment",
+        unit="g",
+        stock_on_hand=12,
+        reorder_point=4,
+    )
+    assert created is not None
+
+    archived = service.archive_material(authorization_header=owner_header, material_id=created.material_id)
+    assert archived is not None
+    assert not archived.is_active
+    assert service.list_materials(authorization_header=owner_header) == []
+    assert len(service.list_materials(authorization_header=owner_header, include_archived=True)) == 1
+
+    assert service.restore_material(authorization_header=other_header, material_id=created.material_id) is None
+    restored = service.restore_material(authorization_header=owner_header, material_id=created.material_id)
+    assert restored is not None
+    assert restored.is_active
+    assert [material.material_id for material in service.list_materials(authorization_header=owner_header)] == [
+        created.material_id
+    ]

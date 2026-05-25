@@ -224,3 +224,17 @@ class MaterialService:
             stock_on_hand=stock_on_hand,
             reorder_point=reorder_point,
         )
+
+    def archive_material(self, *, authorization_header: str | None, material_id: str) -> MaterialRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+
+        return self._material_repository.archive_for_shop(shop_id=context.shop.shop_id, material_id=material_id)
+
+    def restore_material(self, *, authorization_header: str | None, material_id: str) -> MaterialRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+
+        return self._material_repository.restore_for_shop(shop_id=context.shop.shop_id, material_id=material_id)

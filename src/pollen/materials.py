@@ -77,3 +77,21 @@ class MaterialRepository:
         )
         self._records[material_id] = updated
         return updated
+
+    def archive_for_shop(self, *, shop_id: str, material_id: str) -> MaterialRecord | None:
+        existing = self.get_for_shop(shop_id=shop_id, material_id=material_id)
+        if existing is None:
+            return None
+
+        archived = replace(existing, is_active=False)
+        self._records[material_id] = archived
+        return archived
+
+    def restore_for_shop(self, *, shop_id: str, material_id: str) -> MaterialRecord | None:
+        existing = self.get_for_shop(shop_id=shop_id, material_id=material_id)
+        if existing is None:
+            return None
+
+        restored = replace(existing, is_active=True)
+        self._records[material_id] = restored
+        return restored
