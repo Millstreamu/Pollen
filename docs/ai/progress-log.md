@@ -35,6 +35,26 @@ Follow-up:
 
 Add entries below.
 
+### 2026-05-24 — Milestone 1.2 continuation startup report (shop-scoping persistence slice)
+
+Branch/PR/Issue:
+- local milestone planning update
+
+Completed:
+- Added startup continuation report for Milestone 1.2 persistence-backed `shop_id` scoping slice.
+- Defined AI_DEV flow alignment (Spec → Scan → Simplify → Slice → Verify → Clean → Freeze → Ship).
+- Captured acceptance-criteria gap closure plan and verification commands.
+
+Checks run:
+- `git diff --name-only` — pass
+
+Notes:
+- This is planning/report-only work; implementation is intentionally deferred to the next task turn.
+
+Follow-up:
+- Implement persistence-backed shop-scoped record create/read enforcement and tests.
+
+
 ### 2026-05-24 — Milestone 1.2 implementation start (auth + ownership foundation)
 
 Branch/PR/Issue:
