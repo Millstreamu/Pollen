@@ -4,8 +4,8 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 2.2 — Materials CRUD (release-candidate)  
-Overall status: Milestone 2.2 has passed release-candidate validation and is awaiting final sign-off.
+Current milestone: Milestone 2.3 — Product Recipes / Materials Needed (in-progress)  
+Overall status: Milestone 2.2 is signed off as complete; Milestone 2.3 has started with startup planning documented.
 
 ## Latest Summary
 No project-specific summary yet.
@@ -35,6 +35,31 @@ Follow-up:
 
 Add entries below.
 
+
+
+### 2026-05-25 — Milestone 2.2 sign-off complete + Milestone 2.3 startup
+
+Branch/PR/Issue:
+- local milestone status/reporting update
+
+Completed:
+- Finalized Milestone 2.2 release decision as approved and recorded sign-off report.
+- Transitioned milestone tracking from Milestone 2.2 (`release-candidate`) to Milestone 2.2 complete.
+- Started Milestone 2.3 and added startup report for Product Recipes / Materials Needed.
+- Updated current-status header to active Milestone 2.3.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is reporting/state transition only; no app behavior changes yet.
+
+Follow-up:
+- Implement Milestone 2.3 recipe model/service/UI slices and add journey-level coverage.
 
 
 ### 2026-05-25 — Milestone 2.2 release-candidate validation pass

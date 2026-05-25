@@ -3,8 +3,8 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 2.2 — Materials CRUD  
-Status: release-candidate
+Name: Milestone 2.3 — Product Recipes / Materials Needed  
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -25,7 +25,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable
 
 ## Remaining Required Work
-Milestone 2.2 closeout validation has passed and the milestone is now in release-candidate pending final sign-off/release decision.
+Milestone 2.2 is signed off as complete. Milestone 2.3 has started; implementation slices for product recipes/materials-needed are pending.
 
 ## Optional Post-Milestone Work
 - Any additional UX polish beyond Milestone 2.2 acceptance criteria should be deferred until milestone completion.
