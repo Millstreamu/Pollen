@@ -415,3 +415,26 @@ Notes:
 
 Follow-up:
 - Continue Milestone 2.2 with any remaining UX polish and additional edge-case tests as needed.
+
+### 2026-05-25 — Milestone 2.2 UX polish + edge-case test hardening
+
+Branch/PR/Issue:
+- local milestone 2.2 implementation update
+
+Completed:
+- Added materials/products filter-view UX fallback so invalid `view` values default to active content.
+- Added app-level edge-case tests for material invalid-view fallback and unknown-ID edit safety.
+- Added implementation report: `docs/ai/reports/milestone-2.2-ux-polish-edge-tests-report-2026-05-25.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip`
+- `pip install -r requirements.txt`
+- `pip install -r requirements-dev.txt` (environment-limited by package index/proxy)
+- `python -m compileall -q src tests`
+- `pytest -q`
+
+Notes:
+- Dev dependency install remains constrained by environment package index access for pinned `pytest==8.4.2`; compile and full test suite passed with preinstalled tooling.
+
+Follow-up:
+- Milestone 2.2 appears functionally complete for scoped CRUD/UX acceptance criteria.
