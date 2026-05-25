@@ -146,8 +146,8 @@ def test_products_ui_create_edit_archive_interactions() -> None:
         form_data={"action": "archive", "product_id": product_id},
     )
     assert archive_response.status_code == 200
-    assert "Archived products" in archive_response.body
-    assert "<button type='submit'>Restore</button>" in archive_response.body
+    assert "Archived products" not in archive_response.body
+    assert "view=archived" in archive_response.body
 
 
 def test_products_page_renders_forms_for_create_and_archive_actions() -> None:
@@ -223,7 +223,7 @@ def test_products_ui_restore_interaction_shows_archived_section_and_restores_pro
         form_data={"action": "archive", "product_id": created.product_id},
     )
 
-    archived_view = app.get("/products-stock", authorization_header=header)
+    archived_view = app.get("/products-stock?view=archived", authorization_header=header)
     assert archived_view.status_code == 200
     assert "Archived products" in archived_view.body
     assert "<button type='submit'>Restore</button>" in archived_view.body
@@ -237,3 +237,69 @@ def test_products_ui_restore_interaction_shows_archived_section_and_restores_pro
     assert restored_view.status_code == 200
     assert "Archived products" not in restored_view.body
     assert "Archived Candle" in restored_view.body
+
+
+def test_products_ui_filter_views_active_archived_all() -> None:
+    header = _auth_header("owner6", "owner6@example.com")
+    product_service = ProductService()
+    app = AppShell(product_service=product_service)
+
+    active = product_service.create_product(
+        authorization_header=header,
+        name="Active Candle",
+        sku="ACT-001",
+        stock_on_hand=7,
+        reorder_point=3,
+    )
+    archived = product_service.create_product(
+        authorization_header=header,
+        name="Archived Candle",
+        sku="ARC-002",
+        stock_on_hand=7,
+        reorder_point=3,
+    )
+    assert active is not None
+    assert archived is not None
+
+    app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={"action": "archive", "product_id": archived.product_id},
+    )
+
+    active_view = app.get("/products-stock?view=active", authorization_header=header)
+    assert "Active Candle" in active_view.body
+    assert "Archived products" not in active_view.body
+
+    archived_view = app.get("/products-stock?view=archived", authorization_header=header)
+    assert "Archived products" in archived_view.body
+    assert "Active Candle" not in archived_view.body
+
+    all_view = app.get("/products-stock?view=all", authorization_header=header)
+    assert "Active Candle" in all_view.body
+    assert "Archived products" in all_view.body
+
+
+def test_products_ui_status_chips_render_with_icons() -> None:
+    header = _auth_header("owner7", "owner7@example.com")
+    product_service = ProductService()
+    app = AppShell(product_service=product_service)
+
+    product_service.create_product(
+        authorization_header=header,
+        name="Low Candle",
+        sku="LOW-003",
+        stock_on_hand=1,
+        reorder_point=3,
+    )
+    product_service.create_product(
+        authorization_header=header,
+        name="Healthy Candle",
+        sku="HLT-003",
+        stock_on_hand=9,
+        reorder_point=3,
+    )
+
+    response = app.get("/products-stock", authorization_header=header)
+    assert "⚠️ Low stock" in response.body
+    assert "✅ Healthy" in response.body

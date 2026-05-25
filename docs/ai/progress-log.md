@@ -265,3 +265,29 @@ Notes:
 
 Follow-up:
 - Continue remaining Milestone 2.1 UI polish/slices (filters, bulk actions, or richer status chips) as requested.
+
+
+### 2026-05-25 — Milestone 2.1 continuation (filters + status chips UI slice)
+
+Branch/PR/Issue:
+- local milestone UI continuation update
+
+Completed:
+- Added `/products-stock` view filters for active, archived, and all product views.
+- Added clearer status indicators (`✅ Healthy`, `⚠️ Low stock`) in product rows.
+- Updated route parsing to support query-string UI filtering.
+- Added tests for filters and status-chip rendering; aligned archive/restore UI tests with new default active view.
+- Added implementation report: `docs/ai/reports/milestone-2.1-ui-filters-status-report-2026-05-25.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Existing environment already had runnable `pytest`; full suite passed after changes.
+
+Follow-up:
+- Continue Milestone 2.1 remaining UI slices (bulk actions or detail-page polish) as requested.
