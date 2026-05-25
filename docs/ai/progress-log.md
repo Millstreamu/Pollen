@@ -4,8 +4,8 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 2.2 — Materials CRUD (stabilising)  
-Overall status: Milestone 2.2 scope is implemented and now in stabilising after closeout validation.
+Current milestone: Milestone 2.2 — Materials CRUD (release-candidate)  
+Overall status: Milestone 2.2 has passed release-candidate validation and is awaiting final sign-off.
 
 ## Latest Summary
 No project-specific summary yet.
@@ -34,6 +34,31 @@ Follow-up:
 ## Entries
 
 Add entries below.
+
+
+
+### 2026-05-25 — Milestone 2.2 release-candidate validation pass
+
+Branch/PR/Issue:
+- local milestone closeout update
+
+Completed:
+- Executed Milestone 2.2 release-candidate validation pass in current environment.
+- Confirmed compile and full test suite pass with no regressions (`44 passed`).
+- Transitioned Milestone 2.2 status from `stabilising` to `release-candidate`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with index retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Dev dependency install remains blocked by package index/proxy restrictions in this environment, but `pytest` is available and full suite passed.
+
+Follow-up:
+- Proceed to final sign-off/release decision for Milestone 2.2.
 
 
 ### 2026-05-25 — Milestone 2.2 closeout reconciliation + stabilising transition

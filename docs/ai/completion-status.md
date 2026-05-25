@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 2.2 — Materials CRUD  
-Status: stabilising
+Status: release-candidate
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -25,7 +25,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable
 
 ## Remaining Required Work
-Milestone 2.2 implementation scope is complete and now in stabilising for closeout verification and release-readiness checks.
+Milestone 2.2 closeout validation has passed and the milestone is now in release-candidate pending final sign-off/release decision.
 
 ## Optional Post-Milestone Work
 - Any additional UX polish beyond Milestone 2.2 acceptance criteria should be deferred until milestone completion.
