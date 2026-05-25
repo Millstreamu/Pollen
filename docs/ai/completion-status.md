@@ -2,12 +2,12 @@
 
 ## Current Milestone
 Name: Milestone 1 — App Shell and Navigation (Definition Only)
-Status: not-started
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## V1 Milestone Checklist
-- [ ] Milestone 1: App shell, navigation, basic layout, placeholder pages
+- [x] Milestone 1: App shell, navigation, basic layout, placeholder pages
 - [ ] Milestone 2: Orders foundation (reserve → pack → ship)
 - [ ] Milestone 3: Products and finished stock foundation
 - [ ] Milestone 4: Materials and purchasing foundation

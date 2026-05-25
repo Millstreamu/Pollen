@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pollen - Simple Workspace</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <h1>Pollen Workspace</h1>
+        <p class="subtitle">Simple daily business workspace</p>
+      </header>
+
+      <div class="app-layout">
+        <nav class="sidebar" aria-label="Main navigation">
+          <button class="nav-link active" data-page="today">Today</button>
+          <button class="nav-link" data-page="orders">Orders</button>
+          <button class="nav-link" data-page="products-stock">Products &amp; Stock</button>
+          <button class="nav-link" data-page="make-buy">Make / Buy</button>
+          <button class="nav-link" data-page="money">Money</button>
+          <button class="nav-link" data-page="settings">Settings</button>
+        </nav>
+
+        <main class="content" aria-live="polite">
+          <section class="page active" id="today">
+            <h2>Today</h2>
+            <p>Start here for a quick view of your day.</p>
+            <p class="placeholder-note">Placeholder page for Milestone 1.</p>
+          </section>
+
+          <section class="page" id="orders">
+            <h2>Orders</h2>
+            <p>Track customer orders in one place.</p>
+            <p class="placeholder-note">Placeholder page for Milestone 1.</p>
+          </section>
+
+          <section class="page" id="products-stock">
+            <h2>Products &amp; Stock</h2>
+            <p>View product list and current stock levels.</p>
+            <p class="placeholder-note">Placeholder page for Milestone 1.</p>
+          </section>
+
+          <section class="page" id="make-buy">
+            <h2>Make / Buy</h2>
+            <p>Plan what to make or buy next.</p>
+            <p class="placeholder-note">Placeholder page for Milestone 1.</p>
+          </section>
+
+          <section class="page" id="money">
+            <h2>Money</h2>
+            <p>See simple money-related summaries.</p>
+            <p class="placeholder-note">Placeholder page for Milestone 1.</p>
+          </section>
+
+          <section class="page" id="settings">
+            <h2>Settings</h2>
+            <p>Manage basic app preferences and setup.</p>
+            <p class="placeholder-note">Placeholder page for Milestone 1.</p>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
