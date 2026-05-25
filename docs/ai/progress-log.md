@@ -4,8 +4,8 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 1.2 — Managed Auth and Shop Ownership (in-progress)  
-Overall status: Milestone 1.2 implementation started with auth/ownership foundation in place.
+Current milestone: Milestone 1.2 — Managed Auth and Shop Ownership (stabilising)  
+Overall status: Milestone 1.2 is in stabilising after closeout validation passed with no regressions.
 
 ## Latest Summary
 No project-specific summary yet.
@@ -34,6 +34,30 @@ Follow-up:
 ## Entries
 
 Add entries below.
+
+### 2026-05-25 — Milestone 1.2 closeout validation pass
+
+Branch/PR/Issue:
+- local milestone closeout update
+
+Completed:
+- Re-ran milestone closeout validation (dependency install attempt, compile check, full tests).
+- Confirmed no regressions (`15 passed`).
+- Transitioned Milestone 1.2 status from `in-progress` to `stabilising` in completion tracking.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Environment cannot fetch dev dependencies from package index, but existing environment includes working `pytest` and full suite passed.
+
+Follow-up:
+- If requested, run one more clean validation pass in a fully networked environment and move to `release-candidate`.
+
 
 ### 2026-05-24 — Milestone 1.2 continuation startup report (shop-scoping persistence slice)
 
