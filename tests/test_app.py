@@ -165,4 +165,38 @@ def test_products_page_renders_forms_for_create_and_archive_actions() -> None:
 
     assert response.status_code == 200
     assert "<input type='hidden' name='action' value='create'>" in response.body
+    assert "<input type='hidden' name='action' value='edit'>" in response.body
+    assert "Edit name <input name='name' value='Jar'" in response.body
+    assert "type='number' min='0'" in response.body
     assert "<button type='submit'>Archive</button>" in response.body
+
+
+def test_products_ui_row_edit_form_updates_only_submitted_field() -> None:
+    header = _auth_header("owner4", "owner4@example.com")
+    product_service = ProductService()
+    product_service.create_product(
+        authorization_header=header,
+        name="Bundle",
+        sku="BND-001",
+        stock_on_hand=12,
+        reorder_point=4,
+    )
+    product_id = product_service.list_products(authorization_header=header)[0].product_id
+    app = AppShell(product_service=product_service)
+
+    response = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={
+            "action": "edit",
+            "product_id": product_id,
+            "stock_on_hand": "3",
+        },
+    )
+    assert response.status_code == 200
+
+    updated = product_service.get_product(authorization_header=header, product_id=product_id)
+    assert updated.name == "Bundle"
+    assert updated.sku == "BND-001"
+    assert updated.reorder_point == 4
+    assert updated.stock_on_hand == 3
