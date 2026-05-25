@@ -134,7 +134,13 @@ class AppShell:
         return self.get(path, authorization_header=authorization_header)
 
 
-    def _render_products_page(self, *, authorization_header: str, view: str = "active") -> str:
+    def _render_products_page(
+        self,
+        *,
+        authorization_header: str,
+        view: str = "active",
+        edit_product_id: str | None = None,
+    ) -> str:
         products = self._product_service.list_products(authorization_header=authorization_header)
         archived_products = self._product_service.list_products(
             authorization_header=authorization_header,
@@ -160,52 +166,10 @@ class AppShell:
             )
 
         rows = "".join(
-            "<tr>"
-            f"<td><input type='checkbox' disabled aria-label='Select {product.product_id}'></td>"
-            f"<td>{product.product_id}</td>"
-            "<td>"
-            "<form method='post' action='/products-stock'>"
-            "<input type='hidden' name='action' value='edit'>"
-            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
-            f"<label>Edit name <input name='name' value='{product.name}' required></label>"
-            "<button type='submit'>Save</button>"
-            "</form>"
-            "</td>"
-            "<td>"
-            "<form method='post' action='/products-stock'>"
-            "<input type='hidden' name='action' value='edit'>"
-            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
-            f"<label>Edit SKU <input name='sku' value='{product.sku}' required></label>"
-            "<button type='submit'>Save</button>"
-            "</form>"
-            "</td>"
-            "<td>"
-            "<form method='post' action='/products-stock'>"
-            "<input type='hidden' name='action' value='edit'>"
-            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
-            f"<label>Edit stock <input name='stock_on_hand' type='number' min='0' value='{product.stock_on_hand}' required></label>"
-            "<button type='submit'>Save</button>"
-            "</form>"
-            "</td>"
-            "<td>"
-            "<form method='post' action='/products-stock'>"
-            "<input type='hidden' name='action' value='edit'>"
-            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
-            f"<label>Edit reorder <input name='reorder_point' type='number' min='0' value='{product.reorder_point}' required></label>"
-            "<button type='submit'>Save</button>"
-            "</form>"
-            "</td>"
-            f"<td><strong>{'⚠️ Low stock' if product.is_low_stock else '✅ Healthy'}</strong></td>"
-            "<td>"
-            "<form method='post' action='/products-stock'>"
-            "<input type='hidden' name='action' value='archive'>"
-            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
-            "<button type='submit'>Archive</button>"
-            "</form>"
-            "</td>"
-            "</tr>"
+            self._render_product_row(product=product, edit_product_id=edit_product_id)
             for product in products
         )
+
 
         archived_rows = "".join(
             "<tr>"
@@ -274,6 +238,49 @@ class AppShell:
             f"{archived_section if show_archived else ""}"
         )
 
+
+    def _render_product_row(self, *, product, edit_product_id: str | None) -> str:
+        if edit_product_id == product.product_id:
+            return (
+                "<tr>"
+                f"<td><input type='checkbox' disabled aria-label='Select {product.product_id}'></td>"
+                f"<td>{product.product_id}</td>"
+                "<td colspan='4'>"
+                "<form method='post' action='/products-stock'>"
+                "<input type='hidden' name='action' value='edit'>"
+                f"<input type='hidden' name='product_id' value='{product.product_id}'>"
+                f"<label>Name <input name='name' value='{product.name}' required></label>"
+                f"<label>SKU <input name='sku' value='{product.sku}' required></label>"
+                f"<label>Stock <input name='stock_on_hand' type='number' min='0' value='{product.stock_on_hand}' required></label>"
+                f"<label>Reorder <input name='reorder_point' type='number' min='0' value='{product.reorder_point}' required></label>"
+                "<button type='submit'>Save all fields</button>"
+                "</form>"
+                "</td>"
+                f"<td><strong>{'⚠️ Low stock' if product.is_low_stock else '✅ Healthy'}</strong></td>"
+                "<td><a href='/products-stock?view=active'>Cancel edit</a></td>"
+                "</tr>"
+            )
+
+        return (
+            "<tr>"
+            f"<td><input type='checkbox' disabled aria-label='Select {product.product_id}'></td>"
+            f"<td>{product.product_id}</td>"
+            f"<td>{product.name}</td>"
+            f"<td>{product.sku}</td>"
+            f"<td>{product.stock_on_hand}</td>"
+            f"<td>{product.reorder_point}</td>"
+            f"<td><strong>{'⚠️ Low stock' if product.is_low_stock else '✅ Healthy'}</strong></td>"
+            "<td>"
+            f"<a href='/products-stock?view=active&edit={product.product_id}'>Edit</a> "
+            "<form method='post' action='/products-stock' style='display:inline'>"
+            "<input type='hidden' name='action' value='archive'>"
+            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
+            "<button type='submit'>Archive</button>"
+            "</form>"
+            "</td>"
+            "</tr>"
+        )
+
     def render_page(
         self,
         page_title: str,
@@ -292,7 +299,12 @@ class AppShell:
                 requested_view = query.get("view", ["active"])[0]
                 if requested_view in {"active", "archived", "all"}:
                     view = requested_view
-            page_content = self._render_products_page(authorization_header=authorization_header, view=view)
+            edit_product_id = query.get("edit", [None])[0] if query is not None else None
+            page_content = self._render_products_page(
+                authorization_header=authorization_header,
+                view=view,
+                edit_product_id=edit_product_id,
+            )
 
         return (
             "<!doctype html>"

@@ -315,3 +315,29 @@ Notes:
 
 Follow-up:
 - Continue Milestone 2.1 remaining UI slices (bulk actions or detail-page polish) as requested.
+
+### 2026-05-25 — Milestone 2.1 completion (product detail flow polish)
+
+Branch/PR/Issue:
+- local milestone completion update
+
+Completed:
+- Implemented polished product detail flow with explicit row view/edit states.
+- Kept stock and reorder values visible in default row view.
+- Added inline all-field edit mode with save/cancel affordances.
+- Added regression test coverage for detail edit mode field visibility.
+- Added implementation report: `docs/ai/reports/milestone-2.1-product-detail-flow-report-2026-05-25.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Dev dependency install remains constrained by environment package-index access, but compile + full tests pass.
+
+Follow-up:
+- Begin Milestone 2.2 when requested.
+
