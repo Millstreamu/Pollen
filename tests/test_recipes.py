@@ -116,3 +116,45 @@ def test_can_make_quantity_uses_limiting_material_and_does_not_change_product_st
 
     assert recipe_service.can_make_quantity(authorization_header=auth, product_id=product.product_id) == 3
     assert product_service.get_product(authorization_header=auth, product_id=product.product_id).stock_on_hand == 12
+
+
+def test_archived_material_is_excluded_from_materials_needed_and_can_make() -> None:
+    auth = _auth_header("owner4", "owner4@example.com")
+    product_repo = ProductRepository()
+    material_repo = MaterialRepository()
+    recipe_repo = RecipeRepository()
+
+    product_service = ProductService(product_repository=product_repo)
+    material_service = MaterialService(material_repository=material_repo)
+    recipe_service = RecipeService(
+        product_repository=product_repo,
+        material_repository=material_repo,
+        recipe_repository=recipe_repo,
+    )
+
+    product = product_service.create_product(
+        authorization_header=auth,
+        name="Lip Balm",
+        sku="LB-1",
+        stock_on_hand=5,
+        reorder_point=1,
+    )
+    material = material_service.create_material(
+        authorization_header=auth,
+        name="Beeswax",
+        unit="g",
+        stock_on_hand=9,
+        reorder_point=2,
+    )
+    assert product is not None and material is not None
+
+    recipe_service.create_recipe_item(
+        authorization_header=auth,
+        product_id=product.product_id,
+        material_id=material.material_id,
+        quantity_per_unit=3,
+    )
+    material_service.archive_material(authorization_header=auth, material_id=material.material_id)
+
+    assert recipe_service.materials_needed(authorization_header=auth, product_id=product.product_id, quantity=2) == []
+    assert recipe_service.can_make_quantity(authorization_header=auth, product_id=product.product_id) == 0
