@@ -1,4 +1,5 @@
-from pollen.app import NAV_ITEMS, can_access_shop_record, create_app, healthcheck
+from pollen.app import AppShell, NAV_ITEMS, can_access_shop_record, create_app, healthcheck
+from pollen.services import ProductService
 from pollen.auth import AuthService
 
 
@@ -62,3 +63,42 @@ def test_user_cannot_access_another_shop_records() -> None:
 def test_server_ownership_check_helper_denies_cross_shop() -> None:
     header = _auth_header("u2", "u2@example.com")
     assert not can_access_shop_record(header, "shop-someone-else")
+
+
+def test_products_page_shows_empty_state_when_no_products() -> None:
+    app = create_app()
+
+    response = app.get("/products-stock", authorization_header=_auth_header())
+
+    assert response.status_code == 200
+    assert "No products yet. Add your first product to start tracking stock." in response.body
+
+
+def test_products_page_renders_product_table_and_low_stock_status() -> None:
+    header = _auth_header("owner", "owner@example.com")
+    product_service = ProductService()
+    product_service.create_product(
+        authorization_header=header,
+        name="Healthy Candle",
+        sku="CNDL-HEALTHY",
+        stock_on_hand=8,
+        reorder_point=3,
+    )
+    product_service.create_product(
+        authorization_header=header,
+        name="Low Candle",
+        sku="CNDL-LOW",
+        stock_on_hand=2,
+        reorder_point=3,
+    )
+
+    app = AppShell(product_service=product_service)
+
+    response = app.get("/products-stock", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "<th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th>" in response.body
+    assert "Healthy Candle" in response.body
+    assert "Low Candle" in response.body
+    assert "Healthy" in response.body
+    assert "Low stock" in response.body
