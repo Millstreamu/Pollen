@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from urllib.parse import parse_qs, urlsplit
 
 from pollen.auth import AuthService
 from pollen.services import ProductService
@@ -48,16 +49,20 @@ class AppShell:
         self._product_service = product_service or ProductService(auth_service=self._auth_service)
 
     def get(self, path: str, *, authorization_header: str | None = None) -> AppResponse:
-        if path in PRIVATE_ROUTES and self._auth_service.resolve_context(authorization_header) is None:
+        parsed_path = urlsplit(path)
+        route_path = parsed_path.path
+        query = parse_qs(parsed_path.query)
+
+        if route_path in PRIVATE_ROUTES and self._auth_service.resolve_context(authorization_header) is None:
             return AppResponse(status_code=401, body="Unauthorized")
 
-        page_title = self._routes.get(path)
+        page_title = self._routes.get(route_path)
         if page_title is None:
             return AppResponse(status_code=404, body="Not Found")
 
         return AppResponse(
             status_code=200,
-            body=self.render_page(page_title, authorization_header=authorization_header),
+            body=self.render_page(page_title, authorization_header=authorization_header, query=query),
         )
 
     def post(
@@ -115,7 +120,7 @@ class AppShell:
         return self.get(path, authorization_header=authorization_header)
 
 
-    def _render_products_page(self, *, authorization_header: str) -> str:
+    def _render_products_page(self, *, authorization_header: str, view: str = "active") -> str:
         products = self._product_service.list_products(authorization_header=authorization_header)
         archived_products = self._product_service.list_products(
             authorization_header=authorization_header,
@@ -175,7 +180,7 @@ class AppShell:
             "<button type='submit'>Save</button>"
             "</form>"
             "</td>"
-            f"<td><strong>{'Low stock' if product.is_low_stock else 'Healthy'}</strong></td>"
+            f"<td><strong>{'⚠️ Low stock' if product.is_low_stock else '✅ Healthy'}</strong></td>"
             "<td>"
             "<form method='post' action='/products-stock'>"
             "<input type='hidden' name='action' value='archive'>"
@@ -202,6 +207,15 @@ class AppShell:
             "</tr>"
             for product in archived_only
         )
+        filter_nav = (
+            "<nav aria-label='Product view filters'>"
+            "<ul>"
+            "<li><a href='/products-stock?view=active'>Active</a></li>"
+            "<li><a href='/products-stock?view=archived'>Archived</a></li>"
+            "<li><a href='/products-stock?view=all'>All</a></li>"
+            "</ul></nav>"
+        )
+
         archived_section = (
             "<section><h3>Archived products</h3>"
             "<table><thead><tr><th>ID</th><th>Name</th><th>SKU</th><th>Action</th></tr></thead><tbody>"
@@ -211,7 +225,10 @@ class AppShell:
             else ""
         )
 
-        return (
+        show_active = view in {"active", "all"}
+        show_archived = view in {"archived", "all"}
+
+        active_section = (
             "<section><h2>Products</h2>"
             "<p>Manage products with create, per-row edit, archive, and restore interactions.</p>"
             f"{create_form}"
@@ -220,16 +237,35 @@ class AppShell:
             "</tr></thead><tbody>"
             f"{rows}"
             "</tbody></table></section>"
-            f"{archived_section}"
+            if show_active
+            else ""
         )
-    def render_page(self, page_title: str, *, authorization_header: str | None = None) -> str:
+
+        return (
+            f"{filter_nav}"
+            f"{active_section}"
+            f"{archived_section if show_archived else ""}"
+        )
+
+    def render_page(
+        self,
+        page_title: str,
+        *,
+        authorization_header: str | None = None,
+        query: dict[str, list[str]] | None = None,
+    ) -> str:
         nav_links = "".join(
             f'<li><a href="{href}">{label}</a></li>' for label, href in NAV_ITEMS
         )
         page_description = self._DESCRIPTIONS[page_title]
         page_content = f"<p>{page_description}</p>"
         if page_title == "Products & Stock" and authorization_header is not None:
-            page_content = self._render_products_page(authorization_header=authorization_header)
+            view = "active"
+            if query is not None:
+                requested_view = query.get("view", ["active"])[0]
+                if requested_view in {"active", "archived", "all"}:
+                    view = requested_view
+            page_content = self._render_products_page(authorization_header=authorization_header, view=view)
 
         return (
             "<!doctype html>"
