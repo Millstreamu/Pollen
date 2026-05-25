@@ -4,15 +4,15 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 2.2 — Materials CRUD  
-Status: in-progress
+Status: stabilising
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [ ] Material create works with server-side shop scoping.
-- [ ] Material list/detail/update/archive/restore flows are implemented.
-- [ ] Material fields include unit, stock, reorder point, and active/archive handling.
-- [ ] Low-stock status is visible in materials UI and tested.
+- [x] Material create works with server-side shop scoping.
+- [x] Material list/detail/update/archive/restore flows are implemented.
+- [x] Material fields include unit, stock, reorder point, and active/archive handling.
+- [x] Low-stock status is visible in materials UI and tested.
 
 ## Required Verification Checklist
 - [x] Typecheck
@@ -25,7 +25,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable
 
 ## Remaining Required Work
-Milestone 2.2 started on 2026-05-25. Required implementation and verification are pending completion.
+Milestone 2.2 implementation scope is complete and now in stabilising for closeout verification and release-readiness checks.
 
 ## Optional Post-Milestone Work
 - Any additional UX polish beyond Milestone 2.2 acceptance criteria should be deferred until milestone completion.

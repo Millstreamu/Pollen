@@ -4,8 +4,8 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 1.2 — Managed Auth and Shop Ownership (stabilising)  
-Overall status: Milestone 1.2 is in stabilising after closeout validation passed with no regressions.
+Current milestone: Milestone 2.2 — Materials CRUD (stabilising)  
+Overall status: Milestone 2.2 scope is implemented and now in stabilising after closeout validation.
 
 ## Latest Summary
 No project-specific summary yet.
@@ -34,6 +34,33 @@ Follow-up:
 ## Entries
 
 Add entries below.
+
+
+### 2026-05-25 — Milestone 2.2 closeout reconciliation + stabilising transition
+
+Branch/PR/Issue:
+- local milestone closeout update
+
+Completed:
+- Added Milestone 2.2 closeout report and reconciled completion tracking with implementation evidence.
+- Updated `docs/ai/completion-status.md` scope checklist to complete for Materials CRUD acceptance criteria.
+- Transitioned Milestone 2.2 status from `in-progress` to `stabilising`.
+- Updated progress-log current status header to the active milestone.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Closeout work in this slice is status/evidence reconciliation only; no new feature behavior was introduced.
+
+Follow-up:
+- Run final release-candidate pass for Milestone 2.2 and transition to `release-candidate` when requested.
+
+
 
 ### 2026-05-25 — Milestone 1.2 closeout validation pass
 
