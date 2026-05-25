@@ -85,13 +85,17 @@ class AppShell:
         elif action == "edit":
             product_id = payload.get("product_id")
             if product_id is not None:
+                current_product = self._product_service.get_product(
+                    authorization_header=authorization_header,
+                    product_id=product_id,
+                )
                 self._product_service.update_product(
                     authorization_header=authorization_header,
                     product_id=product_id,
-                    name=payload.get("name", ""),
-                    sku=payload.get("sku", ""),
-                    stock_on_hand=int(payload.get("stock_on_hand", "0")),
-                    reorder_point=int(payload.get("reorder_point", "0")),
+                    name=payload.get("name", current_product.name),
+                    sku=payload.get("sku", current_product.sku),
+                    stock_on_hand=int(payload.get("stock_on_hand", str(current_product.stock_on_hand))),
+                    reorder_point=int(payload.get("reorder_point", str(current_product.reorder_point))),
                 )
         elif action == "archive":
             product_id = payload.get("product_id")
@@ -110,10 +114,10 @@ class AppShell:
             "<section><h3>Create product</h3>"
             "<form method='post' action='/products-stock'>"
             "<input type='hidden' name='action' value='create'>"
-            "<label>Name <input name='name'></label>"
-            "<label>SKU <input name='sku'></label>"
-            "<label>Stock <input name='stock_on_hand'></label>"
-            "<label>Reorder <input name='reorder_point'></label>"
+            "<label>Name <input name='name' required></label>"
+            "<label>SKU <input name='sku' required></label>"
+            "<label>Stock <input name='stock_on_hand' type='number' min='0' required></label>"
+            "<label>Reorder <input name='reorder_point' type='number' min='0' required></label>"
             "<button type='submit'>Create</button>"
             "</form></section>"
         )
@@ -127,11 +131,39 @@ class AppShell:
         rows = "".join(
             "<tr>"
             f"<td>{product.product_id}</td>"
-            f"<td>{product.name}</td>"
-            f"<td>{product.sku}</td>"
-            f"<td>{product.stock_on_hand}</td>"
-            f"<td>{product.reorder_point}</td>"
-            f"<td>{'Low stock' if product.is_low_stock else 'Healthy'}</td>"
+            "<td>"
+            "<form method='post' action='/products-stock'>"
+            "<input type='hidden' name='action' value='edit'>"
+            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
+            f"<label>Edit name <input name='name' value='{product.name}' required></label>"
+            "<button type='submit'>Save</button>"
+            "</form>"
+            "</td>"
+            "<td>"
+            "<form method='post' action='/products-stock'>"
+            "<input type='hidden' name='action' value='edit'>"
+            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
+            f"<label>Edit SKU <input name='sku' value='{product.sku}' required></label>"
+            "<button type='submit'>Save</button>"
+            "</form>"
+            "</td>"
+            "<td>"
+            "<form method='post' action='/products-stock'>"
+            "<input type='hidden' name='action' value='edit'>"
+            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
+            f"<label>Edit stock <input name='stock_on_hand' type='number' min='0' value='{product.stock_on_hand}' required></label>"
+            "<button type='submit'>Save</button>"
+            "</form>"
+            "</td>"
+            "<td>"
+            "<form method='post' action='/products-stock'>"
+            "<input type='hidden' name='action' value='edit'>"
+            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
+            f"<label>Edit reorder <input name='reorder_point' type='number' min='0' value='{product.reorder_point}' required></label>"
+            "<button type='submit'>Save</button>"
+            "</form>"
+            "</td>"
+            f"<td><strong>{'Low stock' if product.is_low_stock else 'Healthy'}</strong></td>"
             "<td>"
             "<form method='post' action='/products-stock'>"
             "<input type='hidden' name='action' value='archive'>"
@@ -144,7 +176,7 @@ class AppShell:
         )
         return (
             "<section><h2>Products</h2>"
-            "<p>Manage products with create, edit, and archive interactions.</p>"
+            "<p>Manage products with create, per-row edit, and archive interactions.</p>"
             f"{create_form}"
             "<table><thead><tr>"
             "<th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th>"

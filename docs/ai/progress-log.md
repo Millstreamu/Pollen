@@ -216,3 +216,28 @@ Notes:
 
 Follow-up:
 - Implement create/edit/archive product UI flows in later Milestone 2.1 slices.
+
+### 2026-05-25 — Milestone 2.1 continuation (row-level product edit controls)
+
+Branch/PR/Issue:
+- local milestone UI continuation update
+
+Completed:
+- Added explicit edit form controls per product row on `/products-stock`.
+- Added UX polish for product forms (required fields and non-negative number inputs).
+- Updated edit handling to support partial row updates without clobbering unchanged values.
+- Added and updated UI tests for edit control rendering and row-level partial edit behavior.
+- Added implementation report: `docs/ai/reports/milestone-2.1-ui-row-edit-report-2026-05-25.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Existing environment already contained runnable `pytest`; full suite passed after changes.
+
+Follow-up:
+- Continue Milestone 2.1 remaining UI polish/screen slices as requested.
