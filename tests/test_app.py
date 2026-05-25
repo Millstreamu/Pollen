@@ -146,7 +146,8 @@ def test_products_ui_create_edit_archive_interactions() -> None:
         form_data={"action": "archive", "product_id": product_id},
     )
     assert archive_response.status_code == 200
-    assert "No products yet. Add your first product to start tracking stock." in archive_response.body
+    assert "Archived products" in archive_response.body
+    assert "<button type='submit'>Restore</button>" in archive_response.body
 
 
 def test_products_page_renders_forms_for_create_and_archive_actions() -> None:
@@ -200,3 +201,39 @@ def test_products_ui_row_edit_form_updates_only_submitted_field() -> None:
     assert updated.sku == "BND-001"
     assert updated.reorder_point == 4
     assert updated.stock_on_hand == 3
+
+
+def test_products_ui_restore_interaction_shows_archived_section_and_restores_product() -> None:
+    header = _auth_header("owner5", "owner5@example.com")
+    product_service = ProductService()
+    app = AppShell(product_service=product_service)
+
+    created = product_service.create_product(
+        authorization_header=header,
+        name="Archived Candle",
+        sku="ARC-001",
+        stock_on_hand=5,
+        reorder_point=2,
+    )
+    assert created is not None
+
+    app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={"action": "archive", "product_id": created.product_id},
+    )
+
+    archived_view = app.get("/products-stock", authorization_header=header)
+    assert archived_view.status_code == 200
+    assert "Archived products" in archived_view.body
+    assert "<button type='submit'>Restore</button>" in archived_view.body
+
+    restored_view = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={"action": "restore", "product_id": created.product_id},
+    )
+
+    assert restored_view.status_code == 200
+    assert "Archived products" not in restored_view.body
+    assert "Archived Candle" in restored_view.body

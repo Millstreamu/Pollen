@@ -86,3 +86,12 @@ class ProductRepository:
         archived = replace(existing, is_active=False)
         self._records[product_id] = archived
         return archived
+
+    def restore_for_shop(self, *, shop_id: str, product_id: str) -> ProductRecord | None:
+        existing = self.get_for_shop(shop_id=shop_id, product_id=product_id)
+        if existing is None:
+            return None
+
+        restored = replace(existing, is_active=True)
+        self._records[product_id] = restored
+        return restored

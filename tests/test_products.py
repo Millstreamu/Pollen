@@ -170,3 +170,24 @@ def test_unauthenticated_product_access_is_denied() -> None:
     )
     assert service.list_products(authorization_header=None) == []
     assert service.get_product(authorization_header=None, product_id="prd-1") is None
+
+
+def test_restore_product_makes_archived_product_visible_again() -> None:
+    service = ProductService()
+    header = _auth_header("owner", "owner@example.com")
+
+    created = service.create_product(
+        authorization_header=header,
+        name="Restorable",
+        sku="RST-001",
+        stock_on_hand=5,
+        reorder_point=2,
+    )
+    assert created is not None
+
+    service.archive_product(authorization_header=header, product_id=created.product_id)
+    restored = service.restore_product(authorization_header=header, product_id=created.product_id)
+
+    assert restored is not None
+    assert restored.is_active
+    assert [p.product_id for p in service.list_products(authorization_header=header)] == [created.product_id]
