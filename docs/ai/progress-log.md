@@ -258,6 +258,30 @@ Checks run:
 - `pip install -r requirements.txt` — pass
 - `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
 - `python -m compileall -q src tests` — pass
+
+### 2026-05-25 — Milestone 2.1 continuation (bulk action UI slice)
+
+Branch/PR/Issue:
+- local milestone UI continuation update
+
+Completed:
+- Added bulk archive and bulk restore action handling to the `/products-stock` POST flow.
+- Added Products UI bulk-actions panel (comma-separated product ID input) and select-column polish in active/archived tables.
+- Added tests for bulk action behavior and bulk-control rendering.
+- Added implementation report: `docs/ai/reports/milestone-2.1-ui-bulk-actions-report-2026-05-25.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Existing environment already contained runnable `pytest`; full suite passed after changes.
+
+Follow-up:
+- Continue Milestone 2.1 remaining UI slices (detail-page polish and other CRUD refinements) as requested.
 - `pytest -q` — pass
 
 Notes:

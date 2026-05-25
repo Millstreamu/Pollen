@@ -303,3 +303,70 @@ def test_products_ui_status_chips_render_with_icons() -> None:
     response = app.get("/products-stock", authorization_header=header)
     assert "⚠️ Low stock" in response.body
     assert "✅ Healthy" in response.body
+
+
+def test_products_ui_bulk_archive_and_restore_actions() -> None:
+    header = _auth_header("owner8", "owner8@example.com")
+    product_service = ProductService()
+    app = AppShell(product_service=product_service)
+
+    first = product_service.create_product(
+        authorization_header=header,
+        name="Bulk One",
+        sku="BLK-001",
+        stock_on_hand=6,
+        reorder_point=2,
+    )
+    second = product_service.create_product(
+        authorization_header=header,
+        name="Bulk Two",
+        sku="BLK-002",
+        stock_on_hand=6,
+        reorder_point=2,
+    )
+    assert first is not None
+    assert second is not None
+
+    archive_response = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={
+            "action": "bulk_archive",
+            "product_ids": f"{first.product_id}, {second.product_id}",
+        },
+    )
+    assert archive_response.status_code == 200
+    assert product_service.list_products(authorization_header=header) == []
+
+    restore_response = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={
+            "action": "bulk_restore",
+            "product_ids": first.product_id,
+        },
+    )
+    assert restore_response.status_code == 200
+    visible_ids = [product.product_id for product in product_service.list_products(authorization_header=header)]
+    assert visible_ids == [first.product_id]
+
+
+def test_products_ui_renders_bulk_action_controls() -> None:
+    header = _auth_header("owner9", "owner9@example.com")
+    product_service = ProductService()
+    product_service.create_product(
+        authorization_header=header,
+        name="Selectable",
+        sku="SEL-001",
+        stock_on_hand=5,
+        reorder_point=2,
+    )
+    app = AppShell(product_service=product_service)
+
+    response = app.get("/products-stock", authorization_header=header)
+    assert response.status_code == 200
+    assert "<h3>Bulk actions</h3>" in response.body
+    assert "name='product_ids'" in response.body
+    assert "value='bulk_archive'" in response.body
+    assert "value='bulk_restore'" in response.body
+    assert "<th>Select</th><th>ID</th>" in response.body

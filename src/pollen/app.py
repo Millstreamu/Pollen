@@ -116,6 +116,20 @@ class AppShell:
                     authorization_header=authorization_header,
                     product_id=product_id,
                 )
+        elif action == "bulk_archive":
+            selected_ids = payload.get("product_ids", "")
+            for product_id in [pid.strip() for pid in selected_ids.split(",") if pid.strip()]:
+                self._product_service.archive_product(
+                    authorization_header=authorization_header,
+                    product_id=product_id,
+                )
+        elif action == "bulk_restore":
+            selected_ids = payload.get("product_ids", "")
+            for product_id in [pid.strip() for pid in selected_ids.split(",") if pid.strip()]:
+                self._product_service.restore_product(
+                    authorization_header=authorization_header,
+                    product_id=product_id,
+                )
 
         return self.get(path, authorization_header=authorization_header)
 
@@ -147,6 +161,7 @@ class AppShell:
 
         rows = "".join(
             "<tr>"
+            f"<td><input type='checkbox' disabled aria-label='Select {product.product_id}'></td>"
             f"<td>{product.product_id}</td>"
             "<td>"
             "<form method='post' action='/products-stock'>"
@@ -194,6 +209,7 @@ class AppShell:
 
         archived_rows = "".join(
             "<tr>"
+            f"<td><input type='checkbox' disabled aria-label='Select {product.product_id}'></td>"
             f"<td>{product.product_id}</td>"
             f"<td>{product.name}</td>"
             f"<td>{product.sku}</td>"
@@ -218,7 +234,7 @@ class AppShell:
 
         archived_section = (
             "<section><h3>Archived products</h3>"
-            "<table><thead><tr><th>ID</th><th>Name</th><th>SKU</th><th>Action</th></tr></thead><tbody>"
+            "<table><thead><tr><th>Select</th><th>ID</th><th>Name</th><th>SKU</th><th>Action</th></tr></thead><tbody>"
             f"{archived_rows}"
             "</tbody></table></section>"
             if archived_only
@@ -228,12 +244,23 @@ class AppShell:
         show_active = view in {"active", "all"}
         show_archived = view in {"archived", "all"}
 
+        bulk_actions = (
+            "<section><h3>Bulk actions</h3>"
+            "<p>Archive or restore multiple products by entering comma-separated product IDs.</p>"
+            "<form method='post' action='/products-stock'>"
+            "<label>Product IDs <input name='product_ids' placeholder='prd-1, prd-2'></label>"
+            "<button type='submit' name='action' value='bulk_archive'>Archive selected</button>"
+            "<button type='submit' name='action' value='bulk_restore'>Restore selected</button>"
+            "</form></section>"
+        )
+
         active_section = (
             "<section><h2>Products</h2>"
-            "<p>Manage products with create, per-row edit, archive, and restore interactions.</p>"
+            "<p>Manage products with create, per-row edit, archive, restore, and bulk actions.</p>"
             f"{create_form}"
+            f"{bulk_actions}"
             "<table><thead><tr>"
-            "<th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th>"
+            "<th>Select</th><th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th>"
             "</tr></thead><tbody>"
             f"{rows}"
             "</tbody></table></section>"
