@@ -394,3 +394,47 @@ def test_products_ui_detail_edit_mode_shows_all_editable_fields() -> None:
     assert "name='sku' value='DTL-001'" in response.body
     assert "name='stock_on_hand' type='number' min='0' value='11'" in response.body
     assert "name='reorder_point' type='number' min='0' value='6'" in response.body
+
+
+def test_make_buy_page_shows_materials_empty_state() -> None:
+    app = create_app()
+
+    response = app.get("/make-buy", authorization_header=_auth_header("mat1", "mat1@example.com"))
+
+    assert response.status_code == 200
+    assert "No materials yet. Add your first material to track supplies." in response.body
+
+
+def test_make_buy_ui_create_and_edit_material_interactions() -> None:
+    header = _auth_header("mat2", "mat2@example.com")
+    app = create_app()
+
+    create_response = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "create",
+            "name": "Soy Wax",
+            "unit": "kg",
+            "stock_on_hand": "2",
+            "reorder_point": "3",
+        },
+    )
+    assert create_response.status_code == 200
+    assert "Soy Wax" in create_response.body
+    assert "⚠️ Low stock" in create_response.body
+
+    edit_response = app.get("/make-buy?edit=mat-1", authorization_header=header)
+    assert "Save all fields" in edit_response.body
+
+    save_response = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "edit",
+            "material_id": "mat-1",
+            "stock_on_hand": "8",
+        },
+    )
+    assert save_response.status_code == 200
+    assert "✅ Healthy" in save_response.body
