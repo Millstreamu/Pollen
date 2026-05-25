@@ -4,8 +4,8 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 2.3 — Product Recipes / Materials Needed (release-candidate)  
-Overall status: Milestone 2.2 is complete and Milestone 2.3 is validated at release-candidate status, pending final completion decision.
+Current milestone: Milestone 2.4 — Manual Stock Adjustment (in-progress)  
+Overall status: Milestone 2.3 is complete (human sign-off recorded) and Milestone 2.4 planning has started.
 
 ## Latest Summary
 No project-specific summary yet.
@@ -34,6 +34,30 @@ Follow-up:
 ## Entries
 
 Add entries below.
+
+
+### 2026-05-25 — Milestone 2.3 completion sign-off + Milestone 2.4 startup planning
+
+Branch/PR/Issue:
+- local milestone status/reporting update
+
+Completed:
+- Recorded human sign-off and marked Milestone 2.3 complete in completion tracking.
+- Transitioned active milestone to Milestone 2.4 (`in-progress`).
+- Added Milestone 2.4 startup planning report using AI development process structure.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is status transition and planning only; Milestone 2.4 feature implementation is not started in this change set.
+
+Follow-up:
+- Implement Milestone 2.4 vertical slices (stock adjustment + reason + movement/activity logs + tests).
 
 
 ### 2026-05-25 — Milestone 2.3 release-candidate validation + sign-off
