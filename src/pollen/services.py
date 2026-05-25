@@ -221,7 +221,7 @@ class RecipeService:
         recipe_items = self._recipe_repository.list_for_product(shop_id=context.shop.shop_id, product_id=product_id)
         for item in recipe_items:
             material = self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=item.material_id)
-            if material is None:
+            if material is None or not material.is_active:
                 continue
             needed = item.quantity_per_unit * quantity
             rows.append({
@@ -246,7 +246,7 @@ class RecipeService:
         max_by_material: list[int] = []
         for item in recipe_items:
             material = self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=item.material_id)
-            if material is None or item.quantity_per_unit <= 0:
+            if material is None or not material.is_active or item.quantity_per_unit <= 0:
                 continue
             max_by_material.append(material.stock_on_hand // item.quantity_per_unit)
 

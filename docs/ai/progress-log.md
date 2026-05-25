@@ -4,7 +4,7 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 2.3 — Product Recipes / Materials Needed (in-progress)  
+Current milestone: Milestone 2.3 — Product Recipes / Materials Needed (stabilising)  
 Overall status: Milestone 2.2 is signed off as complete; Milestone 2.3 has started with startup planning documented.
 
 ## Latest Summary
@@ -541,3 +541,27 @@ Notes:
 
 Follow-up:
 - Continue Milestone 2.3 remaining polish/edge cases if requested, then transition milestone status when ready.
+
+
+### 2026-05-25 — Milestone 2.3 polish edge cases + stabilising transition
+
+Branch/PR/Issue:
+- local milestone 2.3 continuation
+
+Completed:
+- Added recipe edge-case test coverage ensuring archived materials are excluded from materials-needed and can-make calculations.
+- Recorded Milestone 2.3 polish report and validation evidence.
+- Transitioned Milestone 2.3 status from `in-progress` to `stabilising`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Environment dependency install limitation persists, but full compile and test validation passed with existing toolchain.
+
+Follow-up:
+- Run Milestone 2.3 release-candidate pass and sign-off when requested.
