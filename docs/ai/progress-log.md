@@ -341,3 +341,27 @@ Notes:
 Follow-up:
 - Begin Milestone 2.2 when requested.
 
+
+
+### 2026-05-25 — Milestone 2.2 startup (materials CRUD planning)
+
+Branch/PR/Issue:
+- local milestone startup update
+
+Completed:
+- Began Milestone 2.2 per roadmap scope (`Materials CRUD`).
+- Added startup implementation report: `docs/ai/reports/milestone-2.2-startup-report-2026-05-25.md`.
+- Updated completion tracking to set current milestone to `Milestone 2.2 — Materials CRUD` (`in-progress`).
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This task intentionally starts the milestone and captures implementation plan/risk/scope; feature code slice follows in subsequent work.
+
+Follow-up:
+- Implement the first Milestone 2.2 vertical slice (materials list + create/edit baseline + tests).
