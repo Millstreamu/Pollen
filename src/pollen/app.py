@@ -170,6 +170,20 @@ class AppShell:
                         stock_on_hand=int(payload.get("stock_on_hand", str(current_material.stock_on_hand))),
                         reorder_point=int(payload.get("reorder_point", str(current_material.reorder_point))),
                     )
+        elif action == "archive":
+            material_id = payload.get("material_id")
+            if material_id is not None:
+                self._material_service.archive_material(
+                    authorization_header=authorization_header,
+                    material_id=material_id,
+                )
+        elif action == "restore":
+            material_id = payload.get("material_id")
+            if material_id is not None:
+                self._material_service.restore_material(
+                    authorization_header=authorization_header,
+                    material_id=material_id,
+                )
 
         return self.get("/make-buy", authorization_header=authorization_header)
 
@@ -322,8 +336,19 @@ class AppShell:
         )
 
 
-    def _render_materials_page(self, *, authorization_header: str, edit_material_id: str | None = None) -> str:
+    def _render_materials_page(
+        self,
+        *,
+        authorization_header: str,
+        view: str = "active",
+        edit_material_id: str | None = None,
+    ) -> str:
         materials = self._material_service.list_materials(authorization_header=authorization_header)
+        archived_materials = self._material_service.list_materials(
+            authorization_header=authorization_header,
+            include_archived=True,
+        )
+        archived_only = [material for material in archived_materials if not material.is_active]
         create_form = (
             "<section><h3>Create material</h3>"
             "<form method='post' action='/make-buy'>"
@@ -335,7 +360,7 @@ class AppShell:
             "<button type='submit'>Create</button>"
             "</form></section>"
         )
-        if not materials:
+        if not materials and not archived_only:
             return (
                 "<section><h2>Materials</h2>"
                 "<p>No materials yet. Add your first material to track supplies.</p>"
@@ -343,13 +368,53 @@ class AppShell:
             )
 
         rows = "".join(self._render_material_row(material=material, edit_material_id=edit_material_id) for material in materials)
-        return (
+        archived_rows = "".join(
+            "<tr>"
+            f"<td>{material.material_id}</td>"
+            f"<td>{material.name}</td>"
+            f"<td>{material.unit}</td>"
+            "<td>"
+            "<form method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='restore'>"
+            f"<input type='hidden' name='material_id' value='{material.material_id}'>"
+            "<button type='submit'>Restore</button>"
+            "</form>"
+            "</td>"
+            "</tr>"
+            for material in archived_only
+        )
+        filter_nav = (
+            "<nav aria-label='Material view filters'>"
+            "<ul>"
+            "<li><a href='/make-buy?view=active'>Active</a></li>"
+            "<li><a href='/make-buy?view=archived'>Archived</a></li>"
+            "<li><a href='/make-buy?view=all'>All</a></li>"
+            "</ul></nav>"
+        )
+        show_active = view in {"active", "all"}
+        show_archived = view in {"archived", "all"}
+        active_section = (
             "<section><h2>Materials</h2>"
-            "<p>Manage materials with simple create and per-row edit controls.</p>"
+            "<p>Manage materials with simple create, per-row edit, archive, and restore controls.</p>"
             f"{create_form}"
             "<table><thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th></tr></thead><tbody>"
             f"{rows}"
             "</tbody></table></section>"
+            if show_active
+            else ""
+        )
+        archived_section = (
+            "<section><h3>Archived materials</h3>"
+            "<table><thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Action</th></tr></thead><tbody>"
+            f"{archived_rows}"
+            "</tbody></table></section>"
+            if archived_only and show_archived
+            else ""
+        )
+        return (
+            f"{filter_nav}"
+            f"{active_section}"
+            f"{archived_section}"
         )
 
     def _render_material_row(self, *, material, edit_material_id: str | None) -> str:
@@ -381,7 +446,14 @@ class AppShell:
             f"<td>{material.stock_on_hand}</td>"
             f"<td>{material.reorder_point}</td>"
             f"<td><strong>{'⚠️ Low stock' if material.is_low_stock else '✅ Healthy'}</strong></td>"
-            f"<td><a href='/make-buy?edit={material.material_id}'>Edit</a></td>"
+            "<td>"
+            f"<a href='/make-buy?view=active&edit={material.material_id}'>Edit</a> "
+            "<form method='post' action='/make-buy' style='display:inline'>"
+            "<input type='hidden' name='action' value='archive'>"
+            f"<input type='hidden' name='material_id' value='{material.material_id}'>"
+            "<button type='submit'>Archive</button>"
+            "</form>"
+            "</td>"
             "</tr>"
         )
 
@@ -410,9 +482,15 @@ class AppShell:
                 edit_product_id=edit_product_id,
             )
         if page_title == "Make / Buy" and authorization_header is not None:
+            view = "active"
+            if query is not None:
+                requested_view = query.get("view", ["active"])[0]
+                if requested_view in {"active", "archived", "all"}:
+                    view = requested_view
             edit_material_id = query.get("edit", [None])[0] if query is not None else None
             page_content = self._render_materials_page(
                 authorization_header=authorization_header,
+                view=view,
                 edit_material_id=edit_material_id,
             )
 
