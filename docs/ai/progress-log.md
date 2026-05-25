@@ -515,3 +515,29 @@ Notes:
 
 Follow-up:
 - Milestone 2.2 appears functionally complete for scoped CRUD/UX acceptance criteria.
+
+
+### 2026-05-25 — Milestone 2.3 continuation (can-make service/UI + journey expansion)
+
+Branch/PR/Issue:
+- local milestone 2.3 continuation update
+
+Completed:
+- Added `RecipeService.can_make_quantity` and integrated bottleneck-based recipe capacity calculation.
+- Updated recipe UI rendering to show per-product “Can make now” and to respect planned quantity query for materials-needed output.
+- Added recipe service regression tests for limiting-material can-make behavior and non-mutating stock behavior.
+- Expanded Milestone 2.3 journey test to assert can-make visibility and planned-quantity materials-needed output.
+- Updated milestone implementation report for this continuation slice.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Dev dependency install remains constrained by package-index access in this environment; existing installed pytest executed full suite successfully.
+
+Follow-up:
+- Continue Milestone 2.3 remaining polish/edge cases if requested, then transition milestone status when ready.

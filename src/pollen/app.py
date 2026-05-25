@@ -235,6 +235,7 @@ class AppShell:
         authorization_header: str,
         view: str = "active",
         edit_product_id: str | None = None,
+        query: dict[str, list[str]] | None = None,
     ) -> str:
         products = self._product_service.list_products(authorization_header=authorization_header)
         archived_products = self._product_service.list_products(
@@ -324,7 +325,7 @@ class AppShell:
             "</tr></thead><tbody>"
             f"{rows}"
             "</tbody></table>"
-            f"{self._render_recipe_management(authorization_header=authorization_header)}"
+            f"{self._render_recipe_management(authorization_header=authorization_header, query=query)}"
             "</section>"
             if show_active
             else ""
@@ -386,6 +387,7 @@ class AppShell:
         authorization_header: str,
         view: str = "active",
         edit_material_id: str | None = None,
+        query: dict[str, list[str]] | None = None,
     ) -> str:
         materials = self._material_service.list_materials(authorization_header=authorization_header)
         archived_materials = self._material_service.list_materials(
@@ -445,7 +447,7 @@ class AppShell:
             "<table><thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th></tr></thead><tbody>"
             f"{rows}"
             "</tbody></table>"
-            f"{self._render_recipe_management(authorization_header=authorization_header)}"
+            f"{self._render_recipe_management(authorization_header=authorization_header, query=query)}"
             "</section>"
             if show_active
             else ""
@@ -505,16 +507,28 @@ class AppShell:
         )
 
 
-    def _render_recipe_management(self, *, authorization_header: str) -> str:
+    def _render_recipe_management(self, *, authorization_header: str, query: dict[str, list[str]] | None = None) -> str:
         products = self._product_service.list_products(authorization_header=authorization_header)
         materials = self._material_service.list_materials(authorization_header=authorization_header)
+        requested_product = query.get("materials_needed_for", [""])[0] if query is not None else ""
+        requested_quantity = query.get("quantity", ["1"])[0] if query is not None else "1"
+        try:
+            calculation_quantity = max(1, int(requested_quantity))
+        except ValueError:
+            calculation_quantity = 1
+
         sections: list[str] = ["<section><h3>Product recipes</h3>"]
         for product in products:
             rows = self._recipe_service.list_recipe_items(authorization_header=authorization_header, product_id=product.product_id)
+            can_make = self._recipe_service.can_make_quantity(
+                authorization_header=authorization_header,
+                product_id=product.product_id,
+            )
+            needed_quantity = calculation_quantity if requested_product == product.product_id else 1
             needed = self._recipe_service.materials_needed(
                 authorization_header=authorization_header,
                 product_id=product.product_id,
-                quantity=1,
+                quantity=needed_quantity,
             )
             item_rows = "".join(
                 "<li>"
@@ -529,7 +543,7 @@ class AppShell:
                 f"<option value='{material.material_id}'>{material.name}</option>" for material in materials
             )
             sections.append(
-                f"<article><h4>{product.name} recipe</h4>"
+                f"<article><h4>{product.name} recipe</h4><p>Can make now: {can_make} units</p>"
                 "<form method='post' action='/products-stock'>"
                 "<input type='hidden' name='action' value='create_recipe_item'>"
                 f"<input type='hidden' name='product_id' value='{product.product_id}'>"
@@ -539,7 +553,7 @@ class AppShell:
                 f"<ul>{item_rows}</ul>"
                 "<form method='get' action='/products-stock'>"
                 f"<input type='hidden' name='materials_needed_for' value='{product.product_id}'>"
-                "<label>Plan quantity <input name='quantity' type='number' min='1' value='1'></label>"
+                f"<label>Plan quantity <input name='quantity' type='number' min='1' value='{needed_quantity}'></label>"
                 "<button type='submit'>Calculate materials needed</button></form></article>"
             )
         sections.append("</section>")
@@ -568,6 +582,7 @@ class AppShell:
                 authorization_header=authorization_header,
                 view=view,
                 edit_product_id=edit_product_id,
+                query=query,
             )
         if page_title == "Make / Buy" and authorization_header is not None:
             view = "active"
@@ -580,6 +595,7 @@ class AppShell:
                 authorization_header=authorization_header,
                 view=view,
                 edit_material_id=edit_material_id,
+                query=query,
             )
 
         return (
