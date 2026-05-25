@@ -38,3 +38,10 @@ def test_recipe_management_and_materials_needed_journey() -> None:
     updated = app.get("/products-stock", authorization_header=header)
     assert "Wax: 3 g" in updated.body
     assert "Calculate materials needed" in updated.body
+    assert "Can make now: 6 units" in updated.body
+
+    planned = app.get("/products-stock?materials_needed_for=prd-1&quantity=4", authorization_header=header)
+    assert "Wax: 12 g" in planned.body
+
+    products_page = app.get("/products-stock", authorization_header=header)
+    assert "<td>4</td>" in products_page.body

@@ -235,6 +235,25 @@ class RecipeService:
             })
         return rows
 
+    def can_make_quantity(self, *, authorization_header: str | None, product_id: str) -> int:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return 0
+        recipe_items = self._recipe_repository.list_for_product(shop_id=context.shop.shop_id, product_id=product_id)
+        if not recipe_items:
+            return 0
+
+        max_by_material: list[int] = []
+        for item in recipe_items:
+            material = self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=item.material_id)
+            if material is None or item.quantity_per_unit <= 0:
+                continue
+            max_by_material.append(material.stock_on_hand // item.quantity_per_unit)
+
+        if not max_by_material:
+            return 0
+        return min(max_by_material)
+
 
 class MaterialService:
     """CRUD operations for shop-scoped materials."""

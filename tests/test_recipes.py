@@ -84,3 +84,35 @@ def test_recipe_validation_and_shop_isolation() -> None:
     )
     assert created is not None
     assert recipe_service.archive_recipe_item(authorization_header=other, recipe_item_id=created.recipe_item_id) is None
+
+
+def test_can_make_quantity_uses_limiting_material_and_does_not_change_product_stock() -> None:
+    auth = _auth_header("owner3", "owner3@example.com")
+    product_repo = ProductRepository()
+    material_repo = MaterialRepository()
+    recipe_repo = RecipeRepository()
+
+    product_service = ProductService(product_repository=product_repo)
+    material_service = MaterialService(material_repository=material_repo)
+    recipe_service = RecipeService(
+        product_repository=product_repo,
+        material_repository=material_repo,
+        recipe_repository=recipe_repo,
+    )
+
+    product = product_service.create_product(
+        authorization_header=auth,
+        name="Body Butter",
+        sku="BB-1",
+        stock_on_hand=12,
+        reorder_point=3,
+    )
+    wax = material_service.create_material(authorization_header=auth, name="Wax", unit="g", stock_on_hand=20, reorder_point=4)
+    oil = material_service.create_material(authorization_header=auth, name="Oil", unit="ml", stock_on_hand=15, reorder_point=4)
+    assert product is not None and wax is not None and oil is not None
+
+    recipe_service.create_recipe_item(authorization_header=auth, product_id=product.product_id, material_id=wax.material_id, quantity_per_unit=3)
+    recipe_service.create_recipe_item(authorization_header=auth, product_id=product.product_id, material_id=oil.material_id, quantity_per_unit=5)
+
+    assert recipe_service.can_make_quantity(authorization_header=auth, product_id=product.product_id) == 3
+    assert product_service.get_product(authorization_header=auth, product_id=product.product_id).stock_on_hand == 12
