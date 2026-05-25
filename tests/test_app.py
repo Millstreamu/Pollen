@@ -166,8 +166,9 @@ def test_products_page_renders_forms_for_create_and_archive_actions() -> None:
 
     assert response.status_code == 200
     assert "<input type='hidden' name='action' value='create'>" in response.body
-    assert "<input type='hidden' name='action' value='edit'>" in response.body
-    assert "Edit name <input name='name' value='Jar'" in response.body
+    assert "Edit</a>" in response.body
+    assert "<td>10</td>" in response.body
+    assert "<td>2</td>" in response.body
     assert "type='number' min='0'" in response.body
     assert "<button type='submit'>Archive</button>" in response.body
 
@@ -370,3 +371,26 @@ def test_products_ui_renders_bulk_action_controls() -> None:
     assert "value='bulk_archive'" in response.body
     assert "value='bulk_restore'" in response.body
     assert "<th>Select</th><th>ID</th>" in response.body
+
+
+def test_products_ui_detail_edit_mode_shows_all_editable_fields() -> None:
+    header = _auth_header("owner10", "owner10@example.com")
+    product_service = ProductService()
+    created = product_service.create_product(
+        authorization_header=header,
+        name="Detail Candle",
+        sku="DTL-001",
+        stock_on_hand=11,
+        reorder_point=6,
+    )
+    assert created is not None
+    app = AppShell(product_service=product_service)
+
+    response = app.get(f"/products-stock?view=active&edit={created.product_id}", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "Save all fields" in response.body
+    assert "name='name' value='Detail Candle'" in response.body
+    assert "name='sku' value='DTL-001'" in response.body
+    assert "name='stock_on_hand' type='number' min='0' value='11'" in response.body
+    assert "name='reorder_point' type='number' min='0' value='6'" in response.body

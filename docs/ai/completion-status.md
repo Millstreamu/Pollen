@@ -3,16 +3,16 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 1.2 — Managed Auth and Shop Ownership  
-Status: release-candidate
+Name: Milestone 2.1 — Products CRUD  
+Status: complete
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Logged-out users cannot access private pages.
-- [x] Logged-in user gets or creates a shop.
-- [x] Records are scoped by `shop_id` (persistence-backed order path).
-- [x] User cannot access another shop’s records.
+- [x] Product create works with server-side shop scoping.
+- [x] Product list/detail/update/archive/restore flows are implemented.
+- [x] Product page supports row-level view/edit with stock/reorder visibility.
+- [x] Low-stock status is visible in product UI and tested.
 
 ## Required Verification Checklist
 - [x] Typecheck
@@ -25,7 +25,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable
 
 ## Remaining Required Work
-Milestone 1.2 promoted to release-candidate after clean validation pass on 2026-05-25.
+Milestone 2.1 marked complete on 2026-05-25 after product detail-flow polish and full local test pass (34 passed).
 
 ## Optional Post-Milestone Work
 None yet.
