@@ -97,8 +97,72 @@ def test_products_page_renders_product_table_and_low_stock_status() -> None:
     response = app.get("/products-stock", authorization_header=header)
 
     assert response.status_code == 200
-    assert "<th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th>" in response.body
+    assert "<th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th>" in response.body
     assert "Healthy Candle" in response.body
     assert "Low Candle" in response.body
     assert "Healthy" in response.body
     assert "Low stock" in response.body
+
+
+def test_products_ui_create_edit_archive_interactions() -> None:
+    header = _auth_header("owner2", "owner2@example.com")
+    product_service = ProductService()
+    app = AppShell(product_service=product_service)
+
+    create_response = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={
+            "action": "create",
+            "name": "Wax Melt",
+            "sku": "WAX-001",
+            "stock_on_hand": "9",
+            "reorder_point": "4",
+        },
+    )
+    assert create_response.status_code == 200
+    assert "Wax Melt" in create_response.body
+
+    product_id = product_service.list_products(authorization_header=header)[0].product_id
+    edit_response = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={
+            "action": "edit",
+            "product_id": product_id,
+            "name": "Wax Melt Deluxe",
+            "sku": "WAX-001-DX",
+            "stock_on_hand": "2",
+            "reorder_point": "4",
+        },
+    )
+    assert edit_response.status_code == 200
+    assert "Wax Melt Deluxe" in edit_response.body
+    assert "Low stock" in edit_response.body
+
+    archive_response = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={"action": "archive", "product_id": product_id},
+    )
+    assert archive_response.status_code == 200
+    assert "No products yet. Add your first product to start tracking stock." in archive_response.body
+
+
+def test_products_page_renders_forms_for_create_and_archive_actions() -> None:
+    header = _auth_header("owner3", "owner3@example.com")
+    product_service = ProductService()
+    product_service.create_product(
+        authorization_header=header,
+        name="Jar",
+        sku="JAR-001",
+        stock_on_hand=10,
+        reorder_point=2,
+    )
+    app = AppShell(product_service=product_service)
+
+    response = app.get("/products-stock", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "<input type='hidden' name='action' value='create'>" in response.body
+    assert "<button type='submit'>Archive</button>" in response.body

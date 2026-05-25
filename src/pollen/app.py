@@ -60,29 +60,94 @@ class AppShell:
             body=self.render_page(page_title, authorization_header=authorization_header),
         )
 
+    def post(
+        self,
+        path: str,
+        *,
+        authorization_header: str | None = None,
+        form_data: dict[str, str] | None = None,
+    ) -> AppResponse:
+        if path != "/products-stock":
+            return AppResponse(status_code=404, body="Not Found")
+        if self._auth_service.resolve_context(authorization_header) is None:
+            return AppResponse(status_code=401, body="Unauthorized")
+
+        payload = form_data or {}
+        action = payload.get("action")
+        if action == "create":
+            self._product_service.create_product(
+                authorization_header=authorization_header,
+                name=payload.get("name", ""),
+                sku=payload.get("sku", ""),
+                stock_on_hand=int(payload.get("stock_on_hand", "0")),
+                reorder_point=int(payload.get("reorder_point", "0")),
+            )
+        elif action == "edit":
+            product_id = payload.get("product_id")
+            if product_id is not None:
+                self._product_service.update_product(
+                    authorization_header=authorization_header,
+                    product_id=product_id,
+                    name=payload.get("name", ""),
+                    sku=payload.get("sku", ""),
+                    stock_on_hand=int(payload.get("stock_on_hand", "0")),
+                    reorder_point=int(payload.get("reorder_point", "0")),
+                )
+        elif action == "archive":
+            product_id = payload.get("product_id")
+            if product_id is not None:
+                self._product_service.archive_product(
+                    authorization_header=authorization_header,
+                    product_id=product_id,
+                )
+
+        return self.get(path, authorization_header=authorization_header)
+
 
     def _render_products_page(self, *, authorization_header: str) -> str:
         products = self._product_service.list_products(authorization_header=authorization_header)
+        create_form = (
+            "<section><h3>Create product</h3>"
+            "<form method='post' action='/products-stock'>"
+            "<input type='hidden' name='action' value='create'>"
+            "<label>Name <input name='name'></label>"
+            "<label>SKU <input name='sku'></label>"
+            "<label>Stock <input name='stock_on_hand'></label>"
+            "<label>Reorder <input name='reorder_point'></label>"
+            "<button type='submit'>Create</button>"
+            "</form></section>"
+        )
         if not products:
             return (
                 "<section><h2>Products</h2>"
-                "<p>No products yet. Add your first product to start tracking stock.</p></section>"
+                "<p>No products yet. Add your first product to start tracking stock.</p>"
+                f"{create_form}</section>"
             )
 
         rows = "".join(
             "<tr>"
+            f"<td>{product.product_id}</td>"
             f"<td>{product.name}</td>"
             f"<td>{product.sku}</td>"
             f"<td>{product.stock_on_hand}</td>"
             f"<td>{product.reorder_point}</td>"
             f"<td>{'Low stock' if product.is_low_stock else 'Healthy'}</td>"
+            "<td>"
+            "<form method='post' action='/products-stock'>"
+            "<input type='hidden' name='action' value='archive'>"
+            f"<input type='hidden' name='product_id' value='{product.product_id}'>"
+            "<button type='submit'>Archive</button>"
+            "</form>"
+            "</td>"
             "</tr>"
             for product in products
         )
         return (
             "<section><h2>Products</h2>"
+            "<p>Manage products with create, edit, and archive interactions.</p>"
+            f"{create_form}"
             "<table><thead><tr>"
-            "<th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th>"
+            "<th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th>"
             "</tr></thead><tbody>"
             f"{rows}"
             "</tbody></table></section>"
