@@ -259,8 +259,9 @@ class AppShell:
             else ""
         )
 
-        show_active = view in {"active", "all"}
-        show_archived = view in {"archived", "all"}
+        normalized_view = view if view in {"active", "archived", "all"} else "active"
+        show_active = normalized_view in {"active", "all"}
+        show_archived = normalized_view in {"archived", "all"}
 
         bulk_actions = (
             "<section><h3>Bulk actions</h3>"
@@ -391,8 +392,9 @@ class AppShell:
             "<li><a href='/make-buy?view=all'>All</a></li>"
             "</ul></nav>"
         )
-        show_active = view in {"active", "all"}
-        show_archived = view in {"archived", "all"}
+        normalized_view = view if view in {"active", "archived", "all"} else "active"
+        show_active = normalized_view in {"active", "all"}
+        show_archived = normalized_view in {"archived", "all"}
         active_section = (
             "<section><h2>Materials</h2>"
             "<p>Manage materials with simple create, per-row edit, archive, and restore controls.</p>"

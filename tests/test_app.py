@@ -483,3 +483,57 @@ def test_make_buy_ui_archive_restore_and_filter_views() -> None:
 
     all_view = app.get("/make-buy?view=all", authorization_header=header)
     assert "Archived Wax" in all_view.body
+
+def test_make_buy_ui_invalid_view_defaults_to_active_content() -> None:
+    header = _auth_header("mat4", "mat4@example.com")
+    app = create_app()
+
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "create",
+            "name": "Default View Wax",
+            "unit": "kg",
+            "stock_on_hand": "5",
+            "reorder_point": "2",
+        },
+    )
+
+    response = app.get("/make-buy?view=unexpected", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "Default View Wax" in response.body
+    assert "<h2>Materials</h2>" in response.body
+
+
+def test_make_buy_ui_edit_ignores_unknown_material_id_without_crashing() -> None:
+    header = _auth_header("mat5", "mat5@example.com")
+    app = create_app()
+
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "create",
+            "name": "Known Material",
+            "unit": "each",
+            "stock_on_hand": "9",
+            "reorder_point": "3",
+        },
+    )
+
+    response = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "edit",
+            "material_id": "mat-999",
+            "name": "Should Not Apply",
+            "stock_on_hand": "0",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Known Material" in response.body
+    assert "Should Not Apply" not in response.body
