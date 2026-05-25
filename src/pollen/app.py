@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from pollen.auth import AuthService
+from pollen.services import ProductService
 
 NAV_ITEMS: tuple[tuple[str, str], ...] = (
     ("Today", "/"),
@@ -37,9 +38,14 @@ class AppShell:
         "Settings": "Shop settings and preferences will appear here.",
     }
 
-    def __init__(self, auth_service: AuthService | None = None) -> None:
+    def __init__(
+        self,
+        auth_service: AuthService | None = None,
+        product_service: ProductService | None = None,
+    ) -> None:
         self._routes = {url: title for title, url in NAV_ITEMS}
         self._auth_service = auth_service or AuthService()
+        self._product_service = product_service or ProductService(auth_service=self._auth_service)
 
     def get(self, path: str, *, authorization_header: str | None = None) -> AppResponse:
         if path in PRIVATE_ROUTES and self._auth_service.resolve_context(authorization_header) is None:
@@ -49,13 +55,46 @@ class AppShell:
         if page_title is None:
             return AppResponse(status_code=404, body="Not Found")
 
-        return AppResponse(status_code=200, body=self.render_page(page_title))
+        return AppResponse(
+            status_code=200,
+            body=self.render_page(page_title, authorization_header=authorization_header),
+        )
 
-    def render_page(self, page_title: str) -> str:
+
+    def _render_products_page(self, *, authorization_header: str) -> str:
+        products = self._product_service.list_products(authorization_header=authorization_header)
+        if not products:
+            return (
+                "<section><h2>Products</h2>"
+                "<p>No products yet. Add your first product to start tracking stock.</p></section>"
+            )
+
+        rows = "".join(
+            "<tr>"
+            f"<td>{product.name}</td>"
+            f"<td>{product.sku}</td>"
+            f"<td>{product.stock_on_hand}</td>"
+            f"<td>{product.reorder_point}</td>"
+            f"<td>{'Low stock' if product.is_low_stock else 'Healthy'}</td>"
+            "</tr>"
+            for product in products
+        )
+        return (
+            "<section><h2>Products</h2>"
+            "<table><thead><tr>"
+            "<th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th>"
+            "</tr></thead><tbody>"
+            f"{rows}"
+            "</tbody></table></section>"
+        )
+    def render_page(self, page_title: str, *, authorization_header: str | None = None) -> str:
         nav_links = "".join(
             f'<li><a href="{href}">{label}</a></li>' for label, href in NAV_ITEMS
         )
         page_description = self._DESCRIPTIONS[page_title]
+        page_content = f"<p>{page_description}</p>"
+        if page_title == "Products & Stock" and authorization_header is not None:
+            page_content = self._render_products_page(authorization_header=authorization_header)
 
         return (
             "<!doctype html>"
@@ -72,7 +111,7 @@ class AppShell:
             f"{nav_links}"
             "</ul></nav>"
             "</header>"
-            f"<main><h1>{page_title}</h1><p>{page_description}</p></main>"
+            f"<main><h1>{page_title}</h1>{page_content}</main>"
             "</body>"
             "</html>"
         )

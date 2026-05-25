@@ -192,3 +192,27 @@ Notes:
 
 Follow-up:
 - Perform milestone closeout/stabilisation pass and status transition when requested.
+
+### 2026-05-25 — Milestone 2.1 UI product page slice
+
+Branch/PR/Issue:
+- local milestone UI slice update
+
+Completed:
+- Replaced `/products-stock` placeholder content with a simple products table powered by existing `ProductService`.
+- Added empty-state message when no products are present.
+- Added UI tests covering empty and populated product page rendering, including low-stock status display.
+- Added startup and implementation reports for this UI slice.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Existing environment already had usable pytest installation; full test suite passed.
+
+Follow-up:
+- Implement create/edit/archive product UI flows in later Milestone 2.1 slices.
