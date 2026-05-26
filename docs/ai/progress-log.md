@@ -5,10 +5,10 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 ## Current Status
 Project phase: Phase 1 — App Foundation  
 Current milestone: Milestone 2.4 — Manual Stock Adjustment (in-progress)  
-Overall status: Milestone 2.4 implementation has been reconciled and milestone is now in stabilising status pending release-candidate validation/sign-off.
+Overall status: Milestone 2.4 release-candidate validation/sign-off has been completed; milestone is now in `release-candidate` status pending final completion decision.
 
 ## Latest Summary
-Milestone 2.4 status/reconciliation update completed on 2026-05-26 with full compile/test evidence in current environment; dependency install is partially environment-limited by index/proxy 403 responses for `pytest==8.4.2`.
+Milestone 2.4 release-candidate validation/sign-off completed on 2026-05-26 with compile/tests passing (`52 passed`) and status transitioned from `stabilising` to `release-candidate`.
 
 ## Entry Format
 
@@ -34,6 +34,31 @@ Follow-up:
 ## Entries
 
 Add entries below.
+
+
+
+### 2026-05-26 — Milestone 2.4 release-candidate validation + sign-off
+
+Branch/PR/Issue:
+- local milestone release-candidate sign-off update
+
+Completed:
+- Executed Milestone 2.4 release-candidate validation pass in current environment.
+- Confirmed compile check and full test suite pass with no regressions (`52 passed`).
+- Transitioned Milestone 2.4 status from `stabilising` to `release-candidate`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`52 passed`)
+
+Notes:
+- This slice is release-validation/sign-off tracking only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Perform final release decision and move Milestone 2.4 to `complete` when requested.
 
 
 ### 2026-05-26 — Milestone 2.4 reconciliation + stabilising status transition
