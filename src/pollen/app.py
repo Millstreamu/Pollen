@@ -10,7 +10,7 @@ from pollen.inventory import ActivityLogRepository, InventoryMovementRepository
 from pollen.materials import MaterialRepository
 from pollen.products import ProductRepository
 from pollen.recipes import RecipeRepository
-from pollen.services import MaterialService, ProductService, RecipeService
+from pollen.services import MaterialService, OrderService, ProductService, RecipeService
 
 NAV_ITEMS: tuple[tuple[str, str], ...] = (
     ("Today", "/"),
@@ -72,6 +72,13 @@ class AppShell:
             product_repository=product_repository,
             material_repository=material_repository,
         )
+        order_product_repository = product_repository
+        if product_service is not None:
+            order_product_repository = product_service._product_repository  # noqa: SLF001
+        self._order_service = OrderService(
+            auth_service=self._auth_service,
+            product_repository=order_product_repository,
+        )
 
     def get(self, path: str, *, authorization_header: str | None = None) -> AppResponse:
         parsed_path = urlsplit(path)
@@ -97,13 +104,15 @@ class AppShell:
         authorization_header: str | None = None,
         form_data: dict[str, str] | None = None,
     ) -> AppResponse:
-        if path not in {"/products-stock", "/make-buy"}:
+        if path not in {"/products-stock", "/make-buy", "/orders"}:
             return AppResponse(status_code=404, body="Not Found")
         if self._auth_service.resolve_context(authorization_header) is None:
             return AppResponse(status_code=401, body="Unauthorized")
 
         if path == "/make-buy":
             return self._handle_material_post(authorization_header=authorization_header, form_data=form_data)
+        if path == "/orders":
+            return self._handle_order_post(authorization_header=authorization_header, form_data=form_data)
 
         payload = form_data or {}
         action = payload.get("action")
@@ -256,6 +265,22 @@ class AppShell:
                 )
 
         return self.get("/make-buy", authorization_header=authorization_header)
+
+    def _handle_order_post(self, *, authorization_header: str, form_data: dict[str, str] | None) -> AppResponse:
+        payload = form_data or {}
+        created = self._order_service.create_order(
+            authorization_header=authorization_header,
+            customer_name=payload.get("customer_name", ""),
+            items=[
+                {
+                    "product_sku": payload.get("product_sku", ""),
+                    "quantity": payload.get("quantity", "0"),
+                }
+            ],
+        )
+        if created is None:
+            return AppResponse(status_code=400, body="Invalid order payload")
+        return self.get("/orders", authorization_header=authorization_header)
 
 
     def _render_products_page(
@@ -625,6 +650,23 @@ class AppShell:
                 view=view,
                 edit_material_id=edit_material_id,
                 query=query,
+            )
+        if page_title == "Orders" and authorization_header is not None:
+            orders = self._order_service.list_orders(authorization_header=authorization_header)
+            rows = "".join(
+                f"<tr><td>{o.order_id}</td><td>{o.customer_name}</td><td>{o.source}</td><td>{o.status}</td></tr>"
+                for o in orders
+            )
+            page_content = (
+                "<section><h3>Create order</h3>"
+                "<form method='post' action='/orders'>"
+                "<label>Customer <input name='customer_name' required></label>"
+                "<label>Product SKU <input name='product_sku' required></label>"
+                "<label>Quantity <input type='number' min='1' name='quantity' required></label>"
+                "<button type='submit'>Create order</button></form></section>"
+                "<section><h3>Orders</h3>"
+                "<table><thead><tr><th>ID</th><th>Customer</th><th>Source</th><th>Status</th></tr></thead>"
+                f"<tbody>{rows}</tbody></table></section>"
             )
 
         return (

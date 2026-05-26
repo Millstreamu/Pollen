@@ -5,7 +5,7 @@ from __future__ import annotations
 from pollen.auth import AuthService
 from pollen.inventory import ActivityLogRepository, InventoryMovementRepository
 from pollen.materials import MaterialRecord, MaterialRepository
-from pollen.orders import OrderRecord, OrderRepository
+from pollen.orders import OrderItemRecord, OrderRecord, OrderRepository
 from pollen.products import ProductRecord, ProductRepository
 from pollen.recipes import RecipeItemRecord, RecipeRepository
 
@@ -18,16 +18,18 @@ class OrderService:
         *,
         auth_service: AuthService | None = None,
         order_repository: OrderRepository | None = None,
+        product_repository: ProductRepository | None = None,
     ) -> None:
         self._auth_service = auth_service or AuthService()
         self._order_repository = order_repository or OrderRepository()
+        self._product_repository = product_repository or ProductRepository()
 
     def create_order(
         self,
         *,
         authorization_header: str | None,
-        product_sku: str,
-        quantity: int,
+        customer_name: str,
+        items: list[dict[str, int | str]],
         requested_shop_id: str | None = None,
     ) -> OrderRecord | None:
         """Create order for current authenticated shop.
@@ -37,14 +39,37 @@ class OrderService:
         """
         _ = requested_shop_id
         context = self._auth_service.resolve_context(authorization_header)
-        if context is None:
+        if context is None or not customer_name.strip() or not items:
             return None
 
-        return self._order_repository.create(
+        normalized_items: list[tuple[str, int]] = []
+        status = "ready_to_pack"
+        for item in items:
+            sku = str(item.get("product_sku", "")).strip()
+            quantity = int(item.get("quantity", 0))
+            if not sku or quantity <= 0:
+                return None
+            normalized_items.append((sku, quantity))
+            product = self._product_repository_by_sku(context.shop.shop_id, sku)
+            if product is None or product.stock_on_hand < quantity:
+                status = "waiting_on_stock"
+
+        created = self._order_repository.create(
             shop_id=context.shop.shop_id,
-            product_sku=product_sku,
-            quantity=quantity,
+            customer_name=customer_name.strip(),
+            source="manual",
+            status=status,
         )
+        for sku, quantity in normalized_items:
+            added = self._order_repository.add_item(
+                order_id=created.order_id,
+                shop_id=context.shop.shop_id,
+                product_sku=sku,
+                quantity=quantity,
+            )
+            if added is None:
+                return None
+        return created
 
     def list_orders(self, *, authorization_header: str | None) -> list[OrderRecord]:
         context = self._auth_service.resolve_context(authorization_header)
@@ -59,6 +84,21 @@ class OrderService:
             return None
 
         return self._order_repository.get_for_shop(shop_id=context.shop.shop_id, order_id=order_id)
+
+    def list_order_items(self, *, authorization_header: str | None, order_id: str) -> list[OrderItemRecord]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return []
+        if self._order_repository.get_for_shop(shop_id=context.shop.shop_id, order_id=order_id) is None:
+            return []
+        return self._order_repository.list_items_for_order(shop_id=context.shop.shop_id, order_id=order_id)
+
+    def _product_repository_by_sku(self, shop_id: str, sku: str) -> ProductRecord | None:
+        products = self._product_repository.list_for_shop(shop_id=shop_id, include_archived=False)
+        for product in products:
+            if product.sku == sku:
+                return product
+        return None
 
 
 class ProductService:
