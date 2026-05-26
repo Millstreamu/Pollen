@@ -4,30 +4,30 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 2.4 — Manual Stock Adjustment  
-Status: in-progress
+Status: stabilising
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [ ] Product stock can be manually adjusted.
-- [ ] Material stock can be manually adjusted.
-- [ ] Adjustment reason is required.
-- [ ] Inventory movement records are created for adjustments.
-- [ ] Activity log records are created for adjustments.
-- [ ] Negative stock is blocked by default.
+- [x] Product stock can be manually adjusted.
+- [x] Material stock can be manually adjusted.
+- [x] Adjustment reason is required.
+- [x] Inventory movement records are created for adjustments.
+- [x] Activity log records are created for adjustments.
+- [x] Negative stock is blocked by default.
 
 ## Required Verification Checklist
-- [ ] Typecheck
-- [ ] Lint
-- [ ] Unit tests
-- [ ] Relevant service/integration tests
-- [ ] Journey tests if applicable
-- [ ] Build
-- [ ] Environment-specific checks or exceptions documented
+- [x] Typecheck *(Python compile check used in current repo flow)*
+- [ ] Lint *(no repo lint command currently defined)*
+- [x] Unit tests
+- [x] Relevant service/integration tests
+- [x] Journey tests if applicable
+- [x] Build *(compile check: `python -m compileall -q src tests`)*
+- [x] Environment-specific checks or exceptions documented
 - [ ] Release smoke test if applicable
 
 ## Remaining Required Work
-Milestone 2.3 is complete following human sign-off. Next step is implementing Milestone 2.4 according to roadmap scope and acceptance criteria.
+Milestone 2.4 implementation scope is delivered and reconciled with project memory. Next step is Milestone 2.4 release-candidate validation/sign-off flow.
 
 ## Optional Post-Milestone Work
 - Any enhancements beyond Milestone 2.4 acceptance criteria should be deferred until milestone completion.
