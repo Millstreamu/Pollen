@@ -4,11 +4,11 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 2.4 — Manual Stock Adjustment (in-progress)  
-Overall status: Milestone 2.4 release-candidate validation/sign-off has been completed; milestone is now in `release-candidate` status pending final completion decision.
+Current milestone: Milestone 2.4 — Manual Stock Adjustment (complete)  
+Overall status: Milestone 2.4 final release decision has been recorded and the milestone is now `complete`.
 
 ## Latest Summary
-Milestone 2.4 release-candidate validation/sign-off completed on 2026-05-26 with compile/tests passing (`52 passed`) and status transitioned from `stabilising` to `release-candidate`.
+Milestone 2.4 completion closeout finalized on 2026-05-26 with compile/tests passing (`52 passed`) and status transitioned from `release-candidate` to `complete`.
 
 ## Entry Format
 
@@ -34,6 +34,29 @@ Follow-up:
 ## Entries
 
 Add entries below.
+
+### 2026-05-26 — Milestone 2.4 completion release decision + closeout
+
+Branch/PR/Issue:
+- local milestone completion closeout update
+
+Completed:
+- Recorded final release decision for Milestone 2.4 after release-candidate validation evidence.
+- Transitioned Milestone 2.4 status from `release-candidate` to `complete`.
+- Updated project progress summary to reflect milestone completion.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with index retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`52 passed`)
+
+Notes:
+- Dev dependency fetch for `pytest==8.4.2` remains blocked by package index/proxy restrictions in this environment, but `pytest` is already available and the full suite passed.
+
+Follow-up:
+- Start Phase 3 planning/implementation beginning with Milestone 3.1 (Manual Order Creation).
 
 
 
