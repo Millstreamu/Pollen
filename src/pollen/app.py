@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from urllib.parse import parse_qs, urlsplit
 
 from pollen.auth import AuthService
+from pollen.inventory import ActivityLogRepository, InventoryMovementRepository
 from pollen.materials import MaterialRepository
 from pollen.products import ProductRepository
 from pollen.recipes import RecipeRepository
@@ -53,13 +54,17 @@ class AppShell:
         product_repository = ProductRepository()
         material_repository = MaterialRepository()
         recipe_repository = RecipeRepository()
+        movement_repository = InventoryMovementRepository()
+        activity_repository = ActivityLogRepository()
         self._product_service = product_service or ProductService(
             auth_service=self._auth_service,
-            product_repository=product_repository,
+            product_repository=product_repository
         )
         self._material_service = material_service or MaterialService(
             auth_service=self._auth_service,
             material_repository=material_repository,
+            movement_repository=movement_repository,
+            activity_repository=activity_repository,
         )
         self._recipe_service = RecipeService(
             auth_service=self._auth_service,
@@ -132,6 +137,14 @@ class AppShell:
                     authorization_header=authorization_header,
                     product_id=product_id,
                 )
+        elif action == "adjust_stock":
+            material_id = payload.get("material_id", "")
+            self._material_service.adjust_material_stock(
+                authorization_header=authorization_header,
+                material_id=material_id,
+                delta=int(payload.get("delta", "0")),
+                reason=payload.get("reason", ""),
+            )
         elif action == "restore":
             product_id = payload.get("product_id")
             if product_id is not None:
@@ -146,6 +159,14 @@ class AppShell:
                     authorization_header=authorization_header,
                     product_id=product_id,
                 )
+        elif action == "adjust_stock":
+            product_id = payload.get("product_id", "")
+            self._product_service.adjust_product_stock(
+                authorization_header=authorization_header,
+                product_id=product_id,
+                delta=int(payload.get("delta", "0")),
+                reason=payload.get("reason", ""),
+            )
         elif action == "bulk_restore":
             selected_ids = payload.get("product_ids", "")
             for product_id in [pid.strip() for pid in selected_ids.split(",") if pid.strip()]:
@@ -218,6 +239,14 @@ class AppShell:
                     authorization_header=authorization_header,
                     material_id=material_id,
                 )
+        elif action == "adjust_stock":
+            material_id = payload.get("material_id", "")
+            self._material_service.adjust_material_stock(
+                authorization_header=authorization_header,
+                material_id=material_id,
+                delta=int(payload.get("delta", "0")),
+                reason=payload.get("reason", ""),
+            )
         elif action == "restore":
             material_id = payload.get("material_id")
             if material_id is not None:
@@ -325,7 +354,7 @@ class AppShell:
             "</tr></thead><tbody>"
             f"{rows}"
             "</tbody></table>"
-            f"{self._render_recipe_management(authorization_header=authorization_header, query=query)}"
+            f"{self._render_recipe_management(authorization_header=authorization_header, query=query)}"f"{self._render_audit_sections(authorization_header=authorization_header)}"
             "</section>"
             if show_active
             else ""
@@ -447,7 +476,7 @@ class AppShell:
             "<table><thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th></tr></thead><tbody>"
             f"{rows}"
             "</tbody></table>"
-            f"{self._render_recipe_management(authorization_header=authorization_header, query=query)}"
+            f"{self._render_recipe_management(authorization_header=authorization_header, query=query)}"f"{self._render_audit_sections(authorization_header=authorization_header)}"
             "</section>"
             if show_active
             else ""
@@ -618,6 +647,13 @@ class AppShell:
             "</html>"
         )
 
+
+    def _render_audit_sections(self, *, authorization_header: str) -> str:
+        movements = self._material_service.list_inventory_movements(authorization_header=authorization_header)
+        activities = self._material_service.list_activity_logs(authorization_header=authorization_header)
+        movement_rows = ''.join(f'<li>{m.item_type}:{m.item_id} {m.before_quantity}->{m.after_quantity} ({m.reason})</li>' for m in movements)
+        activity_rows = ''.join(f'<li>{a.entity_type}:{a.entity_id} {a.message}</li>' for a in activities)
+        return f"<section><h3>Inventory movements</h3><ul>{movement_rows}</ul><h3>Activity log</h3><ul>{activity_rows}</ul></section>"
 
 def create_app() -> AppShell:
     """Create the app shell with milestone auth enforcement."""
