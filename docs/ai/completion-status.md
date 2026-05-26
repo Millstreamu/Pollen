@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 2.4 — Manual Stock Adjustment  
-Status: stabilising
+Status: release-candidate
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -27,7 +27,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable
 
 ## Remaining Required Work
-Milestone 2.4 implementation scope is delivered and reconciled with project memory. Next step is Milestone 2.4 release-candidate validation/sign-off flow.
+Milestone 2.4 is now in `release-candidate` status after validation/sign-off. Await final release decision to transition to `complete`.
 
 ## Optional Post-Milestone Work
 - Any enhancements beyond Milestone 2.4 acceptance criteria should be deferred until milestone completion.
