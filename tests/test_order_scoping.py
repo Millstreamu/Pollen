@@ -10,8 +10,8 @@ def test_create_order_uses_server_resolved_shop_scope() -> None:
 
     created = service.create_order(
         authorization_header=_auth_header("owner", "owner@example.com"),
-        product_sku="SKU-001",
-        quantity=2,
+        customer_name="Owner Customer",
+        items=[{"product_sku": "SKU-001", "quantity": 2}],
         requested_shop_id="shop-attacker",
     )
 
@@ -26,13 +26,13 @@ def test_list_orders_returns_only_current_shop_records() -> None:
 
     owner_order = service.create_order(
         authorization_header=owner_header,
-        product_sku="SKU-001",
-        quantity=1,
+        customer_name="Owner Customer",
+        items=[{"product_sku": "SKU-001", "quantity": 1}],
     )
     other_order = service.create_order(
         authorization_header=other_header,
-        product_sku="SKU-002",
-        quantity=1,
+        customer_name="Other Customer",
+        items=[{"product_sku": "SKU-002", "quantity": 1}],
     )
 
     owner_orders = service.list_orders(authorization_header=owner_header)
@@ -49,8 +49,8 @@ def test_cross_shop_get_denied() -> None:
 
     owner_order = service.create_order(
         authorization_header=owner_header,
-        product_sku="SKU-003",
-        quantity=3,
+        customer_name="Owner Customer",
+        items=[{"product_sku": "SKU-003", "quantity": 3}],
     )
 
     assert owner_order is not None
@@ -61,6 +61,10 @@ def test_cross_shop_get_denied() -> None:
 def test_unauthenticated_order_access_is_denied() -> None:
     service = OrderService()
 
-    assert service.create_order(authorization_header=None, product_sku="SKU-001", quantity=1) is None
+    assert service.create_order(
+        authorization_header=None,
+        customer_name="No Auth",
+        items=[{"product_sku": "SKU-001", "quantity": 1}],
+    ) is None
     assert service.list_orders(authorization_header=None) == []
     assert service.get_order(authorization_header=None, order_id="ord-1") is None
