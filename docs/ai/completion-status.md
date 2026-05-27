@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 3.4 — Cancel Order  
-Status: stabilising
+Status: release-candidate
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -25,7 +25,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable
 
 ## Remaining Required Work
-- Execute Milestone 3.4 release-candidate validation/sign-off and transition to `release-candidate`.
+- Execute Milestone 3.4 completion closeout validation/sign-off and transition to `complete`.
 
 ## Optional Post-Milestone Work
 - UX expansion beyond cancellation core flow remains out of scope unless explicitly requested.
