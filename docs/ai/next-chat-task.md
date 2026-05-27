@@ -1,41 +1,34 @@
-# Next Chat Task — Milestone 4.2 First Vertical Slice Implementation
+# Next Chat Task — Milestone 4.2 Release-Candidate Validation + Sign-off
 
 Use this brief in future chats to continue work without re-planning completed slices.
 
 ## Active Milestone
-- Milestone 4.2 — Start Batch (`in-progress`)
+- Milestone 4.2 — Start Batch (`stabilising`)
 
 ## Objective
-Startup planning and scope lock are complete. Implement the first vertical slice of Milestone 4.2: Start Batch transition behavior.
+Execute release-candidate validation/sign-off for Milestone 4.2 after first-slice implementation and stabilization checks.
 
 ## Scope Lock (current)
 In scope for current next task:
-- implement Start Batch transition for existing planned batches
-- enforce status gate: planned -> in-progress only
-- persist started timestamp and status mutation
-- return clear errors for invalid transitions
-- add/extend tests for success and blocked transitions
-- publish implementation report and update milestone tracking artifacts
+- run full Codex-cloud validation commands
+- confirm Start Batch transition behavior remains regression-safe
+- update milestone status from `stabilising` to `release-candidate` if checks pass
+- publish release-candidate validation report and update milestone tracking artifacts
 
 Out of scope for current slice:
-- Complete Batch stock/material mutation logic (Milestone 4.3)
+- Milestone 4.3 Complete Batch stock/material mutation logic
 - Money module features
 - unrelated UX redesign
-
-## Recommended Implementation Order
-1. Add service/model/app transition logic for Start Batch.
-2. Add tests for valid and invalid transition paths.
-3. Run compile + full test suite.
-4. Publish Milestone 4.2 implementation report and update tracking files.
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
 - `pip install -r requirements.txt`
 - `pip install -r requirements-dev.txt`
 - `python -m compileall -q src tests`
+- `ruff check src tests`
 - `pytest -q`
 
 ## Planning Evidence
 - `docs/ai/reports/milestone-4.2-startup-planning-scope-lock-report-2026-05-27.md`
-- `docs/ai/reports/milestone-4.1-completion-closeout-signoff-2026-05-27.md`
-- `project-roadmap.md`
+- `docs/ai/reports/milestone-4.2-first-vertical-slice-implementation-report-2026-05-27.md`
+- `docs/ai/reports/milestone-4.2-stabilization-validation-report-2026-05-27.md`

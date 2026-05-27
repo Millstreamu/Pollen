@@ -10,7 +10,13 @@ from pollen.inventory import ActivityLogRepository, InventoryMovementRepository
 from pollen.materials import MaterialRepository
 from pollen.products import ProductRepository
 from pollen.recipes import RecipeRepository
-from pollen.services import BatchService, MaterialService, OrderService, ProductService, RecipeService
+from pollen.services import (
+    BatchService,
+    MaterialService,
+    OrderService,
+    ProductService,
+    RecipeService,
+)
 
 NAV_ITEMS: tuple[tuple[str, str], ...] = (
     ("Today", "/"),
@@ -513,11 +519,6 @@ class AppShell:
             "<label>Quantity <input name='quantity' type='number' min='1' required></label>"
             "<button type='submit'>Create batch</button>"
             "</form></section>"
-        )
-        batches = self._batch_service.list_batches(authorization_header=authorization_header)
-        batch_rows = "".join(
-            f"<tr><td>{batch.batch_id}</td><td>{batch.product_id}</td><td>{batch.quantity}</td><td>{batch.status}</td></tr>"
-            for batch in batches
         )
         create_form = (
             "<section><h3>Create material</h3>"
