@@ -9,11 +9,11 @@ Status: in-progress
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [ ] Add Start Batch transition for planned batches.
-- [ ] Enforce valid status transition rules (planned -> in-progress only).
-- [ ] Persist start timestamp/status update.
-- [ ] Block invalid transitions with actionable errors.
-- [ ] Add tests for successful and blocked start transitions.
+- [x] Add Start Batch transition for planned batches.
+- [x] Enforce valid status transition rules (planned -> in-progress only).
+- [x] Persist start timestamp/status update.
+- [x] Block invalid transitions with actionable errors.
+- [x] Add tests for successful and blocked start transitions.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
