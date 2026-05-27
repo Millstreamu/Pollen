@@ -33,6 +33,31 @@ Follow-up:
 
 ## Entries
 
+### 2026-05-27 — Milestone 3.4 startup planning + scope lock report
+
+Branch/PR/Issue:
+- local Milestone 3.4 planning/reporting update
+
+Completed:
+- Executed Milestone 3.4 startup planning and locked cancellation scope boundaries from roadmap criteria.
+- Defined cancellation transition constraints, reservation-release behavior, and implementation touchpoints.
+- Added durable startup planning evidence report for Milestone 3.4.
+- Advanced next-task brief to first vertical implementation slice for cancellation workflow.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 3.4 first vertical slice (cancel transition, reservation release, transition guards, and activity log + tests).
+
+
 ### 2026-05-27 — Milestone 3.3 release validation + completion sign-off
 
 Branch/PR/Issue:

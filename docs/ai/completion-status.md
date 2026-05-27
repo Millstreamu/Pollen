@@ -25,7 +25,6 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable
 
 ## Remaining Required Work
-- Execute Milestone 3.4 startup planning + scope lock report.
 - Implement cancellation workflow slice and tests per roadmap acceptance criteria.
 - Run full Codex-cloud validation pass and progress milestone through release flow.
 
