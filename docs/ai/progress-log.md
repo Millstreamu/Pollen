@@ -62,6 +62,33 @@ Notes:
 Follow-up:
 - Start Milestone 4 startup planning + scope lock for Make/Buy workflow.
 
+Milestone 3.4 completion closeout validation/sign-off is now complete and the milestone is marked `complete`; next focus is Milestone 4 startup planning.
+
+
+### 2026-05-27 — Milestone 3.4 completion closeout validation + sign-off
+
+Branch/PR/Issue:
+- local milestone completion closeout update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 3.4 completion closeout gate.
+- Confirmed cancellation and stock workflows remain regression-safe through compile + full suite checks.
+- Transitioned milestone tracking from `release-candidate` to `complete`.
+- Updated handoff to Milestone 4 startup planning and added durable closeout report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`70 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full test execution succeeded with available tooling.
+
+Follow-up:
+- Start Milestone 4 startup planning + scope lock for Make/Buy workflow.
+
 
 ### 2026-05-27 — Milestone 3.4 release-candidate validation + sign-off
 
