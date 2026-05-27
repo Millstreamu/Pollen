@@ -285,6 +285,14 @@ class AppShell:
             if updated is None:
                 return AppResponse(status_code=400, body="Invalid order transition")
             return self.get("/orders", authorization_header=authorization_header)
+        if action == "cancel":
+            updated = self._order_service.cancel_order(
+                authorization_header=authorization_header,
+                order_id=payload.get("order_id", ""),
+            )
+            if updated is None:
+                return AppResponse(status_code=400, body="Invalid order transition")
+            return self.get("/orders", authorization_header=authorization_header)
 
         created = self._order_service.create_order(
             authorization_header=authorization_header,
@@ -682,7 +690,11 @@ class AppShell:
                 "<form method='post' action='/orders' style='display:inline'>"
                 "<input type='hidden' name='action' value='ship'>"
                 f"<input type='hidden' name='order_id' value='{o.order_id}'>"
-                "<button type='submit'>Ship</button></form>"
+                "<button type='submit'>Ship</button></form> "
+                "<form method='post' action='/orders' style='display:inline'>"
+                "<input type='hidden' name='action' value='cancel'>"
+                f"<input type='hidden' name='order_id' value='{o.order_id}'>"
+                "<button type='submit'>Cancel</button></form>"
                 "</td></tr>"
                 for o in orders
             )
