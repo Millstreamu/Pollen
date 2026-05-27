@@ -4,8 +4,8 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 3.4 — Cancel Order (in-progress)  
-Overall status: Milestone 3.3 is complete after release validation/sign-off; Milestone 3.4 startup is now active.
+Current milestone: Milestone 3.4 — Cancel Order (stabilising)  
+Overall status: Milestone 3.3 is complete after release validation/sign-off; Milestone 3.4 is in stabilising after first-slice validation evidence.
 
 ## Latest Summary
 Milestone 3.3 was released as complete on 2026-05-27; next execution focus shifts to Milestone 3.4 startup.
@@ -36,6 +36,30 @@ Notes:
 Follow-up:
 - Run Milestone 3.4 stabilising and release-candidate validation/sign-off flow when requested.
 
+
+
+### 2026-05-27 — Milestone 3.4 stabilising transition + validation evidence
+
+Branch/PR/Issue:
+- local milestone status/release-flow update
+
+Completed:
+- Reconciled milestone tracking to reflect Milestone 3.4 implementation completion and moved status to `stabilising`.
+- Updated next-task brief to Milestone 3.4 release-candidate validation/sign-off execution.
+- Captured current validation evidence for compile and test checks in Codex cloud.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Validation confirms cancellation workflow remains stable through full regression suite.
+
+Follow-up:
+- Execute Milestone 3.4 release-candidate validation/sign-off and transition status to `release-candidate`.
 ## Entry Format
 
 ```md
@@ -124,7 +148,7 @@ Completed:
 Checks run:
 - `python -m pip install --upgrade pip` — pass
 - `pip install -r requirements.txt` — pass
-- `pip install -r requirements-dev.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
 - `python -m compileall -q src tests` — pass
 - `pytest -q` — pass
 
