@@ -4,11 +4,11 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 3.2 — Stock Reservation (in-progress)  
-Overall status: Milestone 3.2 implementation is in-progress with reservation flow and tests now delivered.
+Current milestone: Milestone 3.2 — Stock Reservation (stabilising)  
+Overall status: Milestone 3.2 implementation is complete and now in stabilising with release-flow validation pending.
 
 ## Latest Summary
-Milestone 3.1 milestone-memory reconciliation finalized on 2026-05-26; tracking files now point to Milestone 3.1 as active and validation checks passed.
+Milestone 3.2 transitioned to stabilising on 2026-05-27 with compile/tests validated; release-candidate transition is next.
 
 ## Entry Format
 
@@ -34,6 +34,29 @@ Follow-up:
 ## Entries
 
 Add entries below.
+
+### 2026-05-27 — Milestone 3.2 stabilising transition + validation evidence
+
+Branch/PR/Issue:
+- local milestone status/release-flow update
+
+Completed:
+- Reconciled milestone tracking to reflect Milestone 3.2 implementation completion and moved status to `stabilising`.
+- Updated next-task brief to Milestone 3.2 release-flow execution.
+- Captured current validation evidence for compile and tests in Codex cloud.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy/index retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (`pytest==8.4.2` not fetchable from index/proxy)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`58 passed`)
+
+Notes:
+- Dev dependency installation remains partially blocked by index/proxy restrictions, but required test execution succeeded using available environment packages.
+
+Follow-up:
+- Run Milestone 3.2 release-candidate validation/sign-off and transition to `release-candidate`.
 
 ### 2026-05-26 — Milestone 3.1 project-memory reconciliation + execution report
 
