@@ -10,6 +10,32 @@ Overall status: Milestone 3.3 is complete after release validation/sign-off; Mil
 ## Latest Summary
 Milestone 3.3 was released as complete on 2026-05-27; next execution focus shifts to Milestone 3.4 startup.
 
+
+
+### 2026-05-27 — Milestone 3.4 first vertical slice implementation
+
+Branch/PR/Issue:
+- local Milestone 3.4 implementation update
+
+Completed:
+- Implemented cancellation transition from eligible statuses and blocked shipped cancellations.
+- Released reserved stock on order cancellation and wrote cancellation activity logs.
+- Added cancellation model/service/app test coverage and stock-consistency assertions.
+- Added durable implementation report evidence for this slice.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`70 passed`)
+
+Notes:
+- Dev dependency install remains partially blocked by index/proxy restrictions, but full test execution succeeded in environment.
+
+Follow-up:
+- Run Milestone 3.4 stabilising and release-candidate validation/sign-off flow when requested.
+
 ## Entry Format
 
 ```md

@@ -9,24 +9,23 @@ Status: in-progress
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [ ] Cancel eligible (`new` / `ready_to_pack` / `packed` where appropriate) orders.
-- [ ] Release reserved stock on cancellation.
-- [ ] Block casual cancellation for `shipped` orders.
-- [ ] Write activity log entries for cancellation transitions.
+- [x] Cancel eligible (`new` / `ready_to_pack` / `packed` where appropriate) orders.
+- [x] Release reserved stock on cancellation.
+- [x] Block casual cancellation for `shipped` orders.
+- [x] Write activity log entries for cancellation transitions.
 
 ## Required Verification Checklist
-- [ ] Typecheck *(Python compile check used in current repo flow)*
+- [x] Typecheck *(Python compile check used in current repo flow)*
 - [ ] Lint *(no repo lint command currently defined)*
-- [ ] Unit tests
-- [ ] Relevant service/integration tests
-- [ ] Journey tests if applicable
-- [ ] Build *(compile check: `python -m compileall -q src tests`)*
+- [x] Unit tests
+- [x] Relevant service/integration tests
+- [x] Journey tests if applicable
+- [x] Build *(compile check: `python -m compileall -q src tests`)*
 - [ ] Environment-specific checks or exceptions documented
 - [ ] Release smoke test if applicable
 
 ## Remaining Required Work
-- Implement cancellation workflow slice and tests per roadmap acceptance criteria.
-- Run full Codex-cloud validation pass and progress milestone through release flow.
+- Progress Milestone 3.4 through stabilising/release-candidate/complete release flow.
 
 ## Optional Post-Milestone Work
 - UX expansion beyond cancellation core flow remains out of scope unless explicitly requested.

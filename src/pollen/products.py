@@ -99,6 +99,20 @@ class ProductRepository:
             return updated
         return None
 
+
+    def release_by_sku_for_shop(self, *, shop_id: str, sku: str, quantity: int) -> ProductRecord | None:
+        if quantity <= 0:
+            return None
+        for product in self.list_for_shop(shop_id=shop_id, include_archived=False):
+            if product.sku != sku:
+                continue
+            if product.reserved_stock < quantity:
+                return None
+            updated = replace(product, reserved_stock=product.reserved_stock - quantity)
+            self._records[product.product_id] = updated
+            return updated
+        return None
+
     def archive_for_shop(self, *, shop_id: str, product_id: str) -> ProductRecord | None:
         existing = self.get_for_shop(shop_id=shop_id, product_id=product_id)
         if existing is None:

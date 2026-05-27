@@ -172,6 +172,41 @@ class OrderService:
             )
         return updated_order
 
+
+    def cancel_order(self, *, authorization_header: str | None, order_id: str) -> OrderRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+        order = self._order_repository.get_for_shop(shop_id=context.shop.shop_id, order_id=order_id)
+        if order is None or order.status not in {"ready_to_pack", "packed"}:
+            return None
+
+        items = self._order_repository.list_items_for_order(shop_id=context.shop.shop_id, order_id=order_id)
+        for item in items:
+            released = self._product_repository.release_by_sku_for_shop(
+                shop_id=context.shop.shop_id,
+                sku=item.product_sku,
+                quantity=item.quantity,
+            )
+            if released is None:
+                return None
+
+        updated = self._order_repository.update_status_for_shop(
+            shop_id=context.shop.shop_id,
+            order_id=order_id,
+            status="cancelled",
+        )
+        if updated is not None:
+            self._activity_repository.create(
+                shop_id=context.shop.shop_id,
+                activity_type="order_cancelled",
+                entity_type="order",
+                entity_id=order.order_id,
+                message=f"Order {order.order_id} cancelled and reservations released",
+                actor_user_id=context.user.user_id,
+            )
+        return updated
+
     def _product_repository_by_sku(self, shop_id: str, sku: str) -> ProductRecord | None:
         products = self._product_repository.list_for_shop(shop_id=shop_id, include_archived=False)
         for product in products:

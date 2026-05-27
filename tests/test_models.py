@@ -27,3 +27,11 @@ def test_blocks_backward_order_transition() -> None:
 
 def test_blocks_from_terminal_state() -> None:
     assert not can_transition(OrderStatus.SHIPPED, OrderStatus.NEW)
+
+
+def test_allows_ready_to_pack_to_cancelled_transition() -> None:
+    assert can_transition(OrderStatus.READY_TO_PACK, OrderStatus.CANCELLED)
+
+
+def test_blocks_cancelled_to_ready_to_pack_transition() -> None:
+    assert not can_transition(OrderStatus.CANCELLED, OrderStatus.READY_TO_PACK)
