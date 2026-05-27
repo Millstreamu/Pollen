@@ -36,6 +36,31 @@ Follow-up:
 Add entries below.
 
 
+
+### 2026-05-27 — Milestone 3.3 startup planning + scope lock report
+
+Branch/PR/Issue:
+- local Milestone 3.3 planning/reporting update
+
+Completed:
+- Executed Milestone 3.3 startup planning and locked in-scope vs out-of-scope boundaries from roadmap criteria.
+- Captured durable planning evidence report for first vertical slice execution.
+- Advanced next-task brief from startup planning into first vertical-slice implementation instructions.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`58 passed`)
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 3.3 first vertical slice (pack transition, ship transition, reservation finalization safety, and activity log coverage).
+
+
 ### 2026-05-27 — Milestone 3.2 release validation + completion sign-off
 
 Branch/PR/Issue:
@@ -96,7 +121,7 @@ Completed:
 Checks run:
 - `python -m pip install --upgrade pip` — pass
 - `pip install -r requirements.txt` — pass
-- `pip install -r requirements-dev.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
 - `python -m compileall -q src tests` — pass
 - `pytest -q` — pass (`55 passed`)
 
