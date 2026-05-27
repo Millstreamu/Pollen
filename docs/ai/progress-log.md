@@ -33,8 +33,29 @@ Follow-up:
 
 ## Entries
 
-Add entries below.
+### 2026-05-27 — Milestone 3.3 first vertical slice implementation
 
+Branch/PR/Issue:
+- local Milestone 3.3 implementation update
+
+Completed:
+- Implemented Milestone 3.3 first vertical slice behavior for pack/ship transitions with invalid-transition blocking and shipment finalization safety.
+- Confirmed app-level pack/ship action wiring and transition error handling behavior remains aligned with scope lock.
+- Updated domain lifecycle transition model coverage to include `waiting_on_stock` and `packed` milestones.
+- Added durable implementation report for this slice.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- Pack/ship service and UI flow were already present; this slice completed implementation alignment + reporting under AI dev method requirements.
+
+Follow-up:
+- Move Milestone 3.3 through stabilising and release-candidate validation/sign-off flow when requested.
 
 
 ### 2026-05-27 — Milestone 3.3 startup planning + scope lock report
