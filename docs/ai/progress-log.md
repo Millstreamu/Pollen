@@ -4,10 +4,38 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 4.2 — Start Batch (in-progress)  
-Overall status: Milestone 4.1 completion closeout is complete; next execution target is Milestone 4.2 startup planning + scope lock.
+Current milestone: Milestone 4.2 — Start Batch (stabilising)  
+Overall status: Milestone 4.2 first vertical slice has been stabilized and validated; next execution target is release-candidate validation/sign-off.
 
 ## Latest Summary
+Milestone 4.2 stabilization validation is complete, lint blockers were resolved, and the milestone is now in `stabilising`.
+
+### 2026-05-27 — Milestone 4.2 stabilization validation + status advancement
+
+Branch/PR/Issue:
+- local milestone stabilization update
+
+Completed:
+- Ran Codex-cloud validation sequence for Milestone 4.2 stabilization gate.
+- Fixed lint blockers in `src/pollen/app.py` (removed unused batch rendering locals).
+- Confirmed compile, lint, and full regression tests are passing.
+- Advanced milestone status from `in-progress` to `stabilising`.
+- Updated next-chat handoff and added durable stabilization report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`74 passed`)
+
+Notes:
+- Dev dependency install for pinned `pytest==8.4.2` remains environment-limited by index/proxy constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 4.2 release-candidate validation/sign-off and transition status to `release-candidate`.
+
 Milestone 4.1 completion closeout validation/sign-off is complete and the milestone is now marked complete.
 
 Current focus shifts to Milestone 4.2 startup planning + scope lock for Start Batch transition behavior in Make/Buy.
