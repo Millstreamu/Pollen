@@ -238,6 +238,32 @@ Notes:
 Follow-up:
 - Start Milestone 4.2 startup planning + scope lock for Start Batch workflow.
 
+### 2026-05-27 — Milestone 4.2 startup planning + scope lock
+
+Branch/PR/Issue:
+- local Milestone 4.2 planning/reporting update
+
+Completed:
+- Read roadmap/rules context for Milestone 4.2 Start Batch scope.
+- Locked first implementation slice boundaries (start transition, status gates, timestamp persistence, transition tests).
+- Documented explicit out-of-scope items (Complete Batch mutation logic, Money module, broad UX redesign).
+- Updated completion status and next-chat handoff to the Milestone 4.2 first vertical implementation task.
+- Added durable startup planning evidence report for Milestone 4.2.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 4.2 first vertical slice (Start Batch transition + tests + implementation report).
+
+
 ## Entry Format
 
 ```md
