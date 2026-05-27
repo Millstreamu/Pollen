@@ -4,11 +4,11 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 3.2 — Stock Reservation (stabilising)  
-Overall status: Milestone 3.2 implementation is complete and now in stabilising with release-flow validation pending.
+Current milestone: Milestone 3.3 — Pack and Ship Workflow (in-progress)  
+Overall status: Milestone 3.2 is complete after release validation/sign-off; Milestone 3.3 is now active.
 
 ## Latest Summary
-Milestone 3.2 transitioned to stabilising on 2026-05-27 with compile/tests validated; release-candidate transition is next.
+Milestone 3.2 was released as complete on 2026-05-27; next execution focus shifts to Milestone 3.3 startup.
 
 ## Entry Format
 
@@ -34,6 +34,31 @@ Follow-up:
 ## Entries
 
 Add entries below.
+
+
+### 2026-05-27 — Milestone 3.2 release validation + completion sign-off
+
+Branch/PR/Issue:
+- local milestone release closeout update
+
+Completed:
+- Executed release-flow validation commands for Milestone 3.2 in Codex cloud.
+- Confirmed compile and full test suite pass (`58 passed`).
+- Finalized release decision and transitioned Milestone 3.2 from `stabilising` to `complete`.
+- Advanced next-task brief to Milestone 3.3 startup.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`58 passed`)
+
+Notes:
+- Dev dependency fetch for pinned `pytest==8.4.2` is still restricted by this environment proxy/index, but installed tooling was sufficient to run the full suite successfully.
+
+Follow-up:
+- Start Milestone 3.3 implementation slices (Pack and Ship Workflow).
 
 ### 2026-05-27 — Milestone 3.2 stabilising transition + validation evidence
 
