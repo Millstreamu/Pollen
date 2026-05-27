@@ -189,6 +189,30 @@ Notes:
 Follow-up:
 - Execute Milestone 4.1 release-candidate validation/sign-off.
 
+### 2026-05-27 — Milestone 4.1 release-candidate validation + sign-off
+
+Branch/PR/Issue:
+- local milestone release-flow validation update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 4.1 stabilising-to-release-candidate gate.
+- Confirmed Create Batch workflow remains regression-safe through compile and full test-suite checks.
+- Transitioned milestone tracking from `stabilising` to `release-candidate`.
+- Added durable report evidence and advanced next-task handoff toward completion closeout.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`72 passed`)
+
+Notes:
+- Dev dependency fetch for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but installed tooling was sufficient for full validation.
+
+Follow-up:
+- Execute Milestone 4.1 completion closeout validation/sign-off and transition status to `complete`.
+
 ## Entry Format
 
 ```md
