@@ -3,18 +3,18 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 2.4 — Manual Stock Adjustment  
-Status: complete
+Name: Milestone 3.1 — Manual Order Creation  
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Product stock can be manually adjusted.
-- [x] Material stock can be manually adjusted.
-- [x] Adjustment reason is required.
-- [x] Inventory movement records are created for adjustments.
-- [x] Activity log records are created for adjustments.
-- [x] Negative stock is blocked by default.
+- [x] Manual order can be created.
+- [x] Order and order items are shop-scoped.
+- [x] Order source defaults to `manual`.
+- [x] Customer name is captured on creation.
+- [x] Initial order status reflects stock availability.
+- [x] Orders flow exposes manual order creation and persists order/item records.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
@@ -27,10 +27,11 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable
 
 ## Remaining Required Work
-None for Milestone 2.4. Milestone scope and required verification are complete.
+- Milestone status/release flow still pending (`stabilising` → `release-candidate` → `complete`).
+- Optional UX expansion for multi-line order item input is deferred.
 
 ## Optional Post-Milestone Work
-- Any enhancements beyond Milestone 2.4 acceptance criteria should be deferred until milestone completion.
+- Any enhancements beyond Milestone 3.1 acceptance criteria should be deferred until milestone completion.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
