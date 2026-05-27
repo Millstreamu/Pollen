@@ -3,17 +3,17 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 3.2 — Stock Reservation  
-Status: complete
+Name: Milestone 3.3 — Pack and Ship Workflow  
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Order creation reserves product stock when available.
-- [x] Insufficient stock marks order `waiting_on_stock`.
-- [x] Product `reserved_stock` updates on successful reservation.
-- [x] Product `available_stock` is calculated as on-hand minus reserved.
-- [x] No silent over-allocation when stock is insufficient.
+- [x] Mark `ready_to_pack` orders as `packed`.
+- [x] Mark `packed` orders as `shipped`.
+- [x] Resolve stock reservation at shipping without double-deduct.
+- [x] Block invalid pack/ship transitions.
+- [x] Write activity log entries for pack/ship transitions.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
@@ -23,14 +23,14 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Journey tests if applicable
 - [x] Build *(compile check: `python -m compileall -q src tests`)*
 - [x] Environment-specific checks or exceptions documented
-- [x] Release smoke test if applicable *(validated via full app compile + test suite in this repo workflow)*
+- [ ] Release smoke test if applicable *(pending milestone stabilising/release-candidate flow)*
 
 ## Remaining Required Work
-- None for Milestone 3.2 core scope.
-- Optional UX expansion for multi-line order item input remains deferred by design.
+- Milestone 3.3 release-flow progression (`stabilising` -> `release-candidate` -> `complete`).
+- Any additional human-requested edge validation before sign-off.
 
 ## Optional Post-Milestone Work
-- Any enhancements beyond Milestone 3.1 acceptance criteria should be deferred until milestone completion.
+- UX expansion beyond current pack/ship core flow remains out of scope for this slice.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
