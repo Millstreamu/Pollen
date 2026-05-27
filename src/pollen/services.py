@@ -23,6 +23,7 @@ class OrderService:
         self._auth_service = auth_service or AuthService()
         self._order_repository = order_repository or OrderRepository()
         self._product_repository = product_repository or ProductRepository()
+        self._activity_repository = ActivityLogRepository()
 
     def create_order(
         self,
@@ -102,6 +103,75 @@ class OrderService:
             return []
         return self._order_repository.list_items_for_order(shop_id=context.shop.shop_id, order_id=order_id)
 
+    def mark_order_packed(self, *, authorization_header: str | None, order_id: str) -> OrderRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+        order = self._order_repository.get_for_shop(shop_id=context.shop.shop_id, order_id=order_id)
+        if order is None or order.status != "ready_to_pack":
+            return None
+        updated = self._order_repository.update_status_for_shop(
+            shop_id=context.shop.shop_id,
+            order_id=order_id,
+            status="packed",
+        )
+        if updated is None:
+            return None
+        self._activity_repository.create(
+            shop_id=context.shop.shop_id,
+            activity_type="order_packed",
+            entity_type="order",
+            entity_id=order.order_id,
+            message=f"Order {order.order_id} moved to packed",
+            actor_user_id=context.user.user_id,
+        )
+        return updated
+
+    def mark_order_shipped(self, *, authorization_header: str | None, order_id: str) -> OrderRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+        order = self._order_repository.get_for_shop(shop_id=context.shop.shop_id, order_id=order_id)
+        if order is None or order.status != "packed":
+            return None
+
+        items = self._order_repository.list_items_for_order(shop_id=context.shop.shop_id, order_id=order_id)
+        for item in items:
+            product = self._product_repository_by_sku(context.shop.shop_id, item.product_sku)
+            if product is None or product.reserved_stock < item.quantity:
+                return None
+
+        for item in items:
+            product = self._product_repository_by_sku(context.shop.shop_id, item.product_sku)
+            assert product is not None
+            updated = self._product_repository.update_for_shop(
+                shop_id=context.shop.shop_id,
+                product_id=product.product_id,
+                name=product.name,
+                sku=product.sku,
+                stock_on_hand=product.stock_on_hand - item.quantity,
+                reserved_stock=product.reserved_stock - item.quantity,
+                reorder_point=product.reorder_point,
+            )
+            if updated is None:
+                return None
+
+        updated_order = self._order_repository.update_status_for_shop(
+            shop_id=context.shop.shop_id,
+            order_id=order_id,
+            status="shipped",
+        )
+        if updated_order is not None:
+            self._activity_repository.create(
+                shop_id=context.shop.shop_id,
+                activity_type="order_shipped",
+                entity_type="order",
+                entity_id=order.order_id,
+                message=f"Order {order.order_id} moved to shipped",
+                actor_user_id=context.user.user_id,
+            )
+        return updated_order
+
     def _product_repository_by_sku(self, shop_id: str, sku: str) -> ProductRecord | None:
         products = self._product_repository.list_for_shop(shop_id=shop_id, include_archived=False)
         for product in products:
@@ -123,6 +193,7 @@ class ProductService:
     ) -> None:
         self._auth_service = auth_service or AuthService()
         self._product_repository = product_repository or ProductRepository()
+        self._activity_repository = ActivityLogRepository()
         self._movement_repository = movement_repository or InventoryMovementRepository()
         self._activity_repository = activity_repository or ActivityLogRepository()
 
@@ -284,6 +355,7 @@ class RecipeService:
         self._auth_service = auth_service or AuthService()
         self._recipe_repository = recipe_repository or RecipeRepository()
         self._product_repository = product_repository or ProductRepository()
+        self._activity_repository = ActivityLogRepository()
         self._material_repository = material_repository or MaterialRepository()
 
     def create_recipe_item(self, *, authorization_header: str | None, product_id: str, material_id: str, quantity_per_unit: int) -> RecipeItemRecord | None:

@@ -72,3 +72,17 @@ class OrderRepository:
 
     def list_items_for_order(self, *, shop_id: str, order_id: str) -> list[OrderItemRecord]:
         return [item for item in self._items.values() if item.shop_id == shop_id and item.order_id == order_id]
+
+    def update_status_for_shop(self, *, shop_id: str, order_id: str, status: str) -> OrderRecord | None:
+        existing = self.get_for_shop(shop_id=shop_id, order_id=order_id)
+        if existing is None:
+            return None
+        updated = OrderRecord(
+            order_id=existing.order_id,
+            shop_id=existing.shop_id,
+            customer_name=existing.customer_name,
+            source=existing.source,
+            status=status,
+        )
+        self._records[order_id] = updated
+        return updated

@@ -808,3 +808,29 @@ Notes:
 
 Follow-up:
 - Advance Milestone 3.2 through stabilising/release-candidate/complete flow when requested.
+
+
+### 2026-05-27 — Milestone 3.3 pack/ship first vertical slice implementation
+
+Branch/PR/Issue:
+- local Milestone 3.3 implementation slice
+
+Completed:
+- Implemented guarded pack and ship transitions for orders.
+- Added shipping reservation finalization logic that prevents double-deduct by blocking invalid repeat ship transition.
+- Added activity log coverage for pack/ship order transitions.
+- Added Orders UI actions for Pack/Ship with invalid-transition error feedback.
+- Added Milestone 3.3 tests for valid transitions, invalid transitions, and no-double-deduct safety.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`61 passed`)
+
+Notes:
+- Environment still cannot fetch pinned `pytest==8.4.2` from configured index/proxy, but existing environment pytest allowed full suite execution.
+
+Follow-up:
+- Continue Milestone 3.3 with any remaining UX polish and completion-status synchronization decisions.

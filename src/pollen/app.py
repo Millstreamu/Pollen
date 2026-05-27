@@ -268,6 +268,24 @@ class AppShell:
 
     def _handle_order_post(self, *, authorization_header: str, form_data: dict[str, str] | None) -> AppResponse:
         payload = form_data or {}
+        action = payload.get("action", "create")
+        if action == "pack":
+            updated = self._order_service.mark_order_packed(
+                authorization_header=authorization_header,
+                order_id=payload.get("order_id", ""),
+            )
+            if updated is None:
+                return AppResponse(status_code=400, body="Invalid order transition")
+            return self.get("/orders", authorization_header=authorization_header)
+        if action == "ship":
+            updated = self._order_service.mark_order_shipped(
+                authorization_header=authorization_header,
+                order_id=payload.get("order_id", ""),
+            )
+            if updated is None:
+                return AppResponse(status_code=400, body="Invalid order transition")
+            return self.get("/orders", authorization_header=authorization_header)
+
         created = self._order_service.create_order(
             authorization_header=authorization_header,
             customer_name=payload.get("customer_name", ""),
@@ -654,7 +672,18 @@ class AppShell:
         if page_title == "Orders" and authorization_header is not None:
             orders = self._order_service.list_orders(authorization_header=authorization_header)
             rows = "".join(
-                f"<tr><td>{o.order_id}</td><td>{o.customer_name}</td><td>{o.source}</td><td>{o.status}</td></tr>"
+                "<tr>"
+                f"<td>{o.order_id}</td><td>{o.customer_name}</td><td>{o.source}</td><td>{o.status}</td>"
+                "<td>"
+                "<form method='post' action='/orders' style='display:inline'>"
+                "<input type='hidden' name='action' value='pack'>"
+                f"<input type='hidden' name='order_id' value='{o.order_id}'>"
+                "<button type='submit'>Pack</button></form> "
+                "<form method='post' action='/orders' style='display:inline'>"
+                "<input type='hidden' name='action' value='ship'>"
+                f"<input type='hidden' name='order_id' value='{o.order_id}'>"
+                "<button type='submit'>Ship</button></form>"
+                "</td></tr>"
                 for o in orders
             )
             page_content = (
@@ -665,7 +694,7 @@ class AppShell:
                 "<label>Quantity <input type='number' min='1' name='quantity' required></label>"
                 "<button type='submit'>Create order</button></form></section>"
                 "<section><h3>Orders</h3>"
-                "<table><thead><tr><th>ID</th><th>Customer</th><th>Source</th><th>Status</th></tr></thead>"
+                "<table><thead><tr><th>ID</th><th>Customer</th><th>Source</th><th>Status</th><th>Actions</th></tr></thead>"
                 f"<tbody>{rows}</tbody></table></section>"
             )
 
