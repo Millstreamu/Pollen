@@ -51,7 +51,7 @@ class OrderService:
                 return None
             normalized_items.append((sku, quantity))
             product = self._product_repository_by_sku(context.shop.shop_id, sku)
-            if product is None or product.stock_on_hand < quantity:
+            if product is None or product.available_stock < quantity:
                 status = "waiting_on_stock"
 
         created = self._order_repository.create(
@@ -69,6 +69,15 @@ class OrderService:
             )
             if added is None:
                 return None
+        if status == "ready_to_pack":
+            for sku, quantity in normalized_items:
+                reserved = self._product_repository.reserve_by_sku_for_shop(
+                    shop_id=context.shop.shop_id,
+                    sku=sku,
+                    quantity=quantity,
+                )
+                if reserved is None:
+                    return None
         return created
 
     def list_orders(self, *, authorization_header: str | None) -> list[OrderRecord]:
@@ -170,6 +179,9 @@ class ProductService:
         context = self._auth_service.resolve_context(authorization_header)
         if context is None:
             return None
+        existing = self._product_repository.get_for_shop(shop_id=context.shop.shop_id, product_id=product_id)
+        if existing is None:
+            return None
 
         return self._product_repository.update_for_shop(
             shop_id=context.shop.shop_id,
@@ -177,6 +189,7 @@ class ProductService:
             name=name,
             sku=sku,
             stock_on_hand=stock_on_hand,
+            reserved_stock=existing.reserved_stock,
             reorder_point=reorder_point,
         )
 
@@ -212,6 +225,7 @@ class ProductService:
             name=existing.name,
             sku=existing.sku,
             stock_on_hand=updated_stock,
+            reserved_stock=existing.reserved_stock,
             reorder_point=existing.reorder_point,
         )
         if updated is None:

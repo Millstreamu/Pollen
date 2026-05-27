@@ -12,12 +12,17 @@ class ProductRecord:
     name: str
     sku: str
     stock_on_hand: int
+    reserved_stock: int
     reorder_point: int
     is_active: bool
 
     @property
     def is_low_stock(self) -> bool:
-        return self.stock_on_hand <= self.reorder_point
+        return self.available_stock <= self.reorder_point
+
+    @property
+    def available_stock(self) -> int:
+        return self.stock_on_hand - self.reserved_stock
 
 
 class ProductRepository:
@@ -36,6 +41,7 @@ class ProductRepository:
             name=name,
             sku=sku,
             stock_on_hand=stock_on_hand,
+            reserved_stock=0,
             reorder_point=reorder_point,
             is_active=True,
         )
@@ -62,6 +68,7 @@ class ProductRepository:
         name: str,
         sku: str,
         stock_on_hand: int,
+        reserved_stock: int,
         reorder_point: int,
     ) -> ProductRecord | None:
         existing = self.get_for_shop(shop_id=shop_id, product_id=product_id)
@@ -73,10 +80,24 @@ class ProductRepository:
             name=name,
             sku=sku,
             stock_on_hand=stock_on_hand,
+            reserved_stock=reserved_stock,
             reorder_point=reorder_point,
         )
         self._records[product_id] = updated
         return updated
+
+    def reserve_by_sku_for_shop(self, *, shop_id: str, sku: str, quantity: int) -> ProductRecord | None:
+        if quantity <= 0:
+            return None
+        for product in self.list_for_shop(shop_id=shop_id, include_archived=False):
+            if product.sku != sku:
+                continue
+            if product.available_stock < quantity:
+                return None
+            updated = replace(product, reserved_stock=product.reserved_stock + quantity)
+            self._records[product.product_id] = updated
+            return updated
+        return None
 
     def archive_for_shop(self, *, shop_id: str, product_id: str) -> ProductRecord | None:
         existing = self.get_for_shop(shop_id=shop_id, product_id=product_id)
