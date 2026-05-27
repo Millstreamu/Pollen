@@ -1,6 +1,6 @@
-from pollen.app import AppShell, NAV_ITEMS, can_access_shop_record, create_app, healthcheck
-from pollen.services import ProductService
+from pollen.app import NAV_ITEMS, AppShell, can_access_shop_record, create_app, healthcheck
 from pollen.auth import AuthService
+from pollen.services import ProductService
 
 
 def _auth_header(user_id: str = "u1", email: str = "maker@example.com") -> str:
