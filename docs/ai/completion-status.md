@@ -3,18 +3,17 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 3.1 — Manual Order Creation  
+Name: Milestone 3.2 — Stock Reservation  
 Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Manual order can be created.
-- [x] Order and order items are shop-scoped.
-- [x] Order source defaults to `manual`.
-- [x] Customer name is captured on creation.
-- [x] Initial order status reflects stock availability.
-- [x] Orders flow exposes manual order creation and persists order/item records.
+- [x] Order creation reserves product stock when available.
+- [x] Insufficient stock marks order `waiting_on_stock`.
+- [x] Product `reserved_stock` updates on successful reservation.
+- [x] Product `available_stock` is calculated as on-hand minus reserved.
+- [x] No silent over-allocation when stock is insufficient.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*

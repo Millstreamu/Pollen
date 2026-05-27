@@ -4,8 +4,8 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 3.1 — Manual Order Creation (in-progress)  
-Overall status: Milestone 3.1 implementation is in-progress and project-memory tracking has been reconciled to this active milestone.
+Current milestone: Milestone 3.2 — Stock Reservation (in-progress)  
+Overall status: Milestone 3.2 implementation is in-progress with reservation flow and tests now delivered.
 
 ## Latest Summary
 Milestone 3.1 milestone-memory reconciliation finalized on 2026-05-26; tracking files now point to Milestone 3.1 as active and validation checks passed.
@@ -709,3 +709,29 @@ Notes:
 
 Follow-up:
 - Run Milestone 2.3 release-candidate pass and sign-off when requested.
+
+
+### 2026-05-27 — Milestone 3.2 stock reservation implementation
+
+Branch/PR/Issue:
+- local milestone implementation update
+
+Completed:
+- Added reservation-aware product stock fields (`reserved_stock`, `available_stock`).
+- Implemented reservation behavior during manual order creation when stock is available.
+- Preserved no-overallocation behavior by marking insufficient stock orders as `waiting_on_stock` without reservation changes.
+- Added Milestone 3.2 tests covering reservation and available-stock calculations.
+- Added milestone implementation report for durable evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`58 passed`)
+
+Notes:
+- Reservation release and shipping finalization remain out of scope for this milestone and are deferred to Milestone 3.3/3.4.
+
+Follow-up:
+- Advance Milestone 3.2 through stabilising/release-candidate/complete flow when requested.
