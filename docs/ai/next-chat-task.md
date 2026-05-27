@@ -6,27 +6,27 @@ Use this brief in future chats to continue work without re-planning completed mi
 - Milestone 3.4 — Cancel Order (`in-progress`)
 
 ## Objective
-Execute Milestone 3.4 startup planning + scope lock, then begin first vertical slice only after planning evidence is captured.
+Milestone 3.4 startup planning + scope lock is complete; execute the first vertical implementation slice for cancellation workflow.
 
 ## Scope Lock (initial)
-In scope for startup/planning:
-- confirm roadmap acceptance criteria for order cancellation behavior
-- define reservation-release behavior for cancellation
-- identify required service/model/app/test touchpoints
-- capture explicit in-scope vs out-of-scope boundaries
+In scope for current next task:
+- implement cancel transition for eligible statuses
+- release reserved stock on cancellation
+- block shipped cancellation transitions
+- write cancellation activity logs
+- add service/app/journey test coverage for cancellation and stock consistency
 
-Out of scope during startup/planning:
-- implementation of Milestone 4.x make/buy workflow
+Out of scope for current slice:
+- Milestone 4.x make/buy implementation
 - unrelated UX polish
 - broad order workflow refactors outside cancellation criteria
 
 ## Recommended Implementation Order
-1. Planning and scope-lock report for Milestone 3.4.
-2. Service/model implementation slice for cancel transition + reservation release.
-3. Tests (unit/service/journey) for valid cancel, invalid transitions, and stock consistency.
-4. App/UI wiring for cancel action + user-facing error handling.
-5. Full validation pass in Codex cloud.
-6. Documentation sync (`completion-status`, `progress-log`, milestone report).
+1. Service/model implementation slice for cancel transition + reservation release.
+2. Tests (unit/service/journey) for valid cancel, invalid transitions, and stock consistency.
+3. App/UI wiring for cancel action + user-facing error handling.
+4. Full validation pass in Codex cloud.
+5. Documentation sync (`completion-status`, `progress-log`, milestone report).
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -36,4 +36,4 @@ Out of scope during startup/planning:
 - `pytest -q`
 
 ## Planning Evidence
-- `docs/ai/reports/milestone-3.3-release-validation-signoff-2026-05-27.md`
+- `docs/ai/reports/milestone-3.4-startup-planning-scope-lock-report-2026-05-27.md`
