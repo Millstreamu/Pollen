@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 4.1 — Create Batch  
-Status: release-candidate
+Status: complete
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -26,7 +26,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Execute Milestone 4.1 completion closeout validation/signoff flow.
+- None for Milestone 4.1; milestone completion closeout is done.
 - Confirm environment exception handling remains documented for dev dependency install proxy/index limitation.
 
 ## Optional Post-Milestone Work
@@ -36,3 +36,4 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 See `docs/ai/do-not-build-yet.md`.
 
 - Milestone 4.1 create-batch first slice: completed (2026-05-27).
+- Milestone 4.1 completion closeout sign-off: completed (2026-05-27).
