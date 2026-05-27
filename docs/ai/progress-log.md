@@ -4,11 +4,63 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 3.4 — Cancel Order (complete)  
-Overall status: Milestone 3.4 is complete after completion closeout validation/sign-off; milestone flow now advances to Milestone 4 startup planning.
+Current milestone: Milestone 4.1 — Create Batch (in-progress)  
+Overall status: Milestone 4.1 startup planning and scope lock are complete; next execution target is the first Create Batch implementation slice.
 
 ## Latest Summary
-Milestone 3.4 passed stabilising validation/sign-off on 2026-05-27 and has transitioned to release-candidate pending final completion closeout.
+Milestone 3.4 completion closeout validation/sign-off is complete and Milestone 4.1 startup planning + scope lock is now published.
+
+Current focus is Milestone 4.1 first implementation slice for Create Batch in Make/Buy.
+
+### 2026-05-27 — Milestone 4.1 startup planning + scope lock report
+
+Branch/PR/Issue:
+- local Milestone 4.1 planning/reporting update
+
+Completed:
+- Read roadmap/rules context for Milestone 4.1 Create Batch scope.
+- Locked first implementation slice boundaries (create-only flow, materials-needed check, insufficient-material blocking, tests).
+- Documented explicit out-of-scope items (Start Batch, Complete Batch, Money module, broad UX redesign).
+- Updated completion status and next-chat handoff to the Milestone 4.1 first vertical implementation task.
+- Added durable startup planning evidence report for Milestone 4.1.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 4.1 first vertical slice (Create Batch flow + tests + implementation report).
+
+
+### 2026-05-27 — Milestone 3.4 completion closeout validation + sign-off
+
+Branch/PR/Issue:
+- local milestone completion closeout update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 3.4 completion closeout gate.
+- Confirmed cancellation and stock workflows remain regression-safe through compile + full suite checks.
+- Transitioned milestone tracking from `release-candidate` to `complete`.
+- Updated handoff to Milestone 4 startup planning and added durable closeout report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`70 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full test execution succeeded with available tooling.
+
+Follow-up:
+- Start Milestone 4 startup planning + scope lock for Make/Buy workflow.
 
 Milestone 3.4 completion closeout validation/sign-off is now complete and the milestone is marked `complete`; next focus is Milestone 4 startup planning.
 
