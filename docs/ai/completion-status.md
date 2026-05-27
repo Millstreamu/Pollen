@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 3.2 — Stock Reservation  
-Status: in-progress
+Status: stabilising
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -26,7 +26,8 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable
 
 ## Remaining Required Work
-- Milestone status/release flow still pending (`stabilising` → `release-candidate` → `complete`).
+- Execute release-candidate validation and transition `stabilising` → `release-candidate` once evidence is recorded.
+- Final release decision/sign-off still pending (`release-candidate` → `complete`).
 - Optional UX expansion for multi-line order item input is deferred.
 
 ## Optional Post-Milestone Work

@@ -1,43 +1,30 @@
-# Next Chat Task — Milestone 3.1 First Coding Slice
+# Next Chat Task — Milestone 3.2 Release Flow
 
 Use this brief in future chats to continue work without re-planning.
 
 ## Active Milestone
-- Milestone 3.1 — Manual Order Creation (in-progress)
+- Milestone 3.2 — Stock Reservation (`stabilising`)
 
 ## Objective
-Implement the first complete vertical slice for manual order creation, aligned to roadmap and completion tracking acceptance criteria.
+Complete milestone release flow for Milestone 3.2 by validating current behavior, documenting evidence, and transitioning status through `release-candidate` to `complete` when approved.
 
 ## Recommended Implementation Order
-1. Domain model support
-   - Add/confirm `Order` and `OrderItem` structures for manual order creation.
-   - Ensure order and order items are shop-scoped.
+1. Release-candidate validation pass
+   - Run full validation commands in Codex cloud.
+   - Confirm compile and tests are green.
+   - Record environment limitations (if any).
 
-2. Service logic
-   - Implement:
-     - `create_order(...)`
-   - Enforce:
-     - source defaults to Manual
-     - customer name is captured
-     - stock-aware initial status calculation
-   - On successful creation, persist order and items.
+2. Status transition
+   - Move milestone from `stabilising` to `release-candidate` after successful validation.
+   - Keep required scope/verification checklist synchronized with observed results.
 
-3. Unit tests (required)
-   - order can be created
-   - order belongs to shop
-   - order items belong to shop
-   - source defaults to Manual
-   - status reflects stock availability
+3. Sign-off and completion
+   - Perform release decision check.
+   - Transition `release-candidate` to `complete` when acceptance/sign-off is confirmed.
 
-4. Route/UI/API wiring
-   - Expose order creation in existing app flow.
-   - Return clear validation errors for malformed inputs.
-
-5. Journey test (milestone-required)
-   - create product with stock
-   - create manual order with item quantity
-   - confirm order persisted and visible in Orders flow
-   - confirm initial order status is correct from available stock
+4. Documentation synchronization
+   - Update `docs/ai/completion-status.md` and `docs/ai/progress-log.md` with exact commands and outcomes.
+   - Add milestone-specific report under `docs/ai/reports/` if needed for traceability.
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -47,5 +34,5 @@ Implement the first complete vertical slice for manual order creation, aligned t
 - `pytest -q`
 
 ## Out of Scope for this slice
-- Milestone 3.2+ roadmap work
-- optional enhancements beyond Milestone 3.1 acceptance criteria
+- Milestone 3.3+ roadmap work
+- New feature additions unrelated to Milestone 3.2 release flow
