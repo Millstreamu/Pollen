@@ -525,6 +525,30 @@ class BatchService:
 
         return self._batch_repository.create(shop_id=context.shop.shop_id, product_id=product_id, quantity=quantity), None
 
+    def start_batch(self, *, authorization_header: str | None, batch_id: str) -> tuple[BatchRecord | None, str | None]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None, "Unauthorized"
+        if not batch_id.strip():
+            return None, "Batch ID is required"
+
+        batch = self._batch_repository.get_for_shop(shop_id=context.shop.shop_id, batch_id=batch_id)
+        if batch is None:
+            return None, "Unknown batch"
+        if batch.status != "planned":
+            return None, "Invalid batch transition: only planned batches can be started"
+
+        started_at = self._batch_repository.now_iso()
+        updated = self._batch_repository.update_for_shop(
+            shop_id=context.shop.shop_id,
+            batch_id=batch_id,
+            status="in-progress",
+            started_at=started_at,
+        )
+        if updated is None:
+            return None, "Batch start failed"
+        return updated, None
+
     def list_batches(self, *, authorization_header: str | None) -> list[BatchRecord]:
         context = self._auth_service.resolve_context(authorization_header)
         if context is None:
