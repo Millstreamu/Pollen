@@ -164,6 +164,31 @@ Notes:
 
 Follow-up:
 - Execute Milestone 3.4 release-candidate validation/sign-off and transition status to `release-candidate`.
+
+### 2026-05-27 — Milestone 4.1 first-slice reconciliation + stabilization handoff
+
+Branch/PR/Issue:
+- local Milestone 4.1 status reconciliation update
+
+Completed:
+- Reconciled milestone tracking to reflect Milestone 4.1 first vertical slice completion.
+- Moved milestone status from `in-progress` to `stabilising` and checked all required scope checklist items.
+- Updated next-chat handoff to Milestone 4.1 stabilization + release-candidate validation/signoff flow.
+- Added durable report evidence for this reconciliation update.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`72 passed`)
+
+Notes:
+- Runtime validation remained fully green; only dev dependency retrieval is environment-limited by index/proxy access.
+
+Follow-up:
+- Execute Milestone 4.1 release-candidate validation/sign-off.
+
 ## Entry Format
 
 ```md

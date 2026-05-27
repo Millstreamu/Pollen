@@ -4,16 +4,16 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 4.1 — Create Batch  
-Status: in-progress
+Status: stabilising
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [ ] Create a planned batch in Make/Buy for a selected product.
-- [ ] Validate batch quantity input and required fields.
-- [ ] Check materials-needed versus available quantities for requested batch quantity.
-- [ ] Block create when required materials are insufficient and return actionable errors.
-- [ ] Persist create-batch result without starting/completing lifecycle transitions.
+- [x] Create a planned batch in Make/Buy for a selected product.
+- [x] Validate batch quantity input and required fields.
+- [x] Check materials-needed versus available quantities for requested batch quantity.
+- [x] Block create when required materials are insufficient and return actionable errors.
+- [x] Persist create-batch result without starting/completing lifecycle transitions.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
@@ -26,9 +26,8 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Implement Milestone 4.1 first vertical slice (Create Batch) service/app behavior.
-- Add/extend tests for create-batch success and insufficient-material blocking flows.
-- Produce implementation report evidence for Milestone 4.1 first slice.
+- Execute Milestone 4.1 stabilization and release-candidate validation/signoff flow.
+- Confirm environment exception handling remains documented for dev dependency install proxy/index limitation.
 
 ## Optional Post-Milestone Work
 - Additional Make/Buy UX polish remains out of scope unless explicitly requested.
