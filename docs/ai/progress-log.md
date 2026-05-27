@@ -4,11 +4,36 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 3.4 — Cancel Order (stabilising)  
-Overall status: Milestone 3.3 is complete after release validation/sign-off; Milestone 3.4 is in stabilising after first-slice validation evidence.
+Current milestone: Milestone 3.4 — Cancel Order (release-candidate)  
+Overall status: Milestone 3.3 is complete after release validation/sign-off; Milestone 3.4 is now release-candidate after stabilising validation/sign-off.
 
 ## Latest Summary
-Milestone 3.3 was released as complete on 2026-05-27; next execution focus shifts to Milestone 3.4 startup.
+Milestone 3.4 passed stabilising validation/sign-off on 2026-05-27 and has transitioned to release-candidate pending final completion closeout.
+
+
+### 2026-05-27 — Milestone 3.4 release-candidate validation + sign-off
+
+Branch/PR/Issue:
+- local milestone release-flow validation update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 3.4 stabilising-to-release-candidate gate.
+- Confirmed cancellation and stock workflows remain regression-free through compile + full test suite pass.
+- Transitioned milestone tracking from `stabilising` to `release-candidate`.
+- Added durable report evidence and advanced next-task handoff toward completion closeout.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`70 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full test execution succeeded with available tooling.
+
+Follow-up:
+- Execute Milestone 3.4 completion closeout validation/sign-off and transition to `complete`.
 
 
 
