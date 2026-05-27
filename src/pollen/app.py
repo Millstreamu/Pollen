@@ -10,7 +10,7 @@ from pollen.inventory import ActivityLogRepository, InventoryMovementRepository
 from pollen.materials import MaterialRepository
 from pollen.products import ProductRepository
 from pollen.recipes import RecipeRepository
-from pollen.services import MaterialService, OrderService, ProductService, RecipeService
+from pollen.services import BatchService, MaterialService, OrderService, ProductService, RecipeService
 
 NAV_ITEMS: tuple[tuple[str, str], ...] = (
     ("Today", "/"),
@@ -75,6 +75,18 @@ class AppShell:
         order_product_repository = product_repository
         if product_service is not None:
             order_product_repository = product_service._product_repository  # noqa: SLF001
+        batch_product_repository = product_repository
+        if product_service is not None:
+            batch_product_repository = product_service._product_repository  # noqa: SLF001
+        batch_material_repository = material_repository
+        if material_service is not None:
+            batch_material_repository = material_service._material_repository  # noqa: SLF001
+        self._batch_service = BatchService(
+            auth_service=self._auth_service,
+            product_repository=batch_product_repository,
+            recipe_repository=self._recipe_service._recipe_repository,  # noqa: SLF001
+            material_repository=batch_material_repository,
+        )
         self._order_service = OrderService(
             auth_service=self._auth_service,
             product_repository=order_product_repository,
@@ -256,6 +268,14 @@ class AppShell:
                 delta=int(payload.get("delta", "0")),
                 reason=payload.get("reason", ""),
             )
+        elif action == "create_batch":
+            created_batch, error = self._batch_service.create_batch(
+                authorization_header=authorization_header,
+                product_id=payload.get("product_id", ""),
+                quantity=int(payload.get("quantity", "0")),
+            )
+            if created_batch is None:
+                return AppResponse(status_code=400, body=error or "Batch creation failed")
         elif action == "restore":
             material_id = payload.get("material_id")
             if material_id is not None:
@@ -406,7 +426,7 @@ class AppShell:
             f"{rows}"
             "</tbody></table>"
             f"{self._render_recipe_management(authorization_header=authorization_header, query=query)}"f"{self._render_audit_sections(authorization_header=authorization_header)}"
-            "</section>"
+"</section>"
             if show_active
             else ""
         )
@@ -475,6 +495,23 @@ class AppShell:
             include_archived=True,
         )
         archived_only = [material for material in archived_materials if not material.is_active]
+        products = self._product_service.list_products(authorization_header=authorization_header)
+        create_batch_form = (
+            "<section><h3>Create batch</h3>"
+            "<form method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='create_batch'>"
+            "<label>Product <select name='product_id'>"
+            + "".join(f"<option value='{product.product_id}'>{product.name}</option>" for product in products)
+            + "</select></label>"
+            "<label>Quantity <input name='quantity' type='number' min='1' required></label>"
+            "<button type='submit'>Create batch</button>"
+            "</form></section>"
+        )
+        batches = self._batch_service.list_batches(authorization_header=authorization_header)
+        batch_rows = "".join(
+            f"<tr><td>{batch.batch_id}</td><td>{batch.product_id}</td><td>{batch.quantity}</td><td>{batch.status}</td></tr>"
+            for batch in batches
+        )
         create_form = (
             "<section><h3>Create material</h3>"
             "<form method='post' action='/make-buy'>"
@@ -490,7 +527,7 @@ class AppShell:
             return (
                 "<section><h2>Materials</h2>"
                 "<p>No materials yet. Add your first material to track supplies.</p>"
-                f"{create_form}</section>"
+                f"{create_form}{create_batch_form}</section>"
             )
 
         rows = "".join(self._render_material_row(material=material, edit_material_id=edit_material_id) for material in materials)
@@ -523,7 +560,7 @@ class AppShell:
         active_section = (
             "<section><h2>Materials</h2>"
             "<p>Manage materials with simple create, per-row edit, archive, and restore controls.</p>"
-            f"{create_form}"
+            f"{create_form}{create_batch_form}"
             "<table><thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th></tr></thead><tbody>"
             f"{rows}"
             "</tbody></table>"

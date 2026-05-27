@@ -35,3 +35,5 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
+
+- Milestone 4.1 create-batch first slice: completed (2026-05-27).
