@@ -4,13 +4,13 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 4.1 — Create Batch (in-progress)  
-Overall status: Milestone 4.1 startup planning and scope lock are complete; next execution target is the first Create Batch implementation slice.
+Current milestone: Milestone 4.2 — Start Batch (in-progress)  
+Overall status: Milestone 4.1 completion closeout is complete; next execution target is Milestone 4.2 startup planning + scope lock.
 
 ## Latest Summary
-Milestone 3.4 completion closeout validation/sign-off is complete and Milestone 4.1 startup planning + scope lock is now published.
+Milestone 4.1 completion closeout validation/sign-off is complete and the milestone is now marked complete.
 
-Current focus is Milestone 4.1 first implementation slice for Create Batch in Make/Buy.
+Current focus shifts to Milestone 4.2 startup planning + scope lock for Start Batch transition behavior in Make/Buy.
 
 ### 2026-05-27 — Milestone 4.1 startup planning + scope lock report
 
@@ -212,6 +212,31 @@ Notes:
 
 Follow-up:
 - Execute Milestone 4.1 completion closeout validation/sign-off and transition status to `complete`.
+
+
+### 2026-05-27 — Milestone 4.1 completion closeout validation + sign-off
+
+Branch/PR/Issue:
+- local milestone completion closeout update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 4.1 completion closeout gate.
+- Confirmed Create Batch workflow remains regression-safe through compile + full suite checks.
+- Transitioned milestone tracking from `release-candidate` to `complete`.
+- Updated next-task handoff to Milestone 4.2 startup planning and added durable closeout report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`72 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full test execution succeeded with available tooling.
+
+Follow-up:
+- Start Milestone 4.2 startup planning + scope lock for Start Batch workflow.
 
 ## Entry Format
 
