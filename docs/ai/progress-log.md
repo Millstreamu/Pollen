@@ -4,11 +4,38 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 3.4 — Cancel Order (release-candidate)  
-Overall status: Milestone 3.3 is complete after release validation/sign-off; Milestone 3.4 is now release-candidate after stabilising validation/sign-off.
+Current milestone: Milestone 3.4 — Cancel Order (complete)  
+Overall status: Milestone 3.4 is complete after completion closeout validation/sign-off; milestone flow now advances to Milestone 4 startup planning.
 
 ## Latest Summary
 Milestone 3.4 passed stabilising validation/sign-off on 2026-05-27 and has transitioned to release-candidate pending final completion closeout.
+
+Milestone 3.4 completion closeout validation/sign-off is now complete and the milestone is marked `complete`; next focus is Milestone 4 startup planning.
+
+
+### 2026-05-27 — Milestone 3.4 completion closeout validation + sign-off
+
+Branch/PR/Issue:
+- local milestone completion closeout update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 3.4 completion closeout gate.
+- Confirmed cancellation and stock workflows remain regression-safe through compile + full suite checks.
+- Transitioned milestone tracking from `release-candidate` to `complete`.
+- Updated handoff to Milestone 4 startup planning and added durable closeout report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`70 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full test execution succeeded with available tooling.
+
+Follow-up:
+- Start Milestone 4 startup planning + scope lock for Make/Buy workflow.
 
 
 ### 2026-05-27 — Milestone 3.4 release-candidate validation + sign-off
