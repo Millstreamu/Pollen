@@ -16,7 +16,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
-- [ ] Lint *(no repo lint command currently defined)*
+- [x] Lint *(configured via `ruff check src tests`)*
 - [x] Unit tests
 - [x] Relevant service/integration tests
 - [x] Journey tests if applicable

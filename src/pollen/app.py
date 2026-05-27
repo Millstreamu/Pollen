@@ -599,7 +599,6 @@ class AppShell:
 
         sections: list[str] = ["<section><h3>Product recipes</h3>"]
         for product in products:
-            rows = self._recipe_service.list_recipe_items(authorization_header=authorization_header, product_id=product.product_id)
             can_make = self._recipe_service.can_make_quantity(
                 authorization_header=authorization_header,
                 product_id=product.product_id,
