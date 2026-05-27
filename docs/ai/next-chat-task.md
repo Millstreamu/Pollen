@@ -1,47 +1,32 @@
-# Next Chat Task — Milestone 3.3 First Vertical Slice
+# Next Chat Task — Milestone 3.4 Startup Planning (Cancel Order)
 
-Use this brief in future chats to continue work without re-planning.
+Use this brief in future chats to continue work without re-planning completed milestones.
 
 ## Active Milestone
-- Milestone 3.3 — Pack and Ship Workflow (`in-progress`)
+- Milestone 3.4 — Cancel Order (`in-progress`)
 
 ## Objective
-Implement the first end-to-end Milestone 3.3 pack-and-ship slice using the scope lock captured on 2026-05-27.
+Execute Milestone 3.4 startup planning + scope lock, then begin first vertical slice only after planning evidence is captured.
 
-## Scope Lock (do not expand)
-In scope:
-- mark `ready_to_pack` order as `packed`
-- mark `packed` order as `shipped`
-- shipping finalises/resolves reservation exactly once (no double-deduct)
-- activity log entries for pack/ship transitions
+## Scope Lock (initial)
+In scope for startup/planning:
+- confirm roadmap acceptance criteria for order cancellation behavior
+- define reservation-release behavior for cancellation
+- identify required service/model/app/test touchpoints
+- capture explicit in-scope vs out-of-scope boundaries
 
-Out of scope:
-- Milestone 3.4+ roadmap work
-- cancellation workflow expansion
-- large UX expansions unrelated to pack/ship core flow
+Out of scope during startup/planning:
+- implementation of Milestone 4.x make/buy workflow
+- unrelated UX polish
+- broad order workflow refactors outside cancellation criteria
 
 ## Recommended Implementation Order
-1. Service/model slice
-   - Add guarded pack/ship transitions.
-   - Enforce invalid-transition blocking.
-   - Resolve reservation at shipping in a no-double-deduct-safe way.
-   - Write activity log entries.
-
-2. Tests
-   - Add/extend tests for valid transitions and invalid-transition blocking.
-   - Add/extend tests to prove shipping does not double-deduct stock.
-   - Add milestone journey/integration test for create→pack→ship flow.
-
-3. App/UI wiring
-   - Wire minimal actions/endpoints for pack and ship transitions.
-   - Return clear transition error feedback consistent with existing behavior.
-
-4. Validation pass
-   - Run full Codex-cloud validation commands and record outcomes.
-
-5. Documentation synchronization
-   - Update `docs/ai/completion-status.md` and `docs/ai/progress-log.md`.
-   - Add milestone implementation report under `docs/ai/reports/`.
+1. Planning and scope-lock report for Milestone 3.4.
+2. Service/model implementation slice for cancel transition + reservation release.
+3. Tests (unit/service/journey) for valid cancel, invalid transitions, and stock consistency.
+4. App/UI wiring for cancel action + user-facing error handling.
+5. Full validation pass in Codex cloud.
+6. Documentation sync (`completion-status`, `progress-log`, milestone report).
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -51,4 +36,4 @@ Out of scope:
 - `pytest -q`
 
 ## Planning Evidence
-- `docs/ai/reports/milestone-3.3-startup-planning-scope-lock-report-2026-05-27.md`
+- `docs/ai/reports/milestone-3.3-release-validation-signoff-2026-05-27.md`

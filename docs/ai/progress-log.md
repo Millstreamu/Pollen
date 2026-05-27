@@ -4,11 +4,11 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 3.3 — Pack and Ship Workflow (in-progress)  
-Overall status: Milestone 3.2 is complete after release validation/sign-off; Milestone 3.3 is now active.
+Current milestone: Milestone 3.4 — Cancel Order (in-progress)  
+Overall status: Milestone 3.3 is complete after release validation/sign-off; Milestone 3.4 startup is now active.
 
 ## Latest Summary
-Milestone 3.2 was released as complete on 2026-05-27; next execution focus shifts to Milestone 3.3 startup.
+Milestone 3.3 was released as complete on 2026-05-27; next execution focus shifts to Milestone 3.4 startup.
 
 ## Entry Format
 
@@ -32,6 +32,32 @@ Follow-up:
 ```
 
 ## Entries
+
+### 2026-05-27 — Milestone 3.3 release validation + completion sign-off
+
+Branch/PR/Issue:
+- local milestone release closeout update
+
+Completed:
+- Executed release-flow validation commands for Milestone 3.3 in Codex cloud.
+- Confirmed compile check and full test suite pass (`65 passed`).
+- Finalized release decision and transitioned Milestone 3.3 from `in-progress` to `complete`.
+- Advanced next-task brief to Milestone 3.4 startup planning.
+- Added durable release sign-off report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`65 passed`)
+
+Notes:
+- Dev dependency fetch for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but installed tooling was sufficient to run the full suite successfully.
+
+Follow-up:
+- Start Milestone 3.4 startup planning and scope lock (Cancel Order).
+
 
 ### 2026-05-27 — Milestone 3.3 first vertical slice implementation
 
