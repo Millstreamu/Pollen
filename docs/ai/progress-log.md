@@ -4,11 +4,11 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 2.4 — Manual Stock Adjustment (complete)  
-Overall status: Milestone 2.4 final release decision has been recorded and the milestone is now `complete`.
+Current milestone: Milestone 3.1 — Manual Order Creation (in-progress)  
+Overall status: Milestone 3.1 implementation is in-progress and project-memory tracking has been reconciled to this active milestone.
 
 ## Latest Summary
-Milestone 2.4 completion closeout finalized on 2026-05-26 with compile/tests passing (`52 passed`) and status transitioned from `release-candidate` to `complete`.
+Milestone 3.1 milestone-memory reconciliation finalized on 2026-05-26; tracking files now point to Milestone 3.1 as active and validation checks passed.
 
 ## Entry Format
 
@@ -34,6 +34,29 @@ Follow-up:
 ## Entries
 
 Add entries below.
+
+### 2026-05-26 — Milestone 3.1 project-memory reconciliation + execution report
+
+Branch/PR/Issue:
+- local milestone status/reporting sync update
+
+Completed:
+- Reconciled milestone tracking mismatch by switching completion tracking to Milestone 3.1 (`in-progress`).
+- Updated current status and summary in progress log to align with the active milestone execution flow.
+- Added a Milestone 3.1 reconciliation/execution report documenting scope, commands, and outcomes.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `pytest -q` — pass (`55 passed`)
+
+Notes:
+- This slice focused on project-memory/status reconciliation and durable reporting while continuing Milestone 3.1 execution under the AI development method.
+
+Follow-up:
+- Continue Milestone 3.1 through stabilising/release-candidate/complete status flow after next requested implementation or validation slice.
 
 ### 2026-05-26 — Milestone 2.4 completion release decision + closeout
 
