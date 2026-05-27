@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pollen.auth import AuthService
+from pollen.batches import BatchRecord, BatchRepository
 from pollen.inventory import ActivityLogRepository, InventoryMovementRepository
 from pollen.materials import MaterialRecord, MaterialRepository
 from pollen.orders import OrderItemRecord, OrderRecord, OrderRepository
@@ -479,6 +480,56 @@ class RecipeService:
         if not max_by_material:
             return 0
         return min(max_by_material)
+
+
+class BatchService:
+    """Create planned batches while validating material requirements."""
+
+    def __init__(
+        self,
+        *,
+        auth_service: AuthService | None = None,
+        batch_repository: BatchRepository | None = None,
+        product_repository: ProductRepository | None = None,
+        recipe_repository: RecipeRepository | None = None,
+        material_repository: MaterialRepository | None = None,
+    ) -> None:
+        self._auth_service = auth_service or AuthService()
+        self._batch_repository = batch_repository or BatchRepository()
+        self._product_repository = product_repository or ProductRepository()
+        self._recipe_repository = recipe_repository or RecipeRepository()
+        self._material_repository = material_repository or MaterialRepository()
+
+    def create_batch(self, *, authorization_header: str | None, product_id: str, quantity: int) -> tuple[BatchRecord | None, str | None]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None, "Unauthorized"
+        if not product_id.strip() or quantity <= 0:
+            return None, "Product and quantity are required"
+        product = self._product_repository.get_for_shop(shop_id=context.shop.shop_id, product_id=product_id)
+        if product is None:
+            return None, "Unknown product"
+
+        recipe_items = self._recipe_repository.list_for_product(shop_id=context.shop.shop_id, product_id=product_id)
+        shortages: list[str] = []
+        for item in recipe_items:
+            material = self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=item.material_id)
+            if material is None or not material.is_active:
+                shortages.append(f"Missing material {item.material_id}")
+                continue
+            needed = item.quantity_per_unit * quantity
+            if material.stock_on_hand < needed:
+                shortages.append(f"{material.name} short by {needed - material.stock_on_hand} {material.unit}")
+        if shortages:
+            return None, "Insufficient materials: " + "; ".join(shortages)
+
+        return self._batch_repository.create(shop_id=context.shop.shop_id, product_id=product_id, quantity=quantity), None
+
+    def list_batches(self, *, authorization_header: str | None) -> list[BatchRecord]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return []
+        return self._batch_repository.list_for_shop(shop_id=context.shop.shop_id)
 
 
 class MaterialService:

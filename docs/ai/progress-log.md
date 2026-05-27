@@ -1060,3 +1060,5 @@ Notes:
 
 Follow-up:
 - Continue Milestone 3.3 with any remaining UX polish and completion-status synchronization decisions.
+
+- 2026-05-27: Implemented Milestone 4.1 first vertical slice (create batch with material sufficiency checks, tests, and report).
