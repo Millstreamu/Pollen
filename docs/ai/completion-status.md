@@ -3,16 +3,17 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 3.4 — Cancel Order  
-Status: complete
+Name: Milestone 4.1 — Create Batch  
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Cancel eligible (`new` / `ready_to_pack` / `packed` where appropriate) orders.
-- [x] Release reserved stock on cancellation.
-- [x] Block casual cancellation for `shipped` orders.
-- [x] Write activity log entries for cancellation transitions.
+- [ ] Create a planned batch in Make/Buy for a selected product.
+- [ ] Validate batch quantity input and required fields.
+- [ ] Check materials-needed versus available quantities for requested batch quantity.
+- [ ] Block create when required materials are insufficient and return actionable errors.
+- [ ] Persist create-batch result without starting/completing lifecycle transitions.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
@@ -25,10 +26,12 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- None for Milestone 3.4.
+- Implement Milestone 4.1 first vertical slice (Create Batch) service/app behavior.
+- Add/extend tests for create-batch success and insufficient-material blocking flows.
+- Produce implementation report evidence for Milestone 4.1 first slice.
 
 ## Optional Post-Milestone Work
-- UX expansion beyond cancellation core flow remains out of scope unless explicitly requested.
+- Additional Make/Buy UX polish remains out of scope unless explicitly requested.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
