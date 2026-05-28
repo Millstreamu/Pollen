@@ -1513,3 +1513,28 @@ Follow-up:
 - Continue Milestone 3.3 with any remaining UX polish and completion-status synchronization decisions.
 
 - 2026-05-27: Implemented Milestone 4.1 first vertical slice (create batch with material sufficiency checks, tests, and report).
+
+### 2026-05-28 — Milestone 5.2 completion closeout validation + sign-off
+
+Branch/PR/Issue:
+- local milestone closeout update
+
+Completed:
+- Executed full Codex-cloud validation sequence for Milestone 5.2 completion closeout.
+- Recorded completion closeout sign-off report with command evidence and outcomes.
+- Transitioned Milestone 5.2 status from `release-candidate` to `complete`.
+- Updated next-chat handoff to Milestone 5.3 startup planning + scope lock.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (`pytest==8.4.2` unavailable via current proxy/index)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`81 passed`)
+
+Notes:
+- Environment dependency fetch limitation persists for dev dependency install, but compile, lint, and full test suite pass with current environment toolchain.
+
+Follow-up:
+- Start Milestone 5.3 startup planning + scope lock, then implement receive-purchase first vertical slice.
