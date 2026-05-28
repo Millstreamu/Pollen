@@ -1,24 +1,27 @@
-# Next Chat Task — Milestone 5.2 Startup Planning + Scope Lock
+# Next Chat Task — Milestone 5.2 First Vertical Slice Implementation
 
 Use this brief in future chats to continue work without re-planning completed slices.
 
 ## Active Milestone
-- Milestone 5.2 — Purchase Workflow Persistence (`not-started`)
+- Milestone 5.2 — Purchase Workflow Persistence (`in-progress`)
 
 ## Objective
-Run startup planning + scope lock for Milestone 5.2 and transition milestone status to `in-progress` once plan/report evidence is complete.
+Implement the Milestone 5.2 first vertical slice for purchase creation persistence, including tests and report evidence.
 
 ## Scope Lock (current)
 In scope for current next task:
-- read roadmap/rules context for Milestone 5.2
-- define first vertical-slice boundaries for Purchase persistence workflow
-- document explicit out-of-scope items for this slice
-- update status tracking and create startup planning report evidence
+- create persisted Purchase records from Make/Buy flow
+- add purchase line items (material + quantity)
+- support optional supplier and expected date fields
+- persist purchase status in Milestone scope (`Draft`/`Ordered`)
+- ensure purchase creation does **not** mutate material stock
+- show created purchases in Buy page list
+- add tests for creation + no-stock-mutation behavior
 
 Out of scope for current slice:
-- Milestone 5.2 implementation changes
 - purchase receiving stock mutation workflow (Milestone 5.3)
-- supplier automation or advanced procurement capabilities
+- InventoryMovement or ActivityLog receiving semantics
+- supplier automation, smart replenishment, or broader procurement UX redesign
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -29,7 +32,5 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-5.1-first-vertical-slice-implementation-report-2026-05-28.md`
-- `docs/ai/reports/milestone-5.1-stabilization-validation-report-2026-05-28.md`
-- `docs/ai/reports/milestone-5.1-release-candidate-validation-signoff-2026-05-28.md`
 - `docs/ai/reports/milestone-5.1-completion-closeout-signoff-2026-05-28.md`
+- `docs/ai/reports/milestone-5.2-startup-planning-scope-lock-report-2026-05-28.md`
