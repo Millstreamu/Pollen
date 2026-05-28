@@ -1,20 +1,21 @@
-# Next Chat Task — Milestone 7.1 Completion Closeout Sign-off
+# Next Chat Task — Milestone 8.1 Startup Planning + Scope Lock
 
 ## Active Milestone
-- Milestone 7.1 — Backlog/Planning Stream (`release-candidate`)
+- Milestone 8.1 — Integration Architecture (`not-started`)
 
 ## Objective
-Run completion closeout validation for Milestone 7.1 and advance status to `complete` if checks remain green.
+Prepare Milestone 8.1 startup planning artifacts, lock scope, and transition status to `in-progress` once planning evidence is documented.
 
 ## Scope Lock (current)
 In scope for current next task:
-- run full Codex-cloud validation sequence
-- confirm Milestone 7.1 behavior remains regression-safe
-- update milestone status to `complete` if validation passes
-- publish completion closeout sign-off report evidence
+- define Milestone 8.1 goals, constraints, and acceptance criteria from roadmap
+- identify minimal integration architecture slice for mocked Etsy import path
+- document risks, out-of-scope boundaries, and verification plan
+- update milestone tracking files after planning sign-off
 
 Out of scope for current slice:
-- Milestone 8+ features
+- implementing Milestone 8.1 production code
+- Milestone 8.2+ behavior changes
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -25,4 +26,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-7.1-release-candidate-validation-signoff-2026-05-28.md`
+- add startup planning report under `docs/ai/reports/` for Milestone 8.1
