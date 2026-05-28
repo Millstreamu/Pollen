@@ -79,3 +79,17 @@ def test_make_buy_page_uses_beginner_friendly_sections_and_empty_state_guidance(
     assert "<button type='submit'>Save batch plan</button>" in response.body
     assert "No low materials right now. Add materials and reorder points to unlock suggestions." in response.body
     assert "<button type='submit'>Save purchase</button>" in response.body
+
+
+def test_money_page_uses_beginner_friendly_consistency_sections_and_empty_state() -> None:
+    header = _auth_header("money-ui", "money-ui@example.com")
+    app = AppShell()
+
+    response = app.get("/money", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "<h3>Money overview</h3>" in response.body
+    assert "<h3>Estimated profit and cost</h3>" in response.body
+    assert "<h3>Next steps</h3>" in response.body
+    assert "No money data yet. Finish a few orders and purchases to unlock estimated totals." in response.body
+    assert "<button type='button' disabled>View estimates</button>" in response.body
