@@ -3,16 +3,16 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 6.2 — Today Actions  
-Status: complete
+Name: Milestone 7.1 — Product Cost and Estimated Profit  
+Status: stabilising
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Add Today-surface action affordances for core next steps.
-- [x] Route actions into existing workflows (order detail/pack, product detail, create batch, create purchase).
-- [x] Keep actions explicit and user-triggered (no hidden automation).
-- [x] Add/adjust tests for Today action availability/routing behavior.
+- [x] Add product-level estimated money inputs (sale price, material cost, packaging/shipping cost, platform fee percent).
+- [x] Compute and expose estimated platform fee and estimated profit per sale.
+- [x] Keep estimates clearly labeled and non-accounting in semantics.
+- [x] Add/adjust tests for estimate calculation behavior.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
@@ -25,10 +25,11 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- None for Milestone 6.2.
+- Execute Milestone 7.1 release-candidate validation sign-off.
+- Execute Milestone 7.1 completion closeout validation sign-off.
 
 ## Optional Post-Milestone Work
-- Prioritization/urgency scoring refinement for Today actions.
+- Future rounding/formatting polish for money display surfaces.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
