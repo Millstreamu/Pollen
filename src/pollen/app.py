@@ -13,6 +13,7 @@ from pollen.recipes import RecipeRepository
 from pollen.services import (
     BatchService,
     MaterialService,
+    MoneySummaryService,
     OrderService,
     ProductService,
     RecipeService,
@@ -106,6 +107,11 @@ class AppShell:
             batch_repository=self._batch_service._batch_repository,  # noqa: SLF001
             purchase_repository=self._material_service._purchase_repository,  # noqa: SLF001
         )
+        self._money_summary_service = MoneySummaryService(
+            auth_service=self._auth_service,
+            order_repository=self._order_service._order_repository,  # noqa: SLF001
+            product_repository=self._product_service._product_repository,  # noqa: SLF001
+        )
 
     def get(self, path: str, *, authorization_header: str | None = None) -> AppResponse:
         parsed_path = urlsplit(path)
@@ -150,6 +156,12 @@ class AppShell:
                 sku=payload.get("sku", ""),
                 stock_on_hand=int(payload.get("stock_on_hand", "0")),
                 reorder_point=int(payload.get("reorder_point", "0")),
+                sale_price=float(payload.get("sale_price", "0") or 0),
+                estimated_material_cost=float(payload.get("estimated_material_cost", "0") or 0),
+                estimated_packaging_shipping_cost=float(
+                    payload.get("estimated_packaging_shipping_cost", "0") or 0
+                ),
+                platform_fee_percent=float(payload.get("platform_fee_percent", "0") or 0),
             )
         elif action == "edit":
             product_id = payload.get("product_id")
@@ -165,6 +177,20 @@ class AppShell:
                     sku=payload.get("sku", current_product.sku),
                     stock_on_hand=int(payload.get("stock_on_hand", str(current_product.stock_on_hand))),
                     reorder_point=int(payload.get("reorder_point", str(current_product.reorder_point))),
+                    sale_price=float(payload.get("sale_price", str(current_product.sale_price)) or 0),
+                    estimated_material_cost=float(
+                        payload.get("estimated_material_cost", str(current_product.estimated_material_cost)) or 0
+                    ),
+                    estimated_packaging_shipping_cost=float(
+                        payload.get(
+                            "estimated_packaging_shipping_cost",
+                            str(current_product.estimated_packaging_shipping_cost),
+                        )
+                        or 0
+                    ),
+                    platform_fee_percent=float(
+                        payload.get("platform_fee_percent", str(current_product.platform_fee_percent)) or 0
+                    ),
                 )
         elif action == "archive":
             product_id = payload.get("product_id")
@@ -396,6 +422,10 @@ class AppShell:
             "<label>SKU <input name='sku' required></label>"
             "<label>Stock <input name='stock_on_hand' type='number' min='0' required></label>"
             "<label>Reorder <input name='reorder_point' type='number' min='0' required></label>"
+            "<label>Sale price <input name='sale_price' type='number' min='0' step='0.01' value='0'></label>"
+            "<label>Material cost <input name='estimated_material_cost' type='number' min='0' step='0.01' value='0'></label>"
+            "<label>Packaging/shipping cost <input name='estimated_packaging_shipping_cost' type='number' min='0' step='0.01' value='0'></label>"
+            "<label>Platform fee % <input name='platform_fee_percent' type='number' min='0' step='0.01' value='0'></label>"
             "<button type='submit'>Save product</button>"
             "</form>"
         )
@@ -503,6 +533,10 @@ class AppShell:
                 f"<label>SKU <input name='sku' value='{product.sku}' required></label>"
                 f"<label>Stock <input name='stock_on_hand' type='number' min='0' value='{product.stock_on_hand}' required></label>"
                 f"<label>Reorder <input name='reorder_point' type='number' min='0' value='{product.reorder_point}' required></label>"
+                f"<label>Sale price <input name='sale_price' type='number' min='0' step='0.01' value='{product.sale_price}'></label>"
+                f"<label>Material cost <input name='estimated_material_cost' type='number' min='0' step='0.01' value='{product.estimated_material_cost}'></label>"
+                f"<label>Packaging/shipping cost <input name='estimated_packaging_shipping_cost' type='number' min='0' step='0.01' value='{product.estimated_packaging_shipping_cost}'></label>"
+                f"<label>Platform fee % <input name='platform_fee_percent' type='number' min='0' step='0.01' value='{product.platform_fee_percent}'></label>"
                 "<button type='submit'>Save all fields</button>"
                 "</form>"
                 "</td>"
@@ -920,6 +954,23 @@ class AppShell:
             )
 
         if page_title == "Money" and authorization_header is not None:
+            summary = self._money_summary_service.get_summary(authorization_header=authorization_header)
+            has_money_data = summary["shipped_item_count"] > 0
+            estimated_content = (
+                "<p>No money data yet. Finish a few orders and purchases to unlock estimated totals.</p>"
+                "<button type='button' disabled>View estimates</button>"
+            )
+            if has_money_data:
+                estimated_content = (
+                    "<p>Estimated totals update from shipped orders using product pricing and cost fields.</p>"
+                    "<ul>"
+                    f"<li>Shipped orders: {summary['shipped_order_count']}</li>"
+                    f"<li>Items shipped: {summary['shipped_item_count']}</li>"
+                    f"<li>Estimated revenue: {self._format_currency(summary['estimated_revenue'])}</li>"
+                    f"<li>Estimated cost: {self._format_currency(summary['estimated_cost'])}</li>"
+                    f"<li>Estimated profit: {self._format_currency(summary['estimated_profit'])}</li>"
+                    "</ul>"
+                )
             page_content = (
                 "<section><h3>Money overview</h3>"
                 "<p>Money snapshots are estimates for planning and are not accounting records.</p>"
@@ -927,8 +978,7 @@ class AppShell:
                 "<li>Use this page to review cash-impact trends before making new inventory decisions.</li>"
                 "</ul></section>"
                 "<section><h3>Estimated profit and cost</h3>"
-                "<p>No money data yet. Finish a few orders and purchases to unlock estimated totals.</p>"
-                "<button type='button' disabled>View estimates</button></section>"
+                f"{estimated_content}</section>"
                 "<section><h3>Next steps</h3>"
                 "<ul>"
                 "<li><a href='/orders'>Ship packed orders</a> to build revenue estimates.</li>"
@@ -977,6 +1027,9 @@ class AppShell:
         movement_rows = ''.join(f'<li>{m.item_type}:{m.item_id} {m.before_quantity}->{m.after_quantity} ({m.reason})</li>' for m in movements)
         activity_rows = ''.join(f'<li>{a.entity_type}:{a.entity_id} {a.message}</li>' for a in activities)
         return f"<section><h3>Inventory movements</h3><ul>{movement_rows}</ul><h3>Activity log</h3><ul>{activity_rows}</ul></section>"
+    def _format_currency(self, amount: float | int) -> str:
+        return f"${float(amount):,.2f}"
+
 
 def create_app() -> AppShell:
     """Create the app shell with milestone auth enforcement."""

@@ -949,6 +949,78 @@ class MaterialService:
         return self._material_repository.restore_for_shop(shop_id=context.shop.shop_id, material_id=material_id)
 
 
+class MoneySummaryService:
+    """Read-only estimated money totals for shipped order planning."""
+
+    def __init__(
+        self,
+        *,
+        auth_service: AuthService | None = None,
+        order_repository: OrderRepository | None = None,
+        product_repository: ProductRepository | None = None,
+    ) -> None:
+        self._auth_service = auth_service or AuthService()
+        self._order_repository = order_repository or OrderRepository()
+        self._product_repository = product_repository or ProductRepository()
+
+    def get_summary(self, *, authorization_header: str | None) -> dict[str, float | int]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return self._empty_summary()
+
+        shop_id = context.shop.shop_id
+        products_by_sku = {
+            product.sku: product
+            for product in self._product_repository.list_for_shop(
+                shop_id=shop_id,
+                include_archived=True,
+            )
+        }
+
+        shipped_order_count = 0
+        shipped_item_count = 0
+        estimated_revenue = 0.0
+        estimated_cost = 0.0
+        estimated_profit = 0.0
+
+        for order in self._order_repository.list_for_shop(shop_id=shop_id):
+            if order.status != "shipped":
+                continue
+            shipped_order_count += 1
+            for item in self._order_repository.list_items_for_order(
+                shop_id=shop_id,
+                order_id=order.order_id,
+            ):
+                product = products_by_sku.get(item.product_sku)
+                if product is None:
+                    continue
+                shipped_item_count += item.quantity
+                estimated_revenue += product.sale_price * item.quantity
+                estimated_cost += (
+                    product.estimated_material_cost
+                    + product.estimated_packaging_shipping_cost
+                    + product.estimated_platform_fee
+                ) * item.quantity
+                estimated_profit += product.estimated_profit_per_sale * item.quantity
+
+        return {
+            "shipped_order_count": shipped_order_count,
+            "shipped_item_count": shipped_item_count,
+            "estimated_revenue": round(estimated_revenue, 2),
+            "estimated_cost": round(estimated_cost, 2),
+            "estimated_profit": round(estimated_profit, 2),
+        }
+
+    def _empty_summary(self) -> dict[str, float | int]:
+        return {
+            "shipped_order_count": 0,
+            "shipped_item_count": 0,
+            "estimated_revenue": 0.0,
+            "estimated_cost": 0.0,
+            "estimated_profit": 0.0,
+        }
+
+
 class TodaySummaryService:
     """Read-only daily summary counts for the Today page."""
 

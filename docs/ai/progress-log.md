@@ -3,12 +3,40 @@
 Records meaningful completed work. Update after feature completion, bug fix completion, milestone completion, release verification, important decision, or server-run evidence that changes status.
 
 ## Current Status
-Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 10.1 — Full Journey Suite (in-progress)  
-Overall status: Milestone 10.1 first-slice stabilization validation passed compile/lint/full tests, but release-candidate advancement is held until the required money-summary journey coverage gap is closed.
+Project phase: Phase 1 — App Foundation
+Current milestone: Milestone 10.1 — Full Journey Suite (release-candidate validation pending)
+Overall status: Milestone 10.1 money-summary journey coverage gap is closed; compile, lint, and full tests pass, so release-candidate sign-off is now the next required step.
 
 
 ## Latest Summary
+
+
+### 2026-05-28 — Milestone 10.1 money summary journey slice
+
+Branch/PR/Issue:
+- local Milestone 10.1 money-summary journey implementation update
+
+Completed:
+- Added a read-only Money summary service for estimated shipped-order revenue, cost, and profit.
+- Updated the Money page to show estimated totals after shipped items exist while preserving the existing empty state for shops with no money data.
+- Wired product create/edit app-shell payloads and forms to persist existing product pricing/cost estimate fields.
+- Extended the Milestone 10.1 journey coverage with Money page assertions after pack/ship.
+- Added durable implementation/validation report evidence for the money-summary slice.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`98 passed`)
+
+Notes:
+- The Money summary is intentionally estimated from shipped order items and product price/cost fields.
+- Purchase spend, taxes, accounting ledgers, and external payment integrations remain out of scope for Milestone 10.1.
+
+Follow-up:
+- Run Milestone 10.1 release-candidate validation/sign-off.
 
 
 ### 2026-05-28 — Milestone 10.1 stabilization validation
