@@ -812,8 +812,15 @@ class AppShell:
         page_content = f"<p>{page_description}</p>"
         if page_title == "Today" and authorization_header is not None:
             summary = self._today_summary_service.get_summary(authorization_header=authorization_header)
+            is_empty_summary = all(value == 0 for value in summary.values())
+            summary_empty_state = (
+                "<p>No work is waiting right now. Create your first order or add inventory to begin.</p>"
+                if is_empty_summary
+                else ""
+            )
             page_content = (
                 "<section><h3>Today summary</h3>"
+                f"{summary_empty_state}"
                 "<ul>"
                 f"<li>Orders to pack: {summary['orders_to_pack']} — <a href='/orders'>Open orders</a></li>"
                 f"<li>Low stock: {summary['low_stock']} — <a href='/products-stock'>Review products</a></li>"
@@ -829,6 +836,10 @@ class AppShell:
                 "<li><a href='/make-buy'>Create a batch</a></li>"
                 "<li><a href='/make-buy'>Create a purchase</a></li>"
                 "</ul></section>"
+                "<section><h3>Next steps</h3>"
+                "<p>Pick one workflow below to keep your shop moving today.</p>"
+                "<button type='button' disabled>Open today checklist</button>"
+                "</section>"
             )
         if page_title == "Products & Stock" and authorization_header is not None:
             view = "active"
