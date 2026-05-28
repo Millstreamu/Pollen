@@ -3,8 +3,8 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 4.3 — Complete Batch  
-Status: release-candidate
+Name: Milestone 5.1 — Buy List / Reorder Suggestions  
+Status: not-started
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -28,7 +28,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Execute Milestone 4.3 completion closeout validation/sign-off and transition to `complete`.
+- Milestone 5.1 startup planning + scope lock is the next required task.
 
 ## Optional Post-Milestone Work
 - Additional Make/Buy UX polish remains out of scope unless explicitly requested.
@@ -42,3 +42,5 @@ See `docs/ai/do-not-build-yet.md`.
 - Milestone 4.3 startup planning + scope lock: completed (2026-05-28).
 
 - Milestone 4.3 stabilization validation: completed (2026-05-28).
+- Milestone 4.3 release-candidate validation sign-off: completed (2026-05-28).
+- Milestone 4.3 completion closeout sign-off: completed (2026-05-28).

@@ -4,12 +4,39 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 4.3 — Complete Batch (release-candidate)  
-Overall status: Milestone 4.3 release-candidate validation/sign-off is complete; milestone is now release-candidate pending completion closeout sign-off.
+Current milestone: Milestone 5.1 — Buy List / Reorder Suggestions (not-started)  
+Overall status: Milestone 4.3 completion closeout validation/sign-off is complete and the milestone is now marked complete. Next focus is Milestone 5.1 startup planning + scope lock.
 
 
 ## Latest Summary
-Milestone 4.3 release-candidate validation/sign-off is complete and milestone status is now `release-candidate`. Next execution target is completion closeout validation/sign-off.
+Milestone 4.3 completion closeout validation/sign-off is complete and milestone status is now `complete`. Next execution target is Milestone 5.1 startup planning + scope lock.
+
+### 2026-05-28 — Milestone 4.3 completion closeout validation + sign-off
+
+Branch/PR/Issue:
+- local milestone completion closeout update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 4.3 completion closeout gate.
+- Confirmed Complete Batch lifecycle and stock mutation workflows remain regression-safe via compile, lint, and full test suite checks.
+- Transitioned milestone tracking from `release-candidate` to `complete`.
+- Updated next-task handoff to Milestone 5.1 startup planning + scope lock.
+- Added durable closeout sign-off report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`77 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 5.1 startup planning + scope lock.
+
 
 ### 2026-05-28 — Milestone 4.3 release-candidate validation + sign-off
 

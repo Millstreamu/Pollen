@@ -1,24 +1,24 @@
-# Next Chat Task — Milestone 4.3 Completion Closeout Sign-off
+# Next Chat Task — Milestone 5.1 Startup Planning + Scope Lock
 
 Use this brief in future chats to continue work without re-planning completed slices.
 
 ## Active Milestone
-- Milestone 4.3 — Complete Batch (`release-candidate`)
+- Milestone 5.1 — Buy List / Reorder Suggestions (`not-started`)
 
 ## Objective
-Execute completion closeout validation/sign-off for Milestone 4.3 and transition milestone status to `complete` when all required checks pass.
+Execute startup planning and scope lock for Milestone 5.1, then transition milestone status to `in-progress` once planning evidence is recorded.
 
 ## Scope Lock (current)
 In scope for current next task:
-- run full Codex-cloud validation command sequence
-- confirm Complete Batch lifecycle behavior remains regression-safe
-- update milestone tracking from `release-candidate` to `complete` once checks pass
-- produce durable closeout sign-off report evidence
+- read roadmap/rules and lock first vertical slice for Buy List / Reorder Suggestions
+- define acceptance criteria and clear out-of-scope boundaries
+- update milestone tracking from `not-started` to `in-progress` after planning
+- produce durable startup planning report evidence
 
 Out of scope for current slice:
-- new feature development unrelated to Milestone 4.3 closeout
-- UX redesign or Money module work
-- partial-completion/rollback workflow expansion
+- implementing Purchase creation or receiving flows (Milestones 5.2/5.3)
+- Money module expansion
+- UX redesign outside the Buy List milestone
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -29,4 +29,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-4.3-release-candidate-validation-signoff-2026-05-28.md`
+- `docs/ai/reports/milestone-4.3-completion-closeout-signoff-2026-05-28.md`
