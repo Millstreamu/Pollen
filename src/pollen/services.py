@@ -912,3 +912,58 @@ class MaterialService:
             return None
 
         return self._material_repository.restore_for_shop(shop_id=context.shop.shop_id, material_id=material_id)
+
+
+class TodaySummaryService:
+    """Read-only daily summary counts for the Today page."""
+
+    def __init__(
+        self,
+        *,
+        auth_service: AuthService | None = None,
+        order_repository: OrderRepository | None = None,
+        product_repository: ProductRepository | None = None,
+        material_repository: MaterialRepository | None = None,
+        batch_repository: BatchRepository | None = None,
+        purchase_repository: PurchaseRepository | None = None,
+    ) -> None:
+        self._auth_service = auth_service or AuthService()
+        self._order_repository = order_repository or OrderRepository()
+        self._product_repository = product_repository or ProductRepository()
+        self._material_repository = material_repository or MaterialRepository()
+        self._batch_repository = batch_repository or BatchRepository()
+        self._purchase_repository = purchase_repository or PurchaseRepository()
+
+    def get_summary(self, *, authorization_header: str | None) -> dict[str, int]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return {
+                "orders_to_pack": 0,
+                "low_stock": 0,
+                "materials_to_buy": 0,
+                "batches_in_progress": 0,
+                "purchases_due": 0,
+            }
+
+        shop_id = context.shop.shop_id
+        orders_to_pack = sum(1 for order in self._order_repository.list_for_shop(shop_id=shop_id) if order.status == "ready_to_pack")
+        low_stock_products = sum(
+            1
+            for product in self._product_repository.list_for_shop(shop_id=shop_id, include_archived=False)
+            if product.is_low_stock
+        )
+        low_stock_materials = sum(
+            1
+            for material in self._material_repository.list_for_shop(shop_id=shop_id, include_archived=False)
+            if material.is_low_stock
+        )
+        batches_in_progress = sum(1 for batch in self._batch_repository.list_for_shop(shop_id=shop_id) if batch.status == "in-progress")
+        purchases_due = sum(1 for purchase in self._purchase_repository.list_for_shop(shop_id=shop_id) if purchase.status == "Ordered")
+
+        return {
+            "orders_to_pack": orders_to_pack,
+            "low_stock": low_stock_products + low_stock_materials,
+            "materials_to_buy": low_stock_materials,
+            "batches_in_progress": batches_in_progress,
+            "purchases_due": purchases_due,
+        }

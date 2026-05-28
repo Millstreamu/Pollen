@@ -16,6 +16,7 @@ from pollen.services import (
     OrderService,
     ProductService,
     RecipeService,
+    TodaySummaryService,
 )
 
 NAV_ITEMS: tuple[tuple[str, str], ...] = (
@@ -96,6 +97,14 @@ class AppShell:
         self._order_service = OrderService(
             auth_service=self._auth_service,
             product_repository=order_product_repository,
+        )
+        self._today_summary_service = TodaySummaryService(
+            auth_service=self._auth_service,
+            order_repository=self._order_service._order_repository,  # noqa: SLF001
+            product_repository=self._product_service._product_repository,  # noqa: SLF001
+            material_repository=self._material_service._material_repository,  # noqa: SLF001
+            batch_repository=self._batch_service._batch_repository,  # noqa: SLF001
+            purchase_repository=self._material_service._purchase_repository,  # noqa: SLF001
         )
 
     def get(self, path: str, *, authorization_header: str | None = None) -> AppResponse:
@@ -793,6 +802,18 @@ class AppShell:
         )
         page_description = self._DESCRIPTIONS[page_title]
         page_content = f"<p>{page_description}</p>"
+        if page_title == "Today" and authorization_header is not None:
+            summary = self._today_summary_service.get_summary(authorization_header=authorization_header)
+            page_content = (
+                "<section><h3>Today summary</h3>"
+                "<ul>"
+                f"<li>Orders to pack: {summary['orders_to_pack']}</li>"
+                f"<li>Low stock: {summary['low_stock']}</li>"
+                f"<li>Materials to buy: {summary['materials_to_buy']}</li>"
+                f"<li>Batches in progress: {summary['batches_in_progress']}</li>"
+                f"<li>Purchases due: {summary['purchases_due']}</li>"
+                "</ul></section>"
+            )
         if page_title == "Products & Stock" and authorization_header is not None:
             view = "active"
             if query is not None:
