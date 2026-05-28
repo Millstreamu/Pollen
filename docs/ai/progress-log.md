@@ -4,11 +4,38 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 6.1 — Today Data Summary (complete)  
-Overall status: Milestone 6.1 completion closeout validation/sign-off finished and milestone is now complete.
+Current milestone: Milestone 6.2 — Today Actions (in-progress)  
+Overall status: Milestone 6.2 startup planning + scope lock completed; implementation handoff prepared.
 
 
 ## Latest Summary
+
+
+### 2026-05-28 — Milestone 6.2 startup planning + scope lock
+
+Branch/PR/Issue:
+- local Milestone 6.2 planning/reporting update
+
+Completed:
+- Read roadmap context for Milestone 6.2 (Today Actions) and validated dependency on existing workflow endpoints.
+- Locked first-slice scope to explicit Today action routing into existing flows only (no new automation).
+- Transitioned active milestone tracking from Milestone 6.1 complete to Milestone 6.2 in-progress.
+- Updated next-chat handoff and completion-status checklists for Milestone 6.2 execution.
+- Added durable startup planning evidence report for Milestone 6.2.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 6.2 first vertical slice (Today actions routing + tests).
 
 
 

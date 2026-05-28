@@ -3,41 +3,39 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 6.1 — Today Data Summary  
-Status: complete
+Name: Milestone 6.2 — Today Actions  
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Add a simple Today summary service/output structure.
-- [x] Include counts for key action buckets (orders to pack, low stock, materials to buy, batches in progress, purchases due).
-- [x] Keep summary read-only (no workflow mutations).
-- [x] Add tests for Today summary behavior.
+- [ ] Add Today-surface action affordances for core next steps.
+- [ ] Route actions into existing workflows (order detail/pack, product detail, create batch, create purchase).
+- [ ] Keep actions explicit and user-triggered (no hidden automation).
+- [ ] Add/adjust tests for Today action availability/routing behavior.
 
 ## Required Verification Checklist
-- [x] Typecheck *(Python compile check used in current repo flow)*
-- [x] Lint *(configured via `ruff check src tests`)*
-- [x] Unit tests
-- [x] Relevant service/integration tests
-- [x] Journey tests if applicable
-- [x] Build *(compile check: `python -m compileall -q src tests`)*
-- [x] Environment-specific checks or exceptions documented
+- [ ] Typecheck *(Python compile check used in current repo flow)*
+- [ ] Lint *(configured via `ruff check src tests`)*
+- [ ] Unit tests
+- [ ] Relevant service/integration tests
+- [ ] Journey tests if applicable
+- [ ] Build *(compile check: `python -m compileall -q src tests`)*
+- [ ] Environment-specific checks or exceptions documented
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- None for Milestone 6.1.
+- Complete Milestone 6.2 startup planning + scope lock report and implementation handoff.
+- Implement first Milestone 6.2 vertical slice.
+- Execute stabilization, release-candidate validation, and completion closeout sign-off.
 
 ## Optional Post-Milestone Work
-- Additional Today UX polish and advanced prioritisation remain out of scope unless explicitly requested.
+- Prioritization/urgency scoring refinement for Today actions.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
 
-- Milestone 4.2 startup planning + scope lock: completed (2026-05-27).
-- Milestone 4.2 release-candidate validation + sign-off: completed (2026-05-27).
-- Milestone 4.2 completion closeout sign-off: completed (2026-05-28).
-- Milestone 4.3 startup planning + scope lock: completed (2026-05-28).
-
-- Milestone 4.3 stabilization validation: completed (2026-05-28).
-- Milestone 4.3 release-candidate validation sign-off: completed (2026-05-28).
-- Milestone 4.3 completion closeout sign-off: completed (2026-05-28).
+- Milestone 6.1 startup planning + scope lock: completed (2026-05-28).
+- Milestone 6.1 stabilization validation: completed (2026-05-28).
+- Milestone 6.1 release-candidate validation sign-off: completed (2026-05-28).
+- Milestone 6.1 completion closeout sign-off: completed (2026-05-28).
