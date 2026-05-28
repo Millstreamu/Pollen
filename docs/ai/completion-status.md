@@ -13,26 +13,28 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Define first-slice journey target and explicit out-of-scope boundaries.
 - [x] Confirm acceptance-criteria interpretation for pass criteria vs documented environment limits.
 - [x] Record startup planning evidence for milestone handoff.
+- [x] Implement first vertical journey slice for one core seller operating workflow.
+- [x] Record first-slice implementation evidence.
 
 ## Required Verification Checklist
-- [ ] Typecheck *(Python compile check used in current repo flow)*
-- [ ] Lint *(configured via `ruff check src tests`)*
-- [ ] Unit tests
-- [ ] Relevant service/integration tests
-- [ ] Journey tests if applicable
-- [ ] Build *(compile check: `python -m compileall -q src tests`)*
-- [ ] Environment-specific checks or exceptions documented
+- [x] Typecheck *(Python compile check used in current repo flow)*
+- [x] Lint *(configured via `ruff check src tests`)*
+- [x] Unit tests
+- [x] Relevant service/integration tests
+- [x] Journey tests if applicable
+- [x] Build *(compile check: `python -m compileall -q src tests`)*
+- [x] Environment-specific checks or exceptions documented
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Implement Milestone 10.1 first vertical slice journey verification.
-- Run full validation sequence and classify any blockers.
+- Run Milestone 10.1 stabilization validation.
+- Decide whether additional required journey slices are needed before release-candidate sign-off.
 
 ## Optional Post-Milestone Work
 - Milestone 9.2 optional screenshot evidence may still be done later if desired.
 
 ## Next Required Milestone
-- Milestone 10.1 first-vertical-slice implementation.
+- Milestone 10.1 stabilization validation.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
