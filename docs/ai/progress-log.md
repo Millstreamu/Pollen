@@ -4,11 +4,38 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation
-Current milestone: Milestone 10.1 — Full Journey Suite (release-candidate validation pending)
-Overall status: Milestone 10.1 money-summary journey coverage gap is closed; compile, lint, and full tests pass, so release-candidate sign-off is now the next required step.
+Current milestone: Milestone 10.1 — Full Journey Suite (completion closeout pending)
+Overall status: Milestone 10.1 release-candidate validation/sign-off passed; compile, lint, and full tests pass, so completion closeout is now the next required step.
 
 
 ## Latest Summary
+
+
+### 2026-05-28 — Milestone 10.1 release-candidate validation + sign-off
+
+Branch/PR/Issue:
+- local Milestone 10.1 release-candidate sign-off update
+
+Completed:
+- Executed the full available Codex-cloud validation sequence for the Milestone 10.1 release-candidate gate.
+- Confirmed the full journey suite now covers all required Milestone 10.1 workflows, including money summary updates.
+- Recorded release-candidate sign-off report evidence with command outcomes and environment limitations.
+- Updated next-chat handoff to Milestone 10.1 completion closeout validation/sign-off.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`98 passed`)
+
+Notes:
+- Dev dependency installation remains constrained by the package-index/proxy, but current environment tooling allowed compile, lint, and full test validation to pass.
+- Milestone 10.1 stays in `release-candidate` status until completion closeout validation transitions it to `complete`.
+
+Follow-up:
+- Run Milestone 10.1 completion closeout validation/sign-off.
 
 
 ### 2026-05-28 — Milestone 10.1 money summary journey slice
