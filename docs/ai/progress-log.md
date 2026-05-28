@@ -10,6 +10,33 @@ Overall status: Milestone 9.1 completion closeout validation is complete; next i
 
 ## Latest Summary
 
+### 2026-05-28 — Milestone 10.1 first vertical slice journey implementation
+
+Branch/PR/Issue:
+- local Milestone 10.1 journey-test implementation update
+
+Completed:
+- Added the first Milestone 10.1 bounded end-to-end journey test for the core seller operating loop.
+- Covered product/material setup, recipe attachment, order reservation, pack/ship, make-batch replenishment, buy-list purchase creation, purchase receipt, and final Today summary state.
+- Kept the slice verification-only with no new runtime product behavior.
+- Added durable implementation report evidence for Milestone 10.1.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`97 passed`)
+
+Notes:
+- The dev dependency install remains blocked by the environment package-index/proxy, but existing tooling allowed full compile, lint, and test validation.
+
+Follow-up:
+- Run Milestone 10.1 stabilization validation and determine whether another journey slice is required before release-candidate sign-off.
+
+
+
 ### 2026-05-28 — Milestone 10.1 startup planning + scope lock
 
 Branch/PR/Issue:
