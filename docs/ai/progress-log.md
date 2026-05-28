@@ -4,12 +4,40 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 5.1 — Buy List / Reorder Suggestions (not-started)  
-Overall status: Milestone 4.3 completion closeout validation/sign-off is complete and the milestone is now marked complete. Next focus is Milestone 5.1 startup planning + scope lock.
+Current milestone: Milestone 5.1 — Buy List / Reorder Suggestions (in-progress)  
+Overall status: Milestone 5.1 startup planning + scope lock is complete and the milestone is now in-progress for first vertical implementation.
 
 
 ## Latest Summary
-Milestone 4.3 completion closeout validation/sign-off is complete and milestone status is now `complete`. Next execution target is Milestone 5.1 startup planning + scope lock.
+Milestone 5.1 startup planning + scope lock is complete and milestone status is now `in-progress`. Next execution target is Milestone 5.1 first vertical slice implementation.
+
+
+### 2026-05-28 — Milestone 5.1 startup planning + scope lock
+
+Branch/PR/Issue:
+- local Milestone 5.1 planning/reporting update
+
+Completed:
+- Read roadmap/rules context for Milestone 5.1 Buy List / Reorder Suggestions scope.
+- Locked first implementation slice boundaries (low-material visibility, deterministic suggestion rule, simple Add to Purchase affordance, tests).
+- Documented explicit out-of-scope items (purchase persistence/receiving flows, automation, Money expansion, broad UX redesign).
+- Updated completion status to `in-progress` and advanced next-chat handoff to first vertical slice implementation.
+- Added durable startup planning evidence report for Milestone 5.1.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 5.1 first vertical slice (low-material list + reorder suggestions + Add to Purchase affordance + tests).
+
 
 ### 2026-05-28 — Milestone 4.3 completion closeout validation + sign-off
 
