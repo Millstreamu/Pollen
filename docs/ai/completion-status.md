@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 5.2 — Purchase Workflow Persistence  
-Status: stabilising
+Status: release-candidate
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -31,6 +31,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - Milestone 5.2 startup planning + scope lock completed on 2026-05-28.
 - Milestone 5.2 first vertical-slice implementation completed (2026-05-28).
 - Milestone 5.2 stabilization validation completed (2026-05-28).
+- Milestone 5.2 release-candidate validation sign-off completed (2026-05-28).
 
 ## Optional Post-Milestone Work
 - Additional Make/Buy UX polish remains out of scope unless explicitly requested.
