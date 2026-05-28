@@ -1,19 +1,21 @@
-# Next Chat Task — Milestone 5.3 Completion Closeout Validation
+# Next Chat Task — Milestone 6.1 Startup Planning and Scope Lock
 
 ## Active Milestone
-- Milestone 5.3 — Receive Purchase (`release-candidate`)
+- Milestone 6.1 — Today Data Summary (`in-progress`)
 
 ## Objective
-Run completion closeout validation and sign-off for Milestone 5.3.
+Plan and scope-lock the first vertical slice for Milestone 6.1 before implementation.
 
 ## Scope Lock (current)
 In scope for current next task:
-- run full Codex cloud validation command set
-- confirm milestone acceptance criteria remain satisfied with no regressions
-- record completion closeout sign-off and set milestone status to `complete` if all checks pass
+- scan roadmap and current services/models for Today summary inputs
+- define minimum summary fields for Milestone 6.1
+- capture explicit in-scope vs out-of-scope boundaries
+- produce startup planning report and prepare implementation handoff
 
 Out of scope for current slice:
-- new feature additions beyond Milestone 5.3 acceptance criteria
+- implementing Today summary service behavior
+- UI redesign or advanced prioritization logic
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -24,4 +26,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-5.3-release-candidate-validation-signoff-2026-05-28.md`
+- `docs/ai/reports/milestone-5.3-completion-closeout-signoff-2026-05-28.md`
