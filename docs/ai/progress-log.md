@@ -3,12 +3,41 @@
 Records meaningful completed work. Update after feature completion, bug fix completion, milestone completion, release verification, important decision, or server-run evidence that changes status.
 
 ## Current Status
-Project phase: Phase 1 — App Foundation
-Current milestone: Milestone 10.1 — Full Journey Suite (completion closeout pending)
-Overall status: Milestone 10.1 release-candidate validation/sign-off passed; compile, lint, and full tests pass, so completion closeout is now the next required step.
+Project phase: Phase 10 — Stabilisation and Release Candidate
+Current milestone: Milestone 10.2 — Release Candidate Freeze (startup planning complete; validation/sign-off next)
+Overall status: Milestone 10.2 release-candidate freeze boundaries are locked. No product blockers are currently recorded; only freeze-allowed blocker fixes, install/build fixes, broken-core-workflow fixes, failing-test fixes, and incorrect-doc fixes may proceed before validation/sign-off.
 
 
 ## Latest Summary
+
+
+### 2026-05-28 — Milestone 10.2 startup planning + scope lock
+
+Branch/PR/Issue:
+- local Milestone 10.2 startup planning update
+
+Completed:
+- Identified Milestone 10.2 Release Candidate Freeze startup planning + scope lock as the next required task after Milestone 10.1 completion closeout.
+- Confirmed Milestone 10.1 completion closeout evidence exists in `docs/ai/reports/milestone-10.1-completion-closeout-signoff-2026-05-28.md`.
+- Locked Milestone 10.2 freeze boundaries to blocker fixes only: failing test fixes, critical bugs, install/build failures, broken core workflows, and incorrect docs.
+- Reconciled current blocker/backlog files by documenting no product blockers, recording the Codex package-index/proxy limitation, and deferring optional Milestone 9.2 screenshot evidence during the freeze.
+- Updated completion tracking and next-chat handoff for Milestone 10.2 freeze validation/sign-off.
+- Added durable startup planning + scope-lock report evidence for Milestone 10.2.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with package-index proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`98 passed`)
+
+Notes:
+- No runtime product behavior changes were introduced in this startup planning slice.
+- The dev dependency install warning remains an environment/package-index limitation because compile, lint, and the full pytest suite pass with the current environment tooling.
+
+Follow-up:
+- Run Milestone 10.2 release-candidate freeze validation/sign-off.
 
 
 ### 2026-05-28 — Milestone 10.1 release-candidate validation + sign-off
