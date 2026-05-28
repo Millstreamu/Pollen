@@ -8,6 +8,7 @@ from pollen.inventory import ActivityLogRepository, InventoryMovementRepository
 from pollen.materials import MaterialRecord, MaterialRepository
 from pollen.orders import OrderItemRecord, OrderRecord, OrderRepository
 from pollen.products import ProductRecord, ProductRepository
+from pollen.purchases import PurchaseRecord, PurchaseRepository
 from pollen.recipes import RecipeItemRecord, RecipeRepository
 
 
@@ -637,6 +638,7 @@ class MaterialService:
         self._movement_repository = movement_repository or InventoryMovementRepository()
         self._activity_repository = activity_repository or ActivityLogRepository()
         self._purchase_draft_by_shop: dict[str, set[str]] = {}
+        self._purchase_repository = PurchaseRepository()
 
     def list_low_stock_suggestions(self, *, authorization_header: str | None) -> list[dict[str, int | str]]:
         context = self._auth_service.resolve_context(authorization_header)
@@ -682,6 +684,48 @@ class MaterialService:
             if material is not None and material.is_active:
                 selected.append(material)
         return sorted(selected, key=lambda m: m.name)
+
+    def create_purchase_from_draft(
+        self,
+        *,
+        authorization_header: str | None,
+        supplier: str | None,
+        expected_date: str | None,
+        status: str = "draft",
+    ) -> PurchaseRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None or status not in {"draft", "ordered"}:
+            return None
+        draft_items = self.list_purchase_draft(authorization_header=authorization_header)
+        if not draft_items:
+            return None
+
+        normalized_supplier = (supplier or "").strip() or None
+        normalized_expected_date = (expected_date or "").strip() or None
+        purchase = self._purchase_repository.create(
+            shop_id=context.shop.shop_id,
+            status=status,
+            supplier=normalized_supplier,
+            expected_date=normalized_expected_date,
+        )
+        for material in draft_items:
+            quantity = max(1, (material.reorder_point * 2) - material.stock_on_hand)
+            added = self._purchase_repository.add_item(
+                shop_id=context.shop.shop_id,
+                purchase_id=purchase.purchase_id,
+                material_id=material.material_id,
+                quantity=quantity,
+            )
+            if added is None:
+                return None
+        self._purchase_draft_by_shop[context.shop.shop_id] = set()
+        return purchase
+
+    def list_purchases(self, *, authorization_header: str | None) -> list[PurchaseRecord]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return []
+        return self._purchase_repository.list_for_shop(shop_id=context.shop.shop_id)
 
     def create_material(
         self,
