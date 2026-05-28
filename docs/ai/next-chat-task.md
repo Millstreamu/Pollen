@@ -1,16 +1,16 @@
-# Next Chat Task — Milestone 5.3 Release-Candidate Validation
+# Next Chat Task — Milestone 5.3 Completion Closeout Validation
 
 ## Active Milestone
-- Milestone 5.3 — Receive Purchase (`stabilising`)
+- Milestone 5.3 — Receive Purchase (`release-candidate`)
 
 ## Objective
-Run release-candidate validation and sign-off for Milestone 5.3 after stabilization validation.
+Run completion closeout validation and sign-off for Milestone 5.3.
 
 ## Scope Lock (current)
 In scope for current next task:
 - run full Codex cloud validation command set
-- verify no regressions in purchase creation and receiving
-- update milestone status and evidence reports
+- confirm milestone acceptance criteria remain satisfied with no regressions
+- record completion closeout sign-off and set milestone status to `complete` if all checks pass
 
 Out of scope for current slice:
 - new feature additions beyond Milestone 5.3 acceptance criteria
@@ -24,4 +24,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-5.3-stabilization-validation-report-2026-05-28.md`
+- `docs/ai/reports/milestone-5.3-release-candidate-validation-signoff-2026-05-28.md`

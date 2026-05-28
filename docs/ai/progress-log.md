@@ -1592,3 +1592,29 @@ Notes:
 
 Follow-up:
 - Start Milestone 5.3 startup planning + scope lock, then implement receive-purchase first vertical slice.
+
+
+### 2026-05-28 — Milestone 5.3 release-candidate validation + sign-off
+
+Branch/PR/Issue:
+- local milestone release-candidate sign-off update
+
+Completed:
+- Executed full Codex-cloud validation sequence for Milestone 5.3 release-candidate gate.
+- Recorded release-candidate sign-off report with command evidence and outcomes.
+- Transitioned Milestone 5.3 status from `stabilising` to `release-candidate`.
+- Updated next-chat handoff to Milestone 5.3 completion closeout validation/sign-off.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (`pytest==8.4.2` unavailable via current proxy/index)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`83 passed`)
+
+Notes:
+- Environment dependency fetch limitation persists for dev dependency install, but compile, lint, and full test suite pass with current environment toolchain.
+
+Follow-up:
+- Run Milestone 5.3 completion closeout validation/sign-off to transition milestone status to `complete`.
