@@ -4,11 +4,37 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 9.1 — UI Consistency Pass (stabilising)  
-Overall status: Milestone 9.1 first vertical slice + stabilization validation are complete; next is release-candidate validation sign-off.
+Current milestone: Milestone 9.1 — UI Consistency Pass (release-candidate)  
+Overall status: Milestone 9.1 release-candidate validation is complete; next is completion closeout validation sign-off.
 
 
 ## Latest Summary
+
+### 2026-05-28 — Milestone 9.1 release-candidate validation + sign-off
+
+Branch/PR/Issue:
+- local milestone release-flow validation update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 9.1 stabilising-to-release-candidate gate.
+- Confirmed UI consistency first-slice behavior remains regression-safe through compile, lint, and full test-suite checks.
+- Transitioned milestone tracking from `stabilising` to `release-candidate`.
+- Added durable release-candidate sign-off report evidence and advanced next-task handoff toward completion closeout sign-off.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`96 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 9.1 completion closeout validation + sign-off.
+
 
 ### 2026-05-28 — Milestone 9.1 stabilization validation + status advancement
 

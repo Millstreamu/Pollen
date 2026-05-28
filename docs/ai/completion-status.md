@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 9.1 — UI Consistency Pass  
-Status: stabilising
+Status: release-candidate
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -25,14 +25,13 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Execute Milestone 9.1 release-candidate validation + sign-off.
 - Execute Milestone 9.1 completion closeout validation + sign-off.
 
 ## Optional Post-Milestone Work
 - Optional future adapters for additional marketplaces beyond Etsy after 8.x hardening.
 
 ## Next Required Milestone
-- Milestone 9.1 — first vertical slice implementation.
+- Milestone 9.1 — completion closeout validation + sign-off.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
