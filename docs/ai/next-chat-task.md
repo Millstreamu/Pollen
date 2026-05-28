@@ -1,19 +1,19 @@
-# Next Chat Task — Milestone 9.1 First Vertical Slice Implementation
+# Next Chat Task — Milestone 9.1 Completion Closeout Sign-off
 
 ## Active Milestone
-- Milestone 9.1 — UI Consistency Pass (`stabilising`)
+- Milestone 9.1 — UI Consistency Pass (`release-candidate`)
 
 ## Objective
-Run Milestone 9.1 release-candidate validation and prepare sign-off evidence for the UI consistency slice.
+Run Milestone 9.1 completion closeout validation and prepare final completion evidence.
 
 ## Scope Lock (current)
 In scope for current next task:
-- run full Codex-cloud validation command set for Milestone 9.1
-- verify first-slice UI consistency behavior remains regression-safe
-- record release-candidate sign-off evidence and status advancement
+- run full Codex-cloud validation command set for Milestone 9.1 closeout gate
+- confirm UI consistency slice remains regression-safe at completion gate
+- record completion sign-off evidence and status advancement to `complete`
 
 Out of scope for current slice:
-- new feature expansion beyond Milestone 9.1 first slice
+- new feature expansion beyond Milestone 9.1
 - app-wide redesign beyond existing implemented surfaces
 - headed-browser-only manual verification requirements
 
@@ -26,4 +26,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- add first-vertical-slice implementation report under `docs/ai/reports/` for Milestone 9.1
+- add completion closeout sign-off report under `docs/ai/reports/` for Milestone 9.1
