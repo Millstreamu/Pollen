@@ -56,14 +56,14 @@ def test_products_stock_page_uses_beginner_friendly_sections_and_buttons() -> No
     response = app.get("/products-stock", authorization_header=header)
 
     assert response.status_code == 200
-    assert "<h3>View</h3>" in response.body
+    assert "<h3>Products workflow</h3>" in response.body
     assert "<h3>Add product</h3>" in response.body
-    assert "<h3>Bulk actions</h3>" in response.body
-    assert "Show active" in response.body
-    assert "Show archived" in response.body
-    assert "Show all" in response.body
+    assert "<h2>Products list</h2>" in response.body
+    assert "Active" in response.body
+    assert "Archived" in response.body
+    assert "All" in response.body
     assert "<button type='submit'>Save product</button>" in response.body
-    assert "<button type='submit' name='action' value='bulk_archive'>Archive products</button>" in response.body
+    assert "<button type='submit' name='action' value='bulk_archive'>Archive selected</button>" in response.body
 
 
 def test_make_buy_page_uses_beginner_friendly_sections_and_empty_state_guidance() -> None:

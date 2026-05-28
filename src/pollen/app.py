@@ -390,7 +390,6 @@ class AppShell:
         )
         archived_only = [product for product in archived_products if not product.is_active]
         create_form = (
-            "<section><h3>Add product</h3>"
             "<form method='post' action='/products-stock'>"
             "<input type='hidden' name='action' value='create'>"
             "<label>Name <input name='name' required></label>"
@@ -398,13 +397,14 @@ class AppShell:
             "<label>Stock <input name='stock_on_hand' type='number' min='0' required></label>"
             "<label>Reorder <input name='reorder_point' type='number' min='0' required></label>"
             "<button type='submit'>Save product</button>"
-            "</form></section>"
+            "</form>"
         )
         if not products and not archived_only:
             return (
-            "<section><h2>Product list</h2>"
+            "<section><h2>Products list</h2>"
             "<p>No products yet. Add your first product to start tracking stock.</p>"
-            f"{create_form}</section>"
+            f"<section><h3>Add product</h3>{create_form}</section>"
+            "</section>"
         )
 
         rows = "".join(
@@ -429,15 +429,11 @@ class AppShell:
             "</tr>"
             for product in archived_only
         )
-        filter_nav = (
-            "<section><h3>View</h3>"
-            "<p>Choose what to show in the product list.</p>"
-            "<nav aria-label='Product view filters'>"
-            "<ul>"
-            "<li><a href='/products-stock?view=active'>Show active</a></li>"
-            "<li><a href='/products-stock?view=archived'>Show archived</a></li>"
-            "<li><a href='/products-stock?view=all'>Show all</a></li>"
-            "</ul></nav></section>"
+        view_controls = (
+            "<p><strong>View:</strong> "
+            "<a href='/products-stock?view=active'>Active</a> · "
+            "<a href='/products-stock?view=archived'>Archived</a> · "
+            "<a href='/products-stock?view=all'>All</a></p>"
         )
 
         archived_section = (
@@ -454,19 +450,18 @@ class AppShell:
         show_archived = normalized_view in {"archived", "all"}
 
         bulk_actions = (
-            "<section><h3>Bulk actions</h3>"
-            "<p>Archive or restore several products by entering comma-separated IDs.</p>"
+            "<p>Archive or restore several products at once by entering comma-separated IDs.</p>"
             "<form method='post' action='/products-stock'>"
             "<label>Product IDs <input name='product_ids' placeholder='prd-1, prd-2'></label>"
-            "<button type='submit' name='action' value='bulk_archive'>Archive products</button>"
-            "<button type='submit' name='action' value='bulk_restore'>Restore products</button>"
-            "</form></section>"
+            "<button type='submit' name='action' value='bulk_archive'>Archive selected</button>"
+            "<button type='submit' name='action' value='bulk_restore'>Restore selected</button>"
+            "</form>"
         )
 
         active_section = (
-            "<section><h2>Product list</h2>"
-            "<p>Review product stock and use row actions to edit or archive.</p>"
-            f"{create_form}"
+            "<section><h2>Products list</h2>"
+            "<p>Review stock levels and use row actions to edit or archive.</p>"
+            f"{view_controls}"
             f"{bulk_actions}"
             "<table><thead><tr>"
             "<th>Select</th><th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th>"
@@ -479,10 +474,18 @@ class AppShell:
             else ""
         )
 
+        page_intro = (
+            "<section><h3>Products workflow</h3>"
+            "<p>Add products, monitor stock health, and keep archived products easy to recover.</p>"
+            "</section>"
+        )
+        add_section = f"<section><h3>Add product</h3>{create_form}</section>"
+
         return (
-            f"{filter_nav}"
+            f"{page_intro}"
+            f"{add_section if show_active else ''}"
             f"{active_section}"
-            f"{archived_section if show_archived else ""}"
+            f"{archived_section if show_archived else ''}"
         )
 
 
