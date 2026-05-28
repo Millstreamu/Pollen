@@ -3,19 +3,16 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 5.3 — Receive Purchase  
-Status: release-candidate
+Name: Milestone 6.1 — Today Data Summary  
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Mark purchase as `Received`.
-- [x] Increase material stock only on receive.
-- [x] Create `InventoryMovement` record on receive.
-- [x] Create `ActivityLog` record on receive.
-- [x] Block double receiving.
-- [x] Keep create-purchase stock mutation at zero.
-- [x] Add tests for receive behavior and regressions.
+- [ ] Add a simple Today summary service/output structure.
+- [ ] Include counts for key action buckets (orders to pack, low stock, materials to buy, batches in progress, purchases due).
+- [ ] Keep summary read-only (no workflow mutations).
+- [ ] Add tests for Today summary behavior.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
@@ -28,10 +25,10 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Milestone 5.3 completion closeout validation + sign-off.
+- Milestone 6.1 first vertical slice implementation.
 
 ## Optional Post-Milestone Work
-- Additional Make/Buy UX polish remains out of scope unless explicitly requested.
+- Additional Today UX polish and advanced prioritisation remain out of scope unless explicitly requested.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
