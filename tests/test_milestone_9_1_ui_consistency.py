@@ -64,3 +64,18 @@ def test_products_stock_page_uses_beginner_friendly_sections_and_buttons() -> No
     assert "Show all" in response.body
     assert "<button type='submit'>Save product</button>" in response.body
     assert "<button type='submit' name='action' value='bulk_archive'>Archive products</button>" in response.body
+
+
+def test_make_buy_page_uses_beginner_friendly_sections_and_empty_state_guidance() -> None:
+    header = _auth_header("make-buy-ui", "make-buy-ui@example.com")
+    app = AppShell()
+
+    response = app.get("/make-buy", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "<h3>Add material</h3>" in response.body
+    assert "<h3>Plan a batch</h3>" in response.body
+    assert "<button type='submit'>Save material</button>" in response.body
+    assert "<button type='submit'>Save batch plan</button>" in response.body
+    assert "No low materials right now. Add materials and reorder points to unlock suggestions." in response.body
+    assert "<button type='submit'>Save purchase</button>" in response.body

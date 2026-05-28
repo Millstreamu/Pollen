@@ -545,31 +545,32 @@ class AppShell:
         archived_only = [material for material in archived_materials if not material.is_active]
         products = self._product_service.list_products(authorization_header=authorization_header)
         create_batch_form = (
-            "<section><h3>Create batch</h3>"
+            "<section><h3>Plan a batch</h3><p>Choose a product and quantity to start make planning.</p>"
             "<form method='post' action='/make-buy'>"
             "<input type='hidden' name='action' value='create_batch'>"
             "<label>Product <select name='product_id'>"
             + "".join(f"<option value='{product.product_id}'>{product.name}</option>" for product in products)
             + "</select></label>"
             "<label>Quantity <input name='quantity' type='number' min='1' required></label>"
-            "<button type='submit'>Create batch</button>"
+            "<button type='submit'>Save batch plan</button>"
             "</form></section>"
         )
         create_form = (
-            "<section><h3>Create material</h3>"
+            "<section><h3>Add material</h3><p>Add a supply item so stock and buy suggestions stay accurate.</p>"
             "<form method='post' action='/make-buy'>"
             "<input type='hidden' name='action' value='create'>"
             "<label>Name <input name='name' required></label>"
             "<label>Unit <input name='unit' required></label>"
             "<label>Stock <input name='stock_on_hand' type='number' min='0' required></label>"
             "<label>Reorder <input name='reorder_point' type='number' min='0' required></label>"
-            "<button type='submit'>Create</button>"
+            "<button type='submit'>Save material</button>"
             "</form></section>"
         )
         if not materials and not archived_only:
             return (
-                "<section><h2>Materials</h2>"
+                "<section><h2>Make / Buy workspace</h2>"
                 "<p>No materials yet. Add your first material to track supplies.</p>"
+                f"{self._render_buy_list(authorization_header=authorization_header)}"
                 f"{create_form}{create_batch_form}</section>"
             )
 
@@ -590,12 +591,14 @@ class AppShell:
             for material in archived_only
         )
         filter_nav = (
+            "<section><h3>View</h3>"
+            "<p>Switch between active and archived materials without leaving this page.</p>"
             "<nav aria-label='Material view filters'>"
             "<ul>"
-            "<li><a href='/make-buy?view=active'>Active</a></li>"
-            "<li><a href='/make-buy?view=archived'>Archived</a></li>"
-            "<li><a href='/make-buy?view=all'>All</a></li>"
-            "</ul></nav>"
+            "<li><a href='/make-buy?view=active'>Show active</a></li>"
+            "<li><a href='/make-buy?view=archived'>Show archived</a></li>"
+            "<li><a href='/make-buy?view=all'>Show all</a></li>"
+            "</ul></nav></section>"
         )
         normalized_view = view if view in {"active", "archived", "all"} else "active"
         show_active = normalized_view in {"active", "all"}
@@ -666,12 +669,12 @@ class AppShell:
             "<label>Supplier <input name='supplier' placeholder='Optional supplier'></label>"
             "<label>Expected date <input name='expected_date' placeholder='YYYY-MM-DD (optional)'></label>"
             "<label>Status <select name='status'><option value='draft'>Draft</option><option value='ordered'>Ordered</option></select></label>"
-            "<button type='submit'>Create Purchase</button>"
+            "<button type='submit'>Save purchase</button>"
             "</form>"
         )
         if not low_materials:
             return (
-                "<section><h3>Buy list suggestions</h3><p>No low materials right now.</p>"
+                "<section><h3>Buy list suggestions</h3><p>No low materials right now. Add materials and reorder points to unlock suggestions.</p>"
                 f"<p>{draft_summary}</p>{create_form}{purchase_history}</section>"
             )
 
