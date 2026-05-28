@@ -4,11 +4,38 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 5.2 — Purchase Workflow Persistence (in-progress)  
-Overall status: Milestone 5.2 startup planning + scope lock is complete; scope is locked and next focus is first vertical-slice implementation.
+Current milestone: Milestone 5.2 — Purchase Workflow Persistence (stabilising)  
+Overall status: Milestone 5.2 stabilization validation is complete; milestone is now in `stabilising` and next focus is release-candidate validation/sign-off.
 
 
 ## Latest Summary
+
+
+
+### 2026-05-28 — Milestone 5.2 stabilization validation + status advancement
+
+Branch/PR/Issue:
+- local milestone stabilization update
+
+Completed:
+- Executed full Codex-cloud validation sequence for Milestone 5.2 stabilization gate.
+- Confirmed purchase creation persistence flow remains regression-safe through compile, lint, and full test-suite checks.
+- Advanced milestone status from `in-progress` to `stabilising`.
+- Updated next-chat handoff and added durable stabilization report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`81 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 5.2 release-candidate validation/sign-off and transition status to `release-candidate`.
 
 
 ### 2026-05-28 — Milestone 5.2 startup planning + scope lock
