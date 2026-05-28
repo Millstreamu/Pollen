@@ -10,6 +10,33 @@ Overall status: Milestone 9.1 completion closeout validation is complete; next i
 
 ## Latest Summary
 
+### 2026-05-28 — Milestone 10.1 startup planning + scope lock
+
+Branch/PR/Issue:
+- local Milestone 10.1 planning/reporting update
+
+Completed:
+- Reviewed roadmap sequencing after Milestone 9.1 completion and selected Milestone 10.1 as the next unlocked required milestone (with Milestone 9.2 remaining optional).
+- Locked scope to journey-verification work only and defined first-slice boundaries for deterministic end-to-end test coverage.
+- Transitioned active milestone tracking from Milestone 9.1 `complete` to Milestone 10.1 `in-progress`.
+- Updated completion tracking and next-chat handoff to direct implementation of the first Milestone 10.1 journey slice.
+- Added durable startup planning + scope-lock report evidence for Milestone 10.1.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`96 passed`)
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 10.1 first vertical slice (one bounded end-to-end journey test workflow).
+
+
 
 ### 2026-05-28 — Milestone 9.1 completion closeout validation + sign-off
 
