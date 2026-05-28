@@ -1,22 +1,22 @@
-# Next Chat Task — Milestone 8.1 First Vertical Slice Implementation
+# Next Chat Task — Milestone 8.1 Release-Candidate Validation Sign-off
 
 ## Active Milestone
 - Milestone 8.1 — Integration Architecture (`in-progress`)
 
 ## Objective
-Implement the first Milestone 8.1 architecture slice for mocked Etsy import plumbing with isolated interfaces, duplicate guards, and visible error logging.
+Run Milestone 8.1 release-candidate validation and sign-off after stabilization checks passed.
 
 ## Scope Lock (current)
 In scope for current next task:
-- add integration client interface boundary for Etsy-like mocked source
-- add external order ID persistence + duplicate protection strategy
-- add fixture-driven import service path (no live API dependency)
-- add tests proving isolated integration logic and failure visibility
+- rerun full Codex-cloud validation commands
+- confirm Milestone 8.1 integration architecture remains regression-safe
+- advance status from `stabilising` to `release-candidate` if checks pass
+- capture durable release-candidate sign-off evidence report
 
 Out of scope for current slice:
 - live OAuth/API integration
 - automatic stock push/sync back to marketplaces
-- Milestone 8.2+ full order-mapping behavior beyond minimal architecture slice
+- Milestone 8.2+ full order-mapping behavior beyond Milestone 8.1
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -27,4 +27,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- add first-vertical-slice implementation report under `docs/ai/reports/` for Milestone 8.1
+- add release-candidate validation sign-off report under `docs/ai/reports/` for Milestone 8.1
