@@ -1,17 +1,17 @@
-# Next Chat Task — Milestone 6.2 Stabilization Validation
+# Next Chat Task — Milestone 6.2 Release-Candidate Validation
 
 ## Active Milestone
-- Milestone 6.2 — Today Actions (`in-progress`)
+- Milestone 6.2 — Today Actions (`stabilising`)
 
 ## Objective
-Run stabilization validation for Milestone 6.2 after first-slice implementation and advance status if checks remain green.
+Run release-candidate validation for Milestone 6.2 and advance status if checks remain green.
 
 ## Scope Lock (current)
 In scope for current next task:
 - run full Codex-cloud validation sequence
-- verify Today action affordances remain routing-only and explicit
-- update milestone status to `stabilising` if validation passes
-- publish stabilization validation report evidence
+- confirm Today action affordances still route explicitly to existing workflows
+- update milestone status to `release-candidate` if validation passes
+- publish release-candidate validation sign-off report evidence
 
 Out of scope for current slice:
 - new Today actions beyond current milestone scope
@@ -26,4 +26,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-6.2-first-vertical-slice-implementation-report-2026-05-28.md`
+- `docs/ai/reports/milestone-6.2-stabilization-validation-report-2026-05-28.md`
