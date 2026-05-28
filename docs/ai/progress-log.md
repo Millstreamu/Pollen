@@ -4,10 +4,37 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 4.2 — Start Batch (stabilising)  
-Overall status: Milestone 4.2 first vertical slice has been stabilized and validated; next execution target is release-candidate validation/sign-off.
+Current milestone: Milestone 4.2 — Start Batch (release-candidate)  
+Overall status: Milestone 4.2 release-candidate validation/sign-off is complete; next execution target is completion closeout validation/sign-off.
 
 ## Latest Summary
+Milestone 4.2 release-candidate validation/sign-off is complete; milestone status is now `release-candidate`.
+
+### 2026-05-27 — Milestone 4.2 release-candidate validation + sign-off
+
+Branch/PR/Issue:
+- local milestone release-flow validation update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 4.2 stabilising-to-release-candidate gate.
+- Confirmed Start Batch transition behavior remains regression-safe through compile, lint, and full test-suite checks.
+- Transitioned milestone tracking from `stabilising` to `release-candidate`.
+- Added durable report evidence and advanced next-task handoff toward completion closeout.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`74 passed`)
+
+Notes:
+- Dev dependency fetch for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but installed tooling allowed full validation.
+
+Follow-up:
+- Execute Milestone 4.2 completion closeout validation/sign-off and transition to `complete`.
+
 Milestone 4.2 stabilization validation is complete, lint blockers were resolved, and the milestone is now in `stabilising`.
 
 ### 2026-05-27 — Milestone 4.2 stabilization validation + status advancement

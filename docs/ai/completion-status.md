@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 4.2 — Start Batch  
-Status: stabilising
+Status: release-candidate
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -26,7 +26,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Run release-candidate validation/sign-off for Milestone 4.2.
+- Run completion closeout validation/sign-off for Milestone 4.2 and transition to `complete`.
 
 ## Optional Post-Milestone Work
 - Additional Make/Buy UX polish remains out of scope unless explicitly requested.
@@ -35,3 +35,5 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 See `docs/ai/do-not-build-yet.md`.
 
 - Milestone 4.2 startup planning + scope lock: completed (2026-05-27).
+
+- Milestone 4.2 release-candidate validation + sign-off: completed (2026-05-27).
