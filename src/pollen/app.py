@@ -308,6 +308,13 @@ class AppShell:
                 authorization_header=authorization_header,
                 material_id=payload.get("material_id", ""),
             )
+        elif action == "create_purchase":
+            self._material_service.create_purchase_from_draft(
+                authorization_header=authorization_header,
+                supplier=payload.get("supplier"),
+                expected_date=payload.get("expected_date"),
+                status=payload.get("status", "draft"),
+            )
 
         return self.get("/make-buy", authorization_header=authorization_header)
 
@@ -607,10 +614,39 @@ class AppShell:
     def _render_buy_list(self, *, authorization_header: str) -> str:
         low_materials = self._material_service.list_low_stock_suggestions(authorization_header=authorization_header)
         selected = self._material_service.list_purchase_draft(authorization_header=authorization_header)
+        purchases = self._material_service.list_purchases(authorization_header=authorization_header)
         selected_names = ", ".join(material.name for material in selected)
         draft_summary = f"Draft purchase list: {selected_names}" if selected_names else "Draft purchase list: empty"
+        purchase_rows = "".join(
+            "<tr>"
+            f"<td>{purchase.purchase_id}</td>"
+            f"<td>{purchase.status}</td>"
+            f"<td>{purchase.supplier or '-'}</td>"
+            f"<td>{purchase.expected_date or '-'}</td>"
+            "</tr>"
+            for purchase in purchases
+        )
+        purchase_history = (
+            "<h4>Created purchases</h4>"
+            "<table><thead><tr><th>ID</th><th>Status</th><th>Supplier</th><th>Expected date</th></tr></thead>"
+            f"<tbody>{purchase_rows}</tbody></table>"
+            if purchases
+            else "<h4>Created purchases</h4><p>No purchases yet.</p>"
+        )
+        create_form = (
+            "<form method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='create_purchase'>"
+            "<label>Supplier <input name='supplier' placeholder='Optional supplier'></label>"
+            "<label>Expected date <input name='expected_date' placeholder='YYYY-MM-DD (optional)'></label>"
+            "<label>Status <select name='status'><option value='draft'>Draft</option><option value='ordered'>Ordered</option></select></label>"
+            "<button type='submit'>Create Purchase</button>"
+            "</form>"
+        )
         if not low_materials:
-            return f"<section><h3>Buy list suggestions</h3><p>No low materials right now.</p><p>{draft_summary}</p></section>"
+            return (
+                "<section><h3>Buy list suggestions</h3><p>No low materials right now.</p>"
+                f"<p>{draft_summary}</p>{create_form}{purchase_history}</section>"
+            )
 
         rows = "".join(
             "<tr>"
@@ -632,6 +668,8 @@ class AppShell:
             "<table><thead><tr><th>Material</th><th>On hand</th><th>Reorder point</th><th>Suggested qty</th><th>Action</th></tr></thead><tbody>"
             f"{rows}</tbody></table>"
             f"<p>{draft_summary}</p>"
+            f"{create_form}"
+            f"{purchase_history}"
             "</section>"
         )
 
