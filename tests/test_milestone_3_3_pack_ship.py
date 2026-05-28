@@ -90,7 +90,7 @@ def test_orders_page_supports_pack_and_ship_actions() -> None:
         form_data={"customer_name": "Kim", "product_sku": "S-1", "quantity": "2"},
     )
     assert created_response.status_code == 200
-    assert "ready_to_pack" in created_response.body
+    assert "Ready to pack" in created_response.body
 
     pack_response = app.post(
         "/orders",
@@ -98,7 +98,7 @@ def test_orders_page_supports_pack_and_ship_actions() -> None:
         form_data={"action": "pack", "order_id": "ord-1"},
     )
     assert pack_response.status_code == 200
-    assert "packed" in pack_response.body
+    assert "Packed" in pack_response.body
 
     ship_response = app.post(
         "/orders",
@@ -106,7 +106,7 @@ def test_orders_page_supports_pack_and_ship_actions() -> None:
         form_data={"action": "ship", "order_id": "ord-1"},
     )
     assert ship_response.status_code == 200
-    assert "shipped" in ship_response.body
+    assert "Shipped" in ship_response.body
 
     invalid_transition = app.post(
         "/orders",
