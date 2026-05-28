@@ -544,10 +544,75 @@ class BatchService:
             batch_id=batch_id,
             status="in-progress",
             started_at=started_at,
+            completed_at=None,
         )
         if updated is None:
             return None, "Batch start failed"
         return updated, None
+
+    def complete_batch(self, *, authorization_header: str | None, batch_id: str) -> tuple[BatchRecord | None, str | None]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None, "Unauthorized"
+        if not batch_id.strip():
+            return None, "Batch ID is required"
+
+        batch = self._batch_repository.get_for_shop(shop_id=context.shop.shop_id, batch_id=batch_id)
+        if batch is None:
+            return None, "Unknown batch"
+        if batch.status != "in-progress":
+            return None, "Invalid batch transition: only in-progress batches can be completed"
+
+        recipe_items = self._recipe_repository.list_for_product(shop_id=context.shop.shop_id, product_id=batch.product_id)
+        material_updates: list[tuple[MaterialRecord, int]] = []
+        for item in recipe_items:
+            material = self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=item.material_id)
+            if material is None or not material.is_active:
+                return None, f"Missing material {item.material_id}"
+            needed = item.quantity_per_unit * batch.quantity
+            if material.stock_on_hand < needed:
+                return None, f"Insufficient materials: {material.name} short by {needed - material.stock_on_hand} {material.unit}"
+            material_updates.append((material, needed))
+
+        product = self._product_repository.get_for_shop(shop_id=context.shop.shop_id, product_id=batch.product_id)
+        if product is None:
+            return None, "Unknown product"
+
+        for material, needed in material_updates:
+            updated = self._material_repository.update_for_shop(
+                shop_id=context.shop.shop_id,
+                material_id=material.material_id,
+                name=material.name,
+                unit=material.unit,
+                stock_on_hand=material.stock_on_hand - needed,
+                reorder_point=material.reorder_point,
+            )
+            if updated is None:
+                return None, "Batch complete failed"
+
+        product_updated = self._product_repository.update_for_shop(
+            shop_id=context.shop.shop_id,
+            product_id=product.product_id,
+            name=product.name,
+            sku=product.sku,
+            stock_on_hand=product.stock_on_hand + batch.quantity,
+            reserved_stock=product.reserved_stock,
+            reorder_point=product.reorder_point,
+        )
+        if product_updated is None:
+            return None, "Batch complete failed"
+
+        completed_at = self._batch_repository.now_iso()
+        updated_batch = self._batch_repository.update_for_shop(
+            shop_id=context.shop.shop_id,
+            batch_id=batch_id,
+            status="complete",
+            started_at=batch.started_at,
+            completed_at=completed_at,
+        )
+        if updated_batch is None:
+            return None, "Batch complete failed"
+        return updated_batch, None
 
     def list_batches(self, *, authorization_header: str | None) -> list[BatchRecord]:
         context = self._auth_service.resolve_context(authorization_header)

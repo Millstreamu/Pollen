@@ -14,6 +14,7 @@ class BatchRecord:
     quantity: int
     status: str
     started_at: str | None = None
+    completed_at: str | None = None
 
 
 class BatchRepository:
@@ -38,11 +39,19 @@ class BatchRepository:
             return None
         return record
 
-    def update_for_shop(self, *, shop_id: str, batch_id: str, status: str, started_at: str | None) -> BatchRecord | None:
+    def update_for_shop(
+        self,
+        *,
+        shop_id: str,
+        batch_id: str,
+        status: str,
+        started_at: str | None,
+        completed_at: str | None,
+    ) -> BatchRecord | None:
         existing = self.get_for_shop(shop_id=shop_id, batch_id=batch_id)
         if existing is None:
             return None
-        updated = replace(existing, status=status, started_at=started_at)
+        updated = replace(existing, status=status, started_at=started_at, completed_at=completed_at)
         self._records[batch_id] = updated
         return updated
 

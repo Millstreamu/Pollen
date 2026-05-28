@@ -289,6 +289,13 @@ class AppShell:
             )
             if started_batch is None:
                 return AppResponse(status_code=400, body=error or "Batch start failed")
+        elif action == "complete_batch":
+            completed_batch, error = self._batch_service.complete_batch(
+                authorization_header=authorization_header,
+                batch_id=payload.get("batch_id", ""),
+            )
+            if completed_batch is None:
+                return AppResponse(status_code=400, body=error or "Batch complete failed")
         elif action == "restore":
             material_id = payload.get("material_id")
             if material_id is not None:
