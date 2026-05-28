@@ -905,6 +905,23 @@ class AppShell:
                 f"{list_content}</section>"
             )
 
+        if page_title == "Money" and authorization_header is not None:
+            page_content = (
+                "<section><h3>Money overview</h3>"
+                "<p>Money snapshots are estimates for planning and are not accounting records.</p>"
+                "<ul>"
+                "<li>Use this page to review cash-impact trends before making new inventory decisions.</li>"
+                "</ul></section>"
+                "<section><h3>Estimated profit and cost</h3>"
+                "<p>No money data yet. Finish a few orders and purchases to unlock estimated totals.</p>"
+                "<button type='button' disabled>View estimates</button></section>"
+                "<section><h3>Next steps</h3>"
+                "<ul>"
+                "<li><a href='/orders'>Ship packed orders</a> to build revenue estimates.</li>"
+                "<li><a href='/make-buy'>Record purchases</a> to track supply spend.</li>"
+                "</ul></section>"
+            )
+
         return (
             "<!doctype html>"
             "<html lang='en'>"
