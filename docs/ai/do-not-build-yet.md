@@ -20,8 +20,8 @@ If Codex thinks an item should be unlocked, suggest an unlock issue. Do not impl
 ```md
 ## <Feature Name>
 
-Status: deferred  
-Earliest milestone: Post-V1  
+Status: deferred
+Earliest milestone: Post-V1
 Current rule: Do not build.
 
 ### Why deferred
@@ -40,4 +40,23 @@ Current rule: Do not build.
 
 ## Current Deferred Items
 
-Add project-specific deferred items here.
+## Milestone 9.2 Screenshot Evidence
+
+Status: deferred
+Earliest milestone: Post-V1 or an explicitly scoped evidence task
+Current rule: Do not build during Milestone 10.2 release-candidate freeze.
+
+### Why deferred
+Milestone 9.2 screenshot evidence is optional and not required for Milestone 10.2 release-candidate freeze acceptance.
+
+### Unlock conditions
+- [ ] A scoped follow-up explicitly asks for screenshot evidence.
+- [ ] The task confirms the environment supports the required headless or screenshot capture flow.
+
+### First allowed version
+A bounded evidence-only report that does not add new UI features, screens, integrations, or speculative polish.
+
+### Still not allowed
+- New UI functionality.
+- Broad visual redesign.
+- Manual browser-only debugging as release evidence.
