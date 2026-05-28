@@ -4,12 +4,38 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 6.1 — Today Data Summary (in-progress)  
-Overall status: Milestone 5.3 completion closeout validation is complete and signed off; next focus is Milestone 6.1 startup planning + scope lock.
+Current milestone: Milestone 6.1 — Today Data Summary (stabilising)  
+Overall status: Milestone 6.1 first vertical slice remains regression-safe after stabilization validation; next focus is Milestone 6.1 release-candidate validation + sign-off.
 
 
 ## Latest Summary
 
+
+
+### 2026-05-28 — Milestone 6.1 stabilization validation + status advancement
+
+Branch/PR/Issue:
+- local milestone stabilization update
+
+Completed:
+- Executed full Codex-cloud validation sequence for Milestone 6.1 stabilization gate.
+- Confirmed Today summary bucket counts and Today page rendering remain regression-safe through compile, lint, and full test-suite checks.
+- Advanced milestone status from `in-progress` to `stabilising`.
+- Added durable stabilization report evidence and updated next-task handoff.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`85 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 6.1 release-candidate validation + sign-off.
 
 ### 2026-05-28 — Milestone 6.1 startup planning + scope lock
 

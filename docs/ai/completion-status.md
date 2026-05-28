@@ -4,15 +4,15 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 6.1 — Today Data Summary  
-Status: in-progress
+Status: stabilising
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [ ] Add a simple Today summary service/output structure.
-- [ ] Include counts for key action buckets (orders to pack, low stock, materials to buy, batches in progress, purchases due).
-- [ ] Keep summary read-only (no workflow mutations).
-- [ ] Add tests for Today summary behavior.
+- [x] Add a simple Today summary service/output structure.
+- [x] Include counts for key action buckets (orders to pack, low stock, materials to buy, batches in progress, purchases due).
+- [x] Keep summary read-only (no workflow mutations).
+- [x] Add tests for Today summary behavior.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
@@ -25,7 +25,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Milestone 6.1 first vertical slice implementation.
+- Milestone 6.1 release-candidate validation + sign-off.
 
 ## Optional Post-Milestone Work
 - Additional Today UX polish and advanced prioritisation remain out of scope unless explicitly requested.
