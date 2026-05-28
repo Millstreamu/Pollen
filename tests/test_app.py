@@ -507,6 +507,38 @@ def test_make_buy_ui_invalid_view_defaults_to_active_content() -> None:
     assert "<h2>Materials</h2>" in response.body
 
 
+def test_make_buy_ui_buy_list_suggestions_and_add_to_purchase() -> None:
+    header = _auth_header("mat-buy", "mat-buy@example.com")
+    app = create_app()
+
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "create",
+            "name": "Label Rolls",
+            "unit": "roll",
+            "stock_on_hand": "1",
+            "reorder_point": "4",
+        },
+    )
+
+    response = app.get("/make-buy", authorization_header=header)
+    assert response.status_code == 200
+    assert "Buy list suggestions" in response.body
+    assert "Suggested reorder quantity rule" in response.body
+    assert "7 roll" in response.body
+    assert "Add to Purchase" in response.body
+
+    added = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "add_to_purchase", "material_id": "mat-1"},
+    )
+    assert added.status_code == 200
+    assert "Draft purchase list: Label Rolls" in added.body
+
+
 def test_make_buy_ui_edit_ignores_unknown_material_id_without_crashing() -> None:
     header = _auth_header("mat5", "mat5@example.com")
     app = create_app()

@@ -103,6 +103,29 @@ def test_low_stock_status_appears_correctly_for_materials() -> None:
     assert low.is_low_stock
 
 
+def test_low_stock_suggestions_and_purchase_draft_flow() -> None:
+    service = MaterialService()
+    header = _auth_header("owner-buy", "buy@example.com")
+    low = service.create_material(
+        authorization_header=header,
+        name="Fragrance",
+        unit="ml",
+        stock_on_hand=3,
+        reorder_point=10,
+    )
+    assert low is not None
+
+    suggestions = service.list_low_stock_suggestions(authorization_header=header)
+    assert len(suggestions) == 1
+    assert suggestions[0]["material_id"] == low.material_id
+    assert suggestions[0]["suggested_quantity"] == 17
+
+    added = service.add_to_purchase_draft(authorization_header=header, material_id=low.material_id)
+    assert added is True
+    draft = service.list_purchase_draft(authorization_header=header)
+    assert [row.material_id for row in draft] == [low.material_id]
+
+
 def test_archive_restore_and_list_scoping_for_materials() -> None:
     service = MaterialService()
     owner_header = _auth_header("owner2", "owner2@example.com")

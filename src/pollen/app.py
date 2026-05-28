@@ -303,6 +303,11 @@ class AppShell:
                     authorization_header=authorization_header,
                     material_id=material_id,
                 )
+        elif action == "add_to_purchase":
+            self._material_service.add_to_purchase_draft(
+                authorization_header=authorization_header,
+                material_id=payload.get("material_id", ""),
+            )
 
         return self.get("/make-buy", authorization_header=authorization_header)
 
@@ -594,8 +599,40 @@ class AppShell:
         )
         return (
             f"{filter_nav}"
+            f"{self._render_buy_list(authorization_header=authorization_header)}"
             f"{active_section}"
             f"{archived_section}"
+        )
+
+    def _render_buy_list(self, *, authorization_header: str) -> str:
+        low_materials = self._material_service.list_low_stock_suggestions(authorization_header=authorization_header)
+        selected = self._material_service.list_purchase_draft(authorization_header=authorization_header)
+        selected_names = ", ".join(material.name for material in selected)
+        draft_summary = f"Draft purchase list: {selected_names}" if selected_names else "Draft purchase list: empty"
+        if not low_materials:
+            return f"<section><h3>Buy list suggestions</h3><p>No low materials right now.</p><p>{draft_summary}</p></section>"
+
+        rows = "".join(
+            "<tr>"
+            f"<td>{row['name']}</td>"
+            f"<td>{row['stock_on_hand']} {row['unit']}</td>"
+            f"<td>{row['reorder_point']} {row['unit']}</td>"
+            f"<td>{row['suggested_quantity']} {row['unit']}</td>"
+            "<td>"
+            "<form method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='add_to_purchase'>"
+            f"<input type='hidden' name='material_id' value='{row['material_id']}'>"
+            "<button type='submit'>Add to Purchase</button></form>"
+            "</td></tr>"
+            for row in low_materials
+        )
+        return (
+            "<section><h3>Buy list suggestions</h3>"
+            "<p>Suggested reorder quantity rule: max(1, (reorder point × 2) − stock on hand).</p>"
+            "<table><thead><tr><th>Material</th><th>On hand</th><th>Reorder point</th><th>Suggested qty</th><th>Action</th></tr></thead><tbody>"
+            f"{rows}</tbody></table>"
+            f"<p>{draft_summary}</p>"
+            "</section>"
         )
 
     def _render_material_row(self, *, material, edit_material_id: str | None) -> str:
