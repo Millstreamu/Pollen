@@ -11,6 +11,34 @@ Overall status: Milestone 5.3 completion closeout validation is complete and sig
 ## Latest Summary
 
 
+### 2026-05-28 — Milestone 6.1 startup planning + scope lock
+
+Branch/PR/Issue:
+- local Milestone 6.1 planning/reporting update
+
+Completed:
+- Read roadmap/rules context for Milestone 6.1 Today Data Summary scope.
+- Locked first implementation slice boundaries (read-only summary service and required count buckets).
+- Documented explicit out-of-scope items (advanced prioritisation, UI redesign, notifications).
+- Updated next-chat handoff to Milestone 6.1 first vertical-slice implementation.
+- Added durable startup planning evidence report for Milestone 6.1.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 6.1 first vertical slice (Today summary service + tests).
+
+
+
 ### 2026-05-28 — Milestone 5.3 completion closeout validation + sign-off
 
 Branch/PR/Issue:

@@ -1,21 +1,22 @@
-# Next Chat Task — Milestone 6.1 Startup Planning and Scope Lock
+# Next Chat Task — Milestone 6.1 First Vertical Slice Implementation
 
 ## Active Milestone
 - Milestone 6.1 — Today Data Summary (`in-progress`)
 
 ## Objective
-Plan and scope-lock the first vertical slice for Milestone 6.1 before implementation.
+Implement the first vertical slice for Today summary service behavior and tests.
 
 ## Scope Lock (current)
 In scope for current next task:
-- scan roadmap and current services/models for Today summary inputs
-- define minimum summary fields for Milestone 6.1
-- capture explicit in-scope vs out-of-scope boundaries
-- produce startup planning report and prepare implementation handoff
+- add read-only Today summary service output
+- include required counts: orders to pack, low stock, materials to buy, batches in progress, purchases due
+- keep implementation minimal and deterministic
+- add tests for summary behavior
 
 Out of scope for current slice:
-- implementing Today summary service behavior
-- UI redesign or advanced prioritization logic
+- advanced prioritization logic
+- UI redesign
+- notifications/automation
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -26,4 +27,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-5.3-completion-closeout-signoff-2026-05-28.md`
+- `docs/ai/reports/milestone-6.1-startup-planning-scope-lock-report-2026-05-28.md`
