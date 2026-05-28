@@ -4,11 +4,11 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 4.3 — Complete Batch (in-progress)  
-Overall status: Milestone 4.3 startup planning + scope lock is complete; next execution target is first vertical slice implementation.
+Current milestone: Milestone 4.3 — Complete Batch (stabilising)  
+Overall status: Milestone 4.3 first vertical slice is implemented and validated; milestone is now stabilising pending release-candidate sign-off.
 
 ## Latest Summary
-Milestone 4.3 startup planning + scope lock is complete; milestone status is now `in-progress` with implementation-slice boundaries locked.
+Milestone 4.3 stabilization validation is complete and milestone status is now `stabilising`. Next execution target is release-candidate validation/sign-off.
 
 ### 2026-05-28 — Milestone 4.3 startup planning + scope lock
 
@@ -344,6 +344,32 @@ Notes:
 Follow-up:
 - Implement Milestone 4.2 first vertical slice (Start Batch transition + tests + implementation report).
 
+
+
+### 2026-05-28 — Milestone 4.3 stabilization validation + status advancement
+
+Branch/PR/Issue:
+- local milestone stabilization update
+
+Completed:
+- Ran Codex-cloud validation sequence for Milestone 4.3 stabilization gate.
+- Confirmed Complete Batch mutation flow remains regression-safe through compile, lint, and full test-suite checks.
+- Advanced milestone status from `in-progress` to `stabilising`.
+- Updated next-chat handoff and added durable stabilization report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`77 passed`)
+
+Notes:
+- Dev dependency install for pinned `pytest==8.4.2` remains environment-limited by index/proxy constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 4.3 release-candidate validation/sign-off and transition status to `release-candidate`.
 
 ## Entry Format
 
