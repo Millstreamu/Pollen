@@ -1,25 +1,24 @@
-# Next Chat Task — Milestone 5.1 First Vertical Slice Implementation
+# Next Chat Task — Milestone 5.1 Stabilization Validation
 
 Use this brief in future chats to continue work without re-planning completed slices.
 
 ## Active Milestone
-- Milestone 5.1 — Buy List / Reorder Suggestions (`in-progress`)
+- Milestone 5.1 — Buy List / Reorder Suggestions (`stabilising`)
 
 ## Objective
-Implement the first vertical slice for Milestone 5.1 so low materials are surfaced with understandable reorder suggestions and a simple Add to Purchase affordance, without implementing purchase creation/receiving flows.
+Run full stabilization validation for the completed Milestone 5.1 vertical slice and confirm it is regression-safe before release-candidate sign-off.
 
 ## Scope Lock (current)
 In scope for current next task:
-- surface low-material list in Make/Buy flow
-- add suggested reorder quantity rule with clear, deterministic behavior
-- add simple “Add to Purchase” action affordance in UI/service flow
-- add tests covering low-list visibility and suggestion behavior
+- run Codex-cloud dependency install commands
+- run compile, lint, and full tests
+- document pass/fail outcomes and any environment exceptions
+- if validation passes, advance milestone from `stabilising` to `release-candidate`
 
 Out of scope for current slice:
-- implementing Purchase creation workflow persistence (Milestone 5.2)
-- implementing Receive Purchase stock mutation (Milestone 5.3)
-- automatic ordering or supplier integrations
-- Money module expansion
+- new feature work for Milestone 5.1
+- purchase persistence workflow (Milestone 5.2)
+- purchase receiving stock mutation workflow (Milestone 5.3)
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -30,4 +29,5 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-5.1-startup-planning-scope-lock-report-2026-05-28.md`
+- `docs/ai/reports/milestone-5.1-first-vertical-slice-implementation-report-2026-05-28.md`
+- `docs/ai/reports/milestone-5.1-stabilization-validation-report-2026-05-28.md`

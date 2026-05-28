@@ -4,12 +4,38 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 5.1 — Buy List / Reorder Suggestions (in-progress)  
-Overall status: Milestone 5.1 startup planning + scope lock is complete and the milestone is now in-progress for first vertical implementation.
+Current milestone: Milestone 5.1 — Buy List / Reorder Suggestions (stabilising)  
+Overall status: Milestone 5.1 first vertical slice and stabilization validation are complete; milestone status is now stabilising.
 
 
 ## Latest Summary
-Milestone 5.1 startup planning + scope lock is complete and milestone status is now `in-progress`. Next execution target is Milestone 5.1 first vertical slice implementation.
+Milestone 5.1 first vertical slice implementation and stabilization validation are complete. Next execution target is Milestone 5.1 release-candidate validation + sign-off.
+
+
+### 2026-05-28 — Milestone 5.1 stabilization validation + status advancement
+
+Branch/PR/Issue:
+- local milestone stabilization update
+
+Completed:
+- Executed full Codex-cloud validation sequence for Milestone 5.1 stabilization gate.
+- Confirmed Buy List suggestions, deterministic reorder rule, and Add to Purchase draft flow remain regression-safe via compile, lint, and full suite checks.
+- Advanced milestone status from `in-progress` to `stabilising`.
+- Updated next-chat handoff and added durable stabilization report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`79 passed`)
+
+Notes:
+- This slice is stabilization evidence only; no new runtime behavior changes were introduced.
+
+Follow-up:
+- Execute Milestone 5.1 release-candidate validation/sign-off and transition status to `release-candidate`.
 
 
 ### 2026-05-28 — Milestone 5.1 startup planning + scope lock
@@ -27,7 +53,7 @@ Completed:
 Checks run:
 - `python -m pip install --upgrade pip` — pass
 - `pip install -r requirements.txt` — pass
-- `pip install -r requirements-dev.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
 - `python -m compileall -q src tests` — pass
 - `ruff check src tests` — pass
 - `pytest -q` — pass
@@ -107,7 +133,7 @@ Completed:
 Checks run:
 - `python -m pip install --upgrade pip` — pass
 - `pip install -r requirements.txt` — pass
-- `pip install -r requirements-dev.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
 - `python -m compileall -q src tests` — pass
 - `ruff check src tests` — pass
 - `pytest -q` — pass
