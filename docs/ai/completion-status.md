@@ -4,30 +4,29 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 6.2 — Today Actions  
-Status: in-progress
+Status: stabilising
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [ ] Add Today-surface action affordances for core next steps.
-- [ ] Route actions into existing workflows (order detail/pack, product detail, create batch, create purchase).
-- [ ] Keep actions explicit and user-triggered (no hidden automation).
-- [ ] Add/adjust tests for Today action availability/routing behavior.
+- [x] Add Today-surface action affordances for core next steps.
+- [x] Route actions into existing workflows (order detail/pack, product detail, create batch, create purchase).
+- [x] Keep actions explicit and user-triggered (no hidden automation).
+- [x] Add/adjust tests for Today action availability/routing behavior.
 
 ## Required Verification Checklist
-- [ ] Typecheck *(Python compile check used in current repo flow)*
-- [ ] Lint *(configured via `ruff check src tests`)*
-- [ ] Unit tests
-- [ ] Relevant service/integration tests
-- [ ] Journey tests if applicable
-- [ ] Build *(compile check: `python -m compileall -q src tests`)*
-- [ ] Environment-specific checks or exceptions documented
+- [x] Typecheck *(Python compile check used in current repo flow)*
+- [x] Lint *(configured via `ruff check src tests`)*
+- [x] Unit tests
+- [x] Relevant service/integration tests
+- [x] Journey tests if applicable
+- [x] Build *(compile check: `python -m compileall -q src tests`)*
+- [x] Environment-specific checks or exceptions documented
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Complete Milestone 6.2 startup planning + scope lock report and implementation handoff.
-- Implement first Milestone 6.2 vertical slice.
-- Execute stabilization, release-candidate validation, and completion closeout sign-off.
+- Execute Milestone 6.2 release-candidate validation sign-off.
+- Execute Milestone 6.2 completion closeout sign-off.
 
 ## Optional Post-Milestone Work
 - Prioritization/urgency scoring refinement for Today actions.

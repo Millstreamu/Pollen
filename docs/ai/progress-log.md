@@ -4,11 +4,37 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 6.2 — Today Actions (in-progress)  
-Overall status: Milestone 6.2 startup planning + scope lock completed; implementation handoff prepared.
+Current milestone: Milestone 6.2 — Today Actions (stabilising)  
+Overall status: Milestone 6.2 stabilization validation completed; release-candidate validation is next.
 
 
 ## Latest Summary
+
+### 2026-05-28 — Milestone 6.2 stabilization validation + status advancement
+
+Branch/PR/Issue:
+- local milestone stabilization update
+
+Completed:
+- Executed full Codex-cloud validation sequence for Milestone 6.2 stabilization gate.
+- Confirmed Today action affordances remain explicit, user-triggered, and route-only into existing workflows.
+- Advanced milestone status from `in-progress` to `stabilising`.
+- Added durable stabilization validation report evidence and updated next-chat handoff.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`86 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 6.2 release-candidate validation + sign-off.
+
 
 
 ### 2026-05-28 — Milestone 6.2 startup planning + scope lock
