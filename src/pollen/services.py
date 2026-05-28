@@ -1004,6 +1004,28 @@ class TodaySummaryService:
         }
 
 
+
+
+class ImportEventService:
+    """Collect marketplace import diagnostics for visible error reporting."""
+
+    def __init__(self) -> None:
+        self._events: list[dict[str, str]] = []
+
+    def record(self, *, level: str, source: str, code: str, message: str) -> None:
+        self._events.append(
+            {
+                "level": level,
+                "source": source,
+                "code": code,
+                "message": message,
+            }
+        )
+
+    def list_events(self) -> list[dict[str, str]]:
+        return list(self._events)
+
+
 class MarketplaceImportService:
     """Import external marketplace orders through an isolated client boundary."""
 
@@ -1013,10 +1035,12 @@ class MarketplaceImportService:
         auth_service: AuthService | None = None,
         order_service: OrderService | None = None,
         order_repository: OrderRepository | None = None,
+        event_service: ImportEventService | None = None,
     ) -> None:
         self._auth_service = auth_service or AuthService()
         self._order_service = order_service or OrderService(auth_service=self._auth_service)
         self._order_repository = order_repository or self._order_service._order_repository  # noqa: SLF001
+        self._event_service = event_service or ImportEventService()
 
     def import_orders(
         self,
@@ -1059,14 +1083,24 @@ class MarketplaceImportService:
             )
             if bound is None:
                 failed += 1
-                print(
+                message = (
                     f"ERROR marketplace import duplicate race: source={source} "
                     f"external_order_id={external_order.external_order_id}"
+                )
+                print(message)
+                self._event_service.record(
+                    level="error",
+                    source=source,
+                    code="duplicate_race",
+                    message=message,
                 )
                 continue
             created += 1
 
         return {"created": created, "duplicates": duplicates, "failed": failed}
+
+    def list_import_events(self) -> list[dict[str, str]]:
+        return self._event_service.list_events()
 
     def _create_internal_order(
         self,
@@ -1076,16 +1110,30 @@ class MarketplaceImportService:
         external_order: ExternalOrder,
     ) -> OrderRecord | None:
         if not external_order.external_order_id or not external_order.customer_name or not external_order.items:
-            print(
+            message = (
                 f"ERROR marketplace import invalid payload: source={source} "
                 f"external_order_id={external_order.external_order_id or '<missing>'}"
+            )
+            print(message)
+            self._event_service.record(
+                level="error",
+                source=source,
+                code="invalid_payload",
+                message=message,
             )
             return None
         for item in external_order.items:
             if not item.product_sku or item.quantity <= 0:
-                print(
+                message = (
                     f"ERROR marketplace import invalid item: source={source} "
                     f"external_order_id={external_order.external_order_id}"
+                )
+                print(message)
+                self._event_service.record(
+                    level="error",
+                    source=source,
+                    code="invalid_item",
+                    message=message,
                 )
                 return None
 

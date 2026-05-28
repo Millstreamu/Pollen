@@ -60,3 +60,8 @@ def test_import_logs_error_for_invalid_payload(capsys) -> None:
     captured = capsys.readouterr()
     assert result == {"created": 0, "duplicates": 0, "failed": 1}
     assert "ERROR marketplace import invalid payload" in captured.out
+
+    events = service.list_import_events()
+    assert len(events) == 1
+    assert events[0]["code"] == "invalid_payload"
+    assert "ERROR marketplace import invalid payload" in events[0]["message"]
