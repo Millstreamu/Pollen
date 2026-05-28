@@ -29,13 +29,13 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Run Milestone 10.1 release-candidate validation/sign-off.
+- Run Milestone 10.1 completion closeout validation/sign-off.
 
 ## Optional Post-Milestone Work
 - Milestone 9.2 optional screenshot evidence may still be done later if desired.
 
 ## Next Required Milestone
-- Milestone 10.1 release-candidate validation/sign-off.
+- Milestone 10.1 completion closeout validation/sign-off.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
