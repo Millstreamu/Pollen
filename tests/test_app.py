@@ -366,7 +366,7 @@ def test_products_ui_renders_bulk_action_controls() -> None:
 
     response = app.get("/products-stock", authorization_header=header)
     assert response.status_code == 200
-    assert "<h3>Bulk actions</h3>" in response.body
+    assert "Archive or restore several products at once" in response.body
     assert "name='product_ids'" in response.body
     assert "value='bulk_archive'" in response.body
     assert "value='bulk_restore'" in response.body
