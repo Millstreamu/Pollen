@@ -1,22 +1,22 @@
-# Next Chat Task — Milestone 6.1 First Vertical Slice Implementation
+# Next Chat Task — Milestone 6.1 Completion Closeout Sign-off
 
 ## Active Milestone
-- Milestone 6.1 — Today Data Summary (`in-progress`)
+- Milestone 6.1 — Today Data Summary (`release-candidate`)
 
 ## Objective
-Implement the first vertical slice for Today summary service behavior and tests.
+Execute Milestone 6.1 completion closeout validation/sign-off and mark milestone complete when checks pass.
 
 ## Scope Lock (current)
 In scope for current next task:
-- add read-only Today summary service output
-- include required counts: orders to pack, low stock, materials to buy, batches in progress, purchases due
-- keep implementation minimal and deterministic
-- add tests for summary behavior
+- rerun required milestone validation commands in Codex cloud
+- confirm no outstanding in-scope items remain
+- produce completion closeout report
+- update milestone status to `complete` only if validation passes
 
 Out of scope for current slice:
-- advanced prioritization logic
-- UI redesign
-- notifications/automation
+- new feature development
+- UX expansion or prioritization logic changes
+- cross-milestone scope additions
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -27,4 +27,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-6.1-startup-planning-scope-lock-report-2026-05-28.md`
+- `docs/ai/reports/milestone-6.1-release-candidate-validation-signoff-2026-05-28.md`
