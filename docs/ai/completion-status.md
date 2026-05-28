@@ -3,16 +3,16 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 8.1 — Integration Architecture  
-Status: complete
+Name: Milestone 9.1 — UI Consistency Pass  
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Define integration client interface boundaries for mocked import flow.
-- [x] Define external ID storage + duplicate-protection approach.
-- [x] Define fixture-driven import test strategy (no live API dependency).
-- [x] Define sync/error visibility model and reporting surfaces.
+- [x] Lock Milestone 9.1 scope to UI consistency only (no net-new workflow logic).
+- [x] Define first-slice page/workflow target and explicit out-of-scope boundaries.
+- [x] Confirm acceptance criteria interpretation for content-area limits, button clarity, and empty states.
+- [x] Record startup planning evidence for milestone handoff.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
@@ -25,13 +25,13 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- None. Milestone 8.1 completion closeout validation sign-off finished on 2026-05-28.
+- Implement Milestone 9.1 first vertical slice (single-page consistency pass with evidence and tests).
 
 ## Optional Post-Milestone Work
 - Optional future adapters for additional marketplaces beyond Etsy after 8.x hardening.
 
 ## Next Required Milestone
-- Milestone 9.1 — TBD startup planning + scope lock (next project roadmap slice).
+- Milestone 9.1 — first vertical slice implementation.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.

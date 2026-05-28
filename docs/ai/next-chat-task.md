@@ -1,21 +1,23 @@
-# Next Chat Task — Milestone 9.1 Startup Planning + Scope Lock
+# Next Chat Task — Milestone 9.1 First Vertical Slice Implementation
 
 ## Active Milestone
-- Milestone 9.1 — TBD (`in-progress` planning slice)
+- Milestone 9.1 — UI Consistency Pass (`in-progress`)
 
 ## Objective
-Start Milestone 9.1 by locking scope, constraints, and first vertical slice acceptance criteria.
+Implement the first vertical slice of Milestone 9.1 by applying a consistent beginner-friendly layout and copy pass to one user-facing workflow page.
 
 ## Scope Lock (current)
 In scope for current next task:
-- read roadmap context and identify Milestone 9.1 objective + boundaries
-- define in-scope first-slice deliverable and explicit out-of-scope items
-- update milestone tracking files for 9.1 in-progress planning status
-- create startup planning evidence report under `docs/ai/reports/`
+- apply Milestone 9.1 consistency rules to one targeted page/workflow
+- keep page to no more than 3 main content areas (Today excluded)
+- normalize button treatment, status badge presentation, and empty-state guidance on that page
+- remove enterprise-style labels on touched surfaces
+- add/update tests that verify adjusted copy/layout-facing output where practical
 
 Out of scope for current slice:
-- implementation of Milestone 9.1 runtime behavior
-- adding new external integrations beyond existing mocked architecture
+- full app-wide redesign across all pages
+- new functional workflows unrelated to UI consistency
+- headed-browser-only manual verification requirements
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -26,4 +28,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- add startup planning + scope lock report under `docs/ai/reports/` for Milestone 9.1
+- add first-vertical-slice implementation report under `docs/ai/reports/` for Milestone 9.1
