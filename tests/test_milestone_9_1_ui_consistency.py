@@ -108,3 +108,17 @@ def test_settings_page_uses_beginner_friendly_consistency_sections_and_empty_sta
     assert "No connected sales channels yet. Add one when you are ready to import orders." in response.body
     assert "<button type='button' disabled>Save settings</button>" in response.body
     assert "<button type='button' disabled>Connect channel</button>" in response.body
+
+
+def test_today_page_uses_beginner_friendly_consistency_sections_and_empty_state() -> None:
+    header = _auth_header("today-ui", "today-ui@example.com")
+    app = AppShell()
+
+    response = app.get("/", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "<h3>Today summary</h3>" in response.body
+    assert "<h3>Today actions</h3>" in response.body
+    assert "<h3>Next steps</h3>" in response.body
+    assert "No work is waiting right now. Create your first order or add inventory to begin." in response.body
+    assert "<button type='button' disabled>Open today checklist</button>" in response.body
