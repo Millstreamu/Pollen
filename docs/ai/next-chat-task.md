@@ -1,10 +1,10 @@
-# Next Chat Task — Milestone 5.3 Stabilization Validation
+# Next Chat Task — Milestone 5.3 Release-Candidate Validation
 
 ## Active Milestone
-- Milestone 5.3 — Receive Purchase (`in-progress`)
+- Milestone 5.3 — Receive Purchase (`stabilising`)
 
 ## Objective
-Run stabilization validation and status advancement for Milestone 5.3 after first vertical slice implementation.
+Run release-candidate validation and sign-off for Milestone 5.3 after stabilization validation.
 
 ## Scope Lock (current)
 In scope for current next task:
@@ -24,4 +24,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-5.3-first-vertical-slice-implementation-report-2026-05-28.md`
+- `docs/ai/reports/milestone-5.3-stabilization-validation-report-2026-05-28.md`

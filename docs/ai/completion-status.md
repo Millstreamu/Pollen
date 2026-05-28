@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 5.3 — Receive Purchase  
-Status: in-progress
+Status: stabilising
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -28,11 +28,8 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Milestone 5.2 startup planning + scope lock completed on 2026-05-28.
-- Milestone 5.2 first vertical-slice implementation completed (2026-05-28).
-- Milestone 5.2 stabilization validation completed (2026-05-28).
-- Milestone 5.2 release-candidate validation sign-off completed (2026-05-28).
-- Milestone 5.2 completion closeout sign-off completed (2026-05-28).
+- Milestone 5.3 release-candidate validation + sign-off.
+- Milestone 5.3 completion closeout validation + sign-off.
 
 ## Optional Post-Milestone Work
 - Additional Make/Buy UX polish remains out of scope unless explicitly requested.
