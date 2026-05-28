@@ -1,17 +1,17 @@
-# Next Chat Task — Milestone 6.2 Release-Candidate Validation
+# Next Chat Task — Milestone 6.2 Completion Closeout Validation
 
 ## Active Milestone
-- Milestone 6.2 — Today Actions (`stabilising`)
+- Milestone 6.2 — Today Actions (`release-candidate`)
 
 ## Objective
-Run release-candidate validation for Milestone 6.2 and advance status if checks remain green.
+Run completion closeout validation for Milestone 6.2 and advance status to `complete` if checks remain green.
 
 ## Scope Lock (current)
 In scope for current next task:
 - run full Codex-cloud validation sequence
-- confirm Today action affordances still route explicitly to existing workflows
-- update milestone status to `release-candidate` if validation passes
-- publish release-candidate validation sign-off report evidence
+- confirm Today action affordances and routing behavior remain regression-safe
+- update milestone status to `complete` if validation passes
+- publish completion closeout sign-off report evidence
 
 Out of scope for current slice:
 - new Today actions beyond current milestone scope
@@ -26,4 +26,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-6.2-stabilization-validation-report-2026-05-28.md`
+- `docs/ai/reports/milestone-6.2-release-candidate-validation-signoff-2026-05-28.md`
