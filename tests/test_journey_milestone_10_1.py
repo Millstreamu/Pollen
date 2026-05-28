@@ -19,6 +19,10 @@ def test_order_fulfillment_to_make_and_buy_replenishment_journey() -> None:
             "sku": "LC-1",
             "stock_on_hand": "3",
             "reorder_point": "1",
+            "sale_price": "25.00",
+            "estimated_material_cost": "8.50",
+            "estimated_packaging_shipping_cost": "3.00",
+            "platform_fee_percent": "10.00",
         },
     )
     assert product_response.status_code == 200
@@ -92,6 +96,14 @@ def test_order_fulfillment_to_make_and_buy_replenishment_journey() -> None:
     assert shipped_product is not None
     assert shipped_product.stock_on_hand == 1
     assert shipped_product.reserved_stock == 0
+
+    money_page_after_shipping = app.get("/money", authorization_header=header)
+    assert money_page_after_shipping.status_code == 200
+    assert "Shipped orders: 1" in money_page_after_shipping.body
+    assert "Items shipped: 2" in money_page_after_shipping.body
+    assert "Estimated revenue: $50.00" in money_page_after_shipping.body
+    assert "Estimated cost: $28.00" in money_page_after_shipping.body
+    assert "Estimated profit: $22.00" in money_page_after_shipping.body
 
     create_batch_response = app.post(
         "/make-buy",
@@ -176,4 +188,55 @@ def test_order_fulfillment_to_make_and_buy_replenishment_journey() -> None:
         "materials_to_buy": 0,
         "batches_in_progress": 0,
         "purchases_due": 0,
+    }
+
+
+def test_money_summary_service_counts_shipped_orders_only() -> None:
+    header = _auth_header("money-summary", "money-summary@example.com")
+    app = create_app()
+
+    app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={
+            "action": "create",
+            "name": "Profit Candle",
+            "sku": "PC-1",
+            "stock_on_hand": "3",
+            "reorder_point": "0",
+            "sale_price": "20.00",
+            "estimated_material_cost": "6.00",
+            "estimated_packaging_shipping_cost": "2.00",
+            "platform_fee_percent": "5.00",
+        },
+    )
+    app.post(
+        "/orders",
+        authorization_header=header,
+        form_data={"customer_name": "Buyer One", "product_sku": "PC-1", "quantity": "1"},
+    )
+    app.post(
+        "/orders",
+        authorization_header=header,
+        form_data={"customer_name": "Buyer Two", "product_sku": "PC-1", "quantity": "1"},
+    )
+    app.post(
+        "/orders",
+        authorization_header=header,
+        form_data={"action": "pack", "order_id": "ord-1"},
+    )
+    app.post(
+        "/orders",
+        authorization_header=header,
+        form_data={"action": "ship", "order_id": "ord-1"},
+    )
+
+    summary = app._money_summary_service.get_summary(authorization_header=header)  # noqa: SLF001
+
+    assert summary == {
+        "shipped_order_count": 1,
+        "shipped_item_count": 1,
+        "estimated_revenue": 20.0,
+        "estimated_cost": 9.0,
+        "estimated_profit": 11.0,
     }
