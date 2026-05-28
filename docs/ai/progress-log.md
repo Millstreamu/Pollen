@@ -4,12 +4,39 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 5.1 — Buy List / Reorder Suggestions (stabilising)  
-Overall status: Milestone 5.1 first vertical slice and stabilization validation are complete; milestone status is now stabilising.
+Current milestone: Milestone 5.1 — Buy List / Reorder Suggestions (release-candidate)  
+Overall status: Milestone 5.1 first vertical slice, stabilization validation, and release-candidate validation are complete; milestone status is now release-candidate.
 
 
 ## Latest Summary
-Milestone 5.1 first vertical slice implementation and stabilization validation are complete. Next execution target is Milestone 5.1 release-candidate validation + sign-off.
+
+
+### 2026-05-28 — Milestone 5.1 release-candidate validation + sign-off
+
+Branch/PR/Issue:
+- local milestone release-flow validation update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 5.1 stabilising-to-release-candidate gate.
+- Confirmed Buy List suggestions and Add to Purchase draft flow remain regression-safe through compile, lint, and full test-suite checks.
+- Transitioned milestone tracking from `stabilising` to `release-candidate`.
+- Added durable release-candidate sign-off report evidence and advanced next-task handoff toward completion closeout sign-off.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`79 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 5.1 completion closeout validation/sign-off and transition status to `complete`.
+
+Milestone 5.1 first vertical slice implementation, stabilization validation, and release-candidate validation are complete. Next execution target is Milestone 5.1 completion closeout validation + sign-off.
 
 
 ### 2026-05-28 — Milestone 5.1 stabilization validation + status advancement
