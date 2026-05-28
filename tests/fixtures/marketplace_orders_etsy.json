@@ -1,0 +1,18 @@
+{
+  "orders": [
+    {
+      "external_order_id": "etsy-1001",
+      "customer_name": "Alex Maker",
+      "items": [
+        {"product_sku": "SKU-CANDLE", "quantity": 2}
+      ]
+    },
+    {
+      "external_order_id": "etsy-1002",
+      "customer_name": "Casey Buyer",
+      "items": [
+        {"product_sku": "SKU-CANDLE", "quantity": 1}
+      ]
+    }
+  ]
+}

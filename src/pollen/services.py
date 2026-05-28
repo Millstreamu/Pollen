@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pollen.auth import AuthService
 from pollen.batches import BatchRecord, BatchRepository
+from pollen.integrations import ExternalOrder, MarketplaceImportClient
 from pollen.inventory import ActivityLogRepository, InventoryMovementRepository
 from pollen.materials import MaterialRecord, MaterialRepository
 from pollen.orders import OrderItemRecord, OrderRecord, OrderRepository
@@ -1001,3 +1002,95 @@ class TodaySummaryService:
             "batches_in_progress": batches_in_progress,
             "purchases_due": purchases_due,
         }
+
+
+class MarketplaceImportService:
+    """Import external marketplace orders through an isolated client boundary."""
+
+    def __init__(
+        self,
+        *,
+        auth_service: AuthService | None = None,
+        order_service: OrderService | None = None,
+        order_repository: OrderRepository | None = None,
+    ) -> None:
+        self._auth_service = auth_service or AuthService()
+        self._order_service = order_service or OrderService(auth_service=self._auth_service)
+        self._order_repository = order_repository or self._order_service._order_repository  # noqa: SLF001
+
+    def import_orders(
+        self,
+        *,
+        authorization_header: str | None,
+        source: str,
+        client: MarketplaceImportClient,
+    ) -> dict[str, int]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None or not source.strip():
+            return {"created": 0, "duplicates": 0, "failed": 0}
+
+        created = 0
+        duplicates = 0
+        failed = 0
+
+        for external_order in client.fetch_orders():
+            if self._order_repository.get_by_external_order(
+                shop_id=context.shop.shop_id,
+                source=source,
+                external_order_id=external_order.external_order_id,
+            ) is not None:
+                duplicates += 1
+                continue
+
+            created_order = self._create_internal_order(
+                authorization_header=authorization_header,
+                source=source,
+                external_order=external_order,
+            )
+            if created_order is None:
+                failed += 1
+                continue
+
+            bound = self._order_repository.bind_external_order(
+                shop_id=context.shop.shop_id,
+                source=source,
+                external_order_id=external_order.external_order_id,
+                order_id=created_order.order_id,
+            )
+            if bound is None:
+                failed += 1
+                print(
+                    f"ERROR marketplace import duplicate race: source={source} "
+                    f"external_order_id={external_order.external_order_id}"
+                )
+                continue
+            created += 1
+
+        return {"created": created, "duplicates": duplicates, "failed": failed}
+
+    def _create_internal_order(
+        self,
+        *,
+        authorization_header: str | None,
+        source: str,
+        external_order: ExternalOrder,
+    ) -> OrderRecord | None:
+        if not external_order.external_order_id or not external_order.customer_name or not external_order.items:
+            print(
+                f"ERROR marketplace import invalid payload: source={source} "
+                f"external_order_id={external_order.external_order_id or '<missing>'}"
+            )
+            return None
+        for item in external_order.items:
+            if not item.product_sku or item.quantity <= 0:
+                print(
+                    f"ERROR marketplace import invalid item: source={source} "
+                    f"external_order_id={external_order.external_order_id}"
+                )
+                return None
+
+        return self._order_service.create_order(
+            authorization_header=authorization_header,
+            customer_name=external_order.customer_name,
+            items=[{"product_sku": item.product_sku, "quantity": item.quantity} for item in external_order.items],
+        )
