@@ -4,11 +4,38 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 5.2 — Purchase Workflow Persistence (stabilising)  
-Overall status: Milestone 5.2 stabilization validation is complete; milestone is now in `stabilising` and next focus is release-candidate validation/sign-off.
+Current milestone: Milestone 5.2 — Purchase Workflow Persistence (release-candidate)  
+Overall status: Milestone 5.2 release-candidate validation is complete; milestone is now in `release-candidate` and next focus is completion closeout validation/sign-off.
 
 
 ## Latest Summary
+
+
+### 2026-05-28 — Milestone 5.2 release-candidate validation + sign-off
+
+Branch/PR/Issue:
+- local milestone release-flow validation update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 5.2 stabilising-to-release-candidate gate.
+- Confirmed purchase creation persistence behavior remains regression-safe through compile, lint, and full test-suite checks.
+- Transitioned milestone tracking from `stabilising` to `release-candidate`.
+- Added durable release-candidate sign-off report evidence and advanced next-task handoff toward completion closeout sign-off.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`81 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 5.2 completion closeout validation/sign-off and transition status to `complete`.
+
 
 
 
