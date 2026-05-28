@@ -1,21 +1,21 @@
-# Next Chat Task — Milestone 6.2 Completion Closeout Validation
+# Next Chat Task — Milestone 7.1 Stabilization Validation
 
 ## Active Milestone
-- Milestone 6.2 — Today Actions (`release-candidate`)
+- Milestone 7.1 — Backlog/Planning Stream (`in-progress`)
 
 ## Objective
-Run completion closeout validation for Milestone 6.2 and advance status to `complete` if checks remain green.
+Run stabilization validation for Milestone 7.1 and advance status to `stabilising` if checks remain green.
 
 ## Scope Lock (current)
 In scope for current next task:
 - run full Codex-cloud validation sequence
-- confirm Today action affordances and routing behavior remain regression-safe
-- update milestone status to `complete` if validation passes
-- publish completion closeout sign-off report evidence
+- confirm Milestone 7.1 first-slice behavior remains regression-safe
+- update milestone status to `stabilising` if validation passes
+- publish stabilization validation report evidence
 
 Out of scope for current slice:
-- new Today actions beyond current milestone scope
-- Milestone 7+ features
+- Milestone 7.1 release-candidate/closeout status transitions
+- Milestone 8+ features
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -26,4 +26,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-6.2-release-candidate-validation-signoff-2026-05-28.md`
+- `docs/ai/reports/milestone-6.2-completion-closeout-signoff-2026-05-28.md`

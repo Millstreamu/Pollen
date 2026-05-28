@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 6.2 — Today Actions  
-Status: release-candidate
+Status: complete
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -22,10 +22,10 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Journey tests if applicable
 - [x] Build *(compile check: `python -m compileall -q src tests`)*
 - [x] Environment-specific checks or exceptions documented
-- [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
+- [x] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Execute Milestone 6.2 completion closeout sign-off.
+- None for Milestone 6.2.
 
 ## Optional Post-Milestone Work
 - Prioritization/urgency scoring refinement for Today actions.
