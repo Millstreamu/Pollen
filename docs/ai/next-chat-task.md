@@ -1,19 +1,19 @@
-# Next Chat Task — Milestone 5.1 Stabilization Validation
+# Next Chat Task — Milestone 5.1 Completion Closeout Sign-off
 
 Use this brief in future chats to continue work without re-planning completed slices.
 
 ## Active Milestone
-- Milestone 5.1 — Buy List / Reorder Suggestions (`stabilising`)
+- Milestone 5.1 — Buy List / Reorder Suggestions (`release-candidate`)
 
 ## Objective
-Run full stabilization validation for the completed Milestone 5.1 vertical slice and confirm it is regression-safe before release-candidate sign-off.
+Run completion closeout validation for Milestone 5.1 and, if checks pass, transition the milestone to `complete`.
 
 ## Scope Lock (current)
 In scope for current next task:
 - run Codex-cloud dependency install commands
 - run compile, lint, and full tests
 - document pass/fail outcomes and any environment exceptions
-- if validation passes, advance milestone from `stabilising` to `release-candidate`
+- if validation passes, advance milestone from `release-candidate` to `complete`
 
 Out of scope for current slice:
 - new feature work for Milestone 5.1
@@ -31,3 +31,4 @@ Out of scope for current slice:
 ## Evidence
 - `docs/ai/reports/milestone-5.1-first-vertical-slice-implementation-report-2026-05-28.md`
 - `docs/ai/reports/milestone-5.1-stabilization-validation-report-2026-05-28.md`
+- `docs/ai/reports/milestone-5.1-release-candidate-validation-signoff-2026-05-28.md`
