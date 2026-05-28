@@ -3,19 +3,19 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 5.1 — Buy List / Reorder Suggestions  
-Status: complete
+Name: Milestone 5.2 — Purchase Workflow Persistence  
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Add Complete Batch transition for in-progress batches.
-- [x] Enforce valid status transition rules (`in-progress` -> `complete` only).
-- [x] Decrease material stock per product recipe × batch quantity.
-- [x] Increase finished product stock by completed batch quantity.
-- [x] Persist completion timestamp/status update.
-- [x] Block invalid complete transitions with actionable errors.
-- [x] Add tests for successful completion mutations and blocked transitions.
+- [ ] Create purchase from Make/Buy flow.
+- [ ] Add purchase line items (material + quantity).
+- [ ] Support optional supplier and expected date fields.
+- [ ] Persist status with Milestone scope (`Draft`/`Ordered`).
+- [ ] Ensure purchase creation does not increase material stock.
+- [ ] Show created purchases in Buy page list.
+- [ ] Add tests for creation + no stock mutation behavior.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
@@ -28,7 +28,8 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Milestone 5.1 completion closeout validation + sign-off completed on 2026-05-28.
+- Milestone 5.2 startup planning + scope lock completed on 2026-05-28.
+- Milestone 5.2 first vertical-slice implementation pending.
 
 ## Optional Post-Milestone Work
 - Additional Make/Buy UX polish remains out of scope unless explicitly requested.
