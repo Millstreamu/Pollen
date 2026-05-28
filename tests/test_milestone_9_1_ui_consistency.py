@@ -42,3 +42,25 @@ def test_orders_page_uses_normalized_status_badge_text_and_action_buttons() -> N
     assert "<button type='submit'>Mark packed</button>" in response.body
     assert "<button type='submit'>Mark shipped</button>" in response.body
     assert "<button type='submit'>Cancel order</button>" in response.body
+
+
+def test_products_stock_page_uses_beginner_friendly_sections_and_buttons() -> None:
+    header = _auth_header("products-ui", "products-ui@example.com")
+    app = AppShell()
+    app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={"action": "create", "name": "Soap", "sku": "SOAP-1", "stock_on_hand": "3", "reorder_point": "1"},
+    )
+
+    response = app.get("/products-stock", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "<h3>View</h3>" in response.body
+    assert "<h3>Add product</h3>" in response.body
+    assert "<h3>Bulk actions</h3>" in response.body
+    assert "Show active" in response.body
+    assert "Show archived" in response.body
+    assert "Show all" in response.body
+    assert "<button type='submit'>Save product</button>" in response.body
+    assert "<button type='submit' name='action' value='bulk_archive'>Archive products</button>" in response.body
