@@ -4,11 +4,40 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 8.1 — Integration Architecture (not-started)  
-Overall status: Milestone 7.1 completion closeout sign-off is complete; next is Milestone 8.1 startup planning + scope lock.
+Current milestone: Milestone 8.1 — Integration Architecture (in-progress)  
+Overall status: Milestone 8.1 startup planning + scope lock is complete; next is Milestone 8.1 first vertical slice implementation.
 
 
 ## Latest Summary
+
+
+### 2026-05-28 — Milestone 8.1 startup planning + scope lock
+
+Branch/PR/Issue:
+- local Milestone 8.1 planning/reporting update
+
+Completed:
+- Read roadmap context for Milestone 8.1 (Integration Architecture) and confirmed prerequisites from completed manual workflow milestones.
+- Locked first-slice scope to mocked/offline integration architecture only (no live API automation).
+- Transitioned active milestone tracking from Milestone 7.1 complete to Milestone 8.1 in-progress.
+- Updated next-chat handoff and completion-status checklists for Milestone 8.1 implementation readiness.
+- Added durable startup planning evidence report for Milestone 8.1.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 8.1 first vertical slice (mocked integration interface + duplicate protection + failure visibility tests).
+
+
 
 
 ### 2026-05-28 — Milestone 7.1 completion closeout validation + sign-off

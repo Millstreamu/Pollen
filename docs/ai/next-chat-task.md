@@ -1,21 +1,22 @@
-# Next Chat Task — Milestone 8.1 Startup Planning + Scope Lock
+# Next Chat Task — Milestone 8.1 First Vertical Slice Implementation
 
 ## Active Milestone
-- Milestone 8.1 — Integration Architecture (`not-started`)
+- Milestone 8.1 — Integration Architecture (`in-progress`)
 
 ## Objective
-Prepare Milestone 8.1 startup planning artifacts, lock scope, and transition status to `in-progress` once planning evidence is documented.
+Implement the first Milestone 8.1 architecture slice for mocked Etsy import plumbing with isolated interfaces, duplicate guards, and visible error logging.
 
 ## Scope Lock (current)
 In scope for current next task:
-- define Milestone 8.1 goals, constraints, and acceptance criteria from roadmap
-- identify minimal integration architecture slice for mocked Etsy import path
-- document risks, out-of-scope boundaries, and verification plan
-- update milestone tracking files after planning sign-off
+- add integration client interface boundary for Etsy-like mocked source
+- add external order ID persistence + duplicate protection strategy
+- add fixture-driven import service path (no live API dependency)
+- add tests proving isolated integration logic and failure visibility
 
 Out of scope for current slice:
-- implementing Milestone 8.1 production code
-- Milestone 8.2+ behavior changes
+- live OAuth/API integration
+- automatic stock push/sync back to marketplaces
+- Milestone 8.2+ full order-mapping behavior beyond minimal architecture slice
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -26,4 +27,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- add startup planning report under `docs/ai/reports/` for Milestone 8.1
+- add first-vertical-slice implementation report under `docs/ai/reports/` for Milestone 8.1
