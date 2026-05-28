@@ -4,11 +4,38 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 9.1 — UI Consistency Pass (release-candidate)  
-Overall status: Milestone 9.1 release-candidate validation is complete; next is completion closeout validation sign-off.
+Current milestone: Milestone 9.1 — UI Consistency Pass (complete)  
+Overall status: Milestone 9.1 completion closeout validation is complete; next is post-9.1 roadmap planning + next milestone startup/scope-lock.
 
 
 ## Latest Summary
+
+
+### 2026-05-28 — Milestone 9.1 completion closeout validation + sign-off
+
+Branch/PR/Issue:
+- local milestone completion closeout update
+
+Completed:
+- Executed full Codex-cloud validation commands for Milestone 9.1 completion closeout gate.
+- Confirmed UI consistency slice remains regression-safe through compile, lint, and full test-suite checks.
+- Transitioned milestone tracking from `release-candidate` to `complete`.
+- Added durable completion closeout sign-off report evidence and advanced next-task handoff to post-9.1 roadmap planning.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`96 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Begin post-9.1 roadmap planning and startup/scope-lock for the next unlocked milestone.
+
 
 ### 2026-05-28 — Milestone 9.1 release-candidate validation + sign-off
 

@@ -1,21 +1,20 @@
-# Next Chat Task — Milestone 9.1 Completion Closeout Sign-off
+# Next Chat Task — Post-9.1 Roadmap Planning + Next Milestone Startup
 
 ## Active Milestone
-- Milestone 9.1 — UI Consistency Pass (`release-candidate`)
+- Milestone 9.1 — UI Consistency Pass (`complete`)
 
 ## Objective
-Run Milestone 9.1 completion closeout validation and prepare final completion evidence.
+Start post-9.1 roadmap planning and select the next unlocked milestone for startup/scope-lock execution.
 
 ## Scope Lock (current)
 In scope for current next task:
-- run full Codex-cloud validation command set for Milestone 9.1 closeout gate
-- confirm UI consistency slice remains regression-safe at completion gate
-- record completion sign-off evidence and status advancement to `complete`
+- review roadmap sequencing after Milestone 9.1 completion
+- select and activate the next milestone in `in-progress` status
+- record startup planning scope lock evidence for the selected milestone
 
 Out of scope for current slice:
-- new feature expansion beyond Milestone 9.1
-- app-wide redesign beyond existing implemented surfaces
-- headed-browser-only manual verification requirements
+- implementing net-new runtime features before startup planning is locked
+- editing completed milestone acceptance criteria retroactively
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -26,4 +25,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- add completion closeout sign-off report under `docs/ai/reports/` for Milestone 9.1
+- add startup planning/scope-lock report under `docs/ai/reports/` for the next selected milestone
