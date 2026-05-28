@@ -1,17 +1,17 @@
-# Next Chat Task — Milestone 8.1 Release-Candidate Validation Sign-off
+# Next Chat Task — Milestone 8.1 Completion Closeout Validation Sign-off
 
 ## Active Milestone
-- Milestone 8.1 — Integration Architecture (`in-progress`)
+- Milestone 8.1 — Integration Architecture (`release-candidate`)
 
 ## Objective
-Run Milestone 8.1 release-candidate validation and sign-off after stabilization checks passed.
+Run Milestone 8.1 completion closeout validation and sign-off after release-candidate checks passed.
 
 ## Scope Lock (current)
 In scope for current next task:
 - rerun full Codex-cloud validation commands
-- confirm Milestone 8.1 integration architecture remains regression-safe
-- advance status from `stabilising` to `release-candidate` if checks pass
-- capture durable release-candidate sign-off evidence report
+- confirm Milestone 8.1 integration architecture remains regression-safe at completion gate
+- advance status from `release-candidate` to `complete` if checks pass
+- capture durable completion closeout sign-off evidence report
 
 Out of scope for current slice:
 - live OAuth/API integration
@@ -27,4 +27,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- add release-candidate validation sign-off report under `docs/ai/reports/` for Milestone 8.1
+- add completion closeout sign-off report under `docs/ai/reports/` for Milestone 8.1
