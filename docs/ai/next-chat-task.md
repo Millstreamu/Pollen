@@ -1,28 +1,24 @@
-# Next Chat Task — Milestone 4.3 First Vertical Slice Implementation
+# Next Chat Task — Milestone 4.3 Completion Closeout Sign-off
 
 Use this brief in future chats to continue work without re-planning completed slices.
 
 ## Active Milestone
-- Milestone 4.3 — Complete Batch (`in-progress`)
+- Milestone 4.3 — Complete Batch (`release-candidate`)
 
 ## Objective
-Implement the first Milestone 4.3 vertical slice for Complete Batch lifecycle transition with safe stock mutation behavior and test coverage.
+Execute completion closeout validation/sign-off for Milestone 4.3 and transition milestone status to `complete` when all required checks pass.
 
 ## Scope Lock (current)
 In scope for current next task:
-- add Complete Batch action in service/app flow for in-progress batches
-- enforce transition gate (`in-progress` -> `complete` only)
-- decrease material quantities according to recipe requirements × batch quantity
-- increase finished product stock by batch quantity
-- persist completion timestamp/status metadata
-- add/extend tests for successful completion + blocked invalid transitions
-- add/extend journey test coverage for create -> start -> complete integrity
+- run full Codex-cloud validation command sequence
+- confirm Complete Batch lifecycle behavior remains regression-safe
+- update milestone tracking from `release-candidate` to `complete` once checks pass
+- produce durable closeout sign-off report evidence
 
 Out of scope for current slice:
-- partial completion or rollback workflows
-- post-completion rework/cancel flows
-- Money module features
-- unrelated UX redesign
+- new feature development unrelated to Milestone 4.3 closeout
+- UX redesign or Money module work
+- partial-completion/rollback workflow expansion
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -33,4 +29,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-4.3-startup-planning-scope-lock-report-2026-05-28.md`
+- `docs/ai/reports/milestone-4.3-release-candidate-validation-signoff-2026-05-28.md`
