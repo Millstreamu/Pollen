@@ -15,6 +15,10 @@ class ProductRecord:
     reserved_stock: int
     reorder_point: int
     is_active: bool
+    sale_price: float
+    estimated_material_cost: float
+    estimated_packaging_shipping_cost: float
+    platform_fee_percent: float
 
     @property
     def is_low_stock(self) -> bool:
@@ -24,6 +28,19 @@ class ProductRecord:
     def available_stock(self) -> int:
         return self.stock_on_hand - self.reserved_stock
 
+    @property
+    def estimated_platform_fee(self) -> float:
+        return self.sale_price * (self.platform_fee_percent / 100)
+
+    @property
+    def estimated_profit_per_sale(self) -> float:
+        return (
+            self.sale_price
+            - self.estimated_material_cost
+            - self.estimated_packaging_shipping_cost
+            - self.estimated_platform_fee
+        )
+
 
 class ProductRepository:
     """In-memory repository with strict shop scoping semantics."""
@@ -32,7 +49,19 @@ class ProductRepository:
         self._records: dict[str, ProductRecord] = {}
         self._next_id = 1
 
-    def create(self, *, shop_id: str, name: str, sku: str, stock_on_hand: int, reorder_point: int) -> ProductRecord:
+    def create(
+        self,
+        *,
+        shop_id: str,
+        name: str,
+        sku: str,
+        stock_on_hand: int,
+        reorder_point: int,
+        sale_price: float = 0.0,
+        estimated_material_cost: float = 0.0,
+        estimated_packaging_shipping_cost: float = 0.0,
+        platform_fee_percent: float = 0.0,
+    ) -> ProductRecord:
         product_id = f"prd-{self._next_id}"
         self._next_id += 1
         created = ProductRecord(
@@ -44,6 +73,10 @@ class ProductRepository:
             reserved_stock=0,
             reorder_point=reorder_point,
             is_active=True,
+            sale_price=sale_price,
+            estimated_material_cost=estimated_material_cost,
+            estimated_packaging_shipping_cost=estimated_packaging_shipping_cost,
+            platform_fee_percent=platform_fee_percent,
         )
         self._records[product_id] = created
         return created
@@ -70,6 +103,10 @@ class ProductRepository:
         stock_on_hand: int,
         reserved_stock: int,
         reorder_point: int,
+        sale_price: float,
+        estimated_material_cost: float,
+        estimated_packaging_shipping_cost: float,
+        platform_fee_percent: float,
     ) -> ProductRecord | None:
         existing = self.get_for_shop(shop_id=shop_id, product_id=product_id)
         if existing is None:
@@ -82,6 +119,10 @@ class ProductRepository:
             stock_on_hand=stock_on_hand,
             reserved_stock=reserved_stock,
             reorder_point=reorder_point,
+            sale_price=sale_price,
+            estimated_material_cost=estimated_material_cost,
+            estimated_packaging_shipping_cost=estimated_packaging_shipping_cost,
+            platform_fee_percent=platform_fee_percent,
         )
         self._records[product_id] = updated
         return updated
