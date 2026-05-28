@@ -3,19 +3,19 @@
 Tracks the current milestone/release finish line to prevent endless asymptotic development.
 
 ## Current Milestone
-Name: Milestone 5.2 — Purchase Workflow Persistence  
-Status: complete
+Name: Milestone 5.3 — Receive Purchase  
+Status: in-progress
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [x] Create purchase from Make/Buy flow.
-- [x] Add purchase line items (material + quantity).
-- [x] Support optional supplier and expected date fields.
-- [x] Persist status with Milestone scope (`Draft`/`Ordered`).
-- [x] Ensure purchase creation does not increase material stock.
-- [x] Show created purchases in Buy page list.
-- [x] Add tests for creation + no stock mutation behavior.
+- [x] Mark purchase as `Received`.
+- [x] Increase material stock only on receive.
+- [x] Create `InventoryMovement` record on receive.
+- [x] Create `ActivityLog` record on receive.
+- [x] Block double receiving.
+- [x] Keep create-purchase stock mutation at zero.
+- [x] Add tests for receive behavior and regressions.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*

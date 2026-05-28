@@ -728,6 +728,54 @@ class MaterialService:
             return []
         return self._purchase_repository.list_for_shop(shop_id=context.shop.shop_id)
 
+    def receive_purchase(self, *, authorization_header: str | None, purchase_id: str) -> PurchaseRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+        purchase = self._purchase_repository.get_for_shop(shop_id=context.shop.shop_id, purchase_id=purchase_id)
+        if purchase is None or purchase.status == "Received":
+            return None
+
+        items = self._purchase_repository.list_items_for_purchase(shop_id=context.shop.shop_id, purchase_id=purchase_id)
+        for item in items:
+            material = self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=item.material_id)
+            if material is None or not material.is_active:
+                return None
+            updated = self._material_repository.update_for_shop(
+                shop_id=context.shop.shop_id,
+                material_id=material.material_id,
+                name=material.name,
+                unit=material.unit,
+                stock_on_hand=material.stock_on_hand + item.quantity,
+                reorder_point=material.reorder_point,
+            )
+            if updated is None:
+                return None
+            self._movement_repository.create(
+                shop_id=context.shop.shop_id,
+                item_type="material",
+                item_id=material.material_id,
+                reason="purchase_received",
+                delta=item.quantity,
+                before_quantity=material.stock_on_hand,
+                after_quantity=updated.stock_on_hand,
+                actor_user_id=context.user.user_id,
+            )
+            self._activity_repository.create(
+                shop_id=context.shop.shop_id,
+                activity_type="purchase_received",
+                entity_type="purchase",
+                entity_id=purchase.purchase_id,
+                message=f"Purchase {purchase.purchase_id} received for material {material.material_id}",
+                actor_user_id=context.user.user_id,
+            )
+
+        return self._purchase_repository.update_status_for_shop(
+            shop_id=context.shop.shop_id,
+            purchase_id=purchase.purchase_id,
+            status="Received",
+        )
+
     def create_material(
         self,
         *,

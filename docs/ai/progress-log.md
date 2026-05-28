@@ -10,6 +10,33 @@ Overall status: Milestone 5.2 release-candidate validation is complete; mileston
 
 ## Latest Summary
 
+### 2026-05-28 — Milestone 5.3 first vertical slice implementation
+
+Branch/PR/Issue:
+- local milestone implementation update
+
+Completed:
+- Implemented purchase receiving transition (`Ordered`/`Draft` -> `Received`).
+- Added material stock mutation on receive only (no stock mutation on create).
+- Added inventory movement and activity log creation on receive.
+- Added double-receive guard to block idempotency violations.
+- Added Milestone 5.3 receive workflow regression tests.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`83 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but validation ran successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 5.3 stabilization validation + status advancement.
+
+
 
 ### 2026-05-28 — Milestone 5.2 release-candidate validation + sign-off
 

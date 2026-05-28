@@ -315,6 +315,11 @@ class AppShell:
                 expected_date=payload.get("expected_date"),
                 status=payload.get("status", "draft"),
             )
+        elif action == "receive_purchase":
+            self._material_service.receive_purchase(
+                authorization_header=authorization_header,
+                purchase_id=payload.get("purchase_id", ""),
+            )
 
         return self.get("/make-buy", authorization_header=authorization_header)
 
@@ -623,12 +628,23 @@ class AppShell:
             f"<td>{purchase.status}</td>"
             f"<td>{purchase.supplier or '-'}</td>"
             f"<td>{purchase.expected_date or '-'}</td>"
+            "<td>"
+            + (
+                "<form method='post' action='/make-buy'>"
+                "<input type='hidden' name='action' value='receive_purchase'>"
+                f"<input type='hidden' name='purchase_id' value='{purchase.purchase_id}'>"
+                "<button type='submit'>Mark Received</button>"
+                "</form>"
+                if purchase.status != "Received"
+                else "-"
+            )
+            + "</td>"
             "</tr>"
             for purchase in purchases
         )
         purchase_history = (
             "<h4>Created purchases</h4>"
-            "<table><thead><tr><th>ID</th><th>Status</th><th>Supplier</th><th>Expected date</th></tr></thead>"
+            "<table><thead><tr><th>ID</th><th>Status</th><th>Supplier</th><th>Expected date</th><th>Action</th></tr></thead>"
             f"<tbody>{purchase_rows}</tbody></table>"
             if purchases
             else "<h4>Created purchases</h4><p>No purchases yet.</p>"
