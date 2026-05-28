@@ -93,3 +93,18 @@ def test_money_page_uses_beginner_friendly_consistency_sections_and_empty_state(
     assert "<h3>Next steps</h3>" in response.body
     assert "No money data yet. Finish a few orders and purchases to unlock estimated totals." in response.body
     assert "<button type='button' disabled>View estimates</button>" in response.body
+
+
+def test_settings_page_uses_beginner_friendly_consistency_sections_and_empty_state() -> None:
+    header = _auth_header("settings-ui", "settings-ui@example.com")
+    app = AppShell()
+
+    response = app.get("/settings", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "<h3>Shop settings</h3>" in response.body
+    assert "<h3>Sales channels</h3>" in response.body
+    assert "<h3>Next steps</h3>" in response.body
+    assert "No connected sales channels yet. Add one when you are ready to import orders." in response.body
+    assert "<button type='button' disabled>Save settings</button>" in response.body
+    assert "<button type='button' disabled>Connect channel</button>" in response.body

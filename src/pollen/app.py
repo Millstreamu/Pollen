@@ -921,6 +921,20 @@ class AppShell:
                 "<li><a href='/make-buy'>Record purchases</a> to track supply spend.</li>"
                 "</ul></section>"
             )
+        if page_title == "Settings" and authorization_header is not None:
+            page_content = (
+                "<section><h3>Shop settings</h3>"
+                "<p>Keep your shop details current so orders and labels stay accurate.</p>"
+                "<button type='button' disabled>Save settings</button></section>"
+                "<section><h3>Sales channels</h3>"
+                "<p>No connected sales channels yet. Add one when you are ready to import orders.</p>"
+                "<button type='button' disabled>Connect channel</button></section>"
+                "<section><h3>Next steps</h3>"
+                "<ul>"
+                "<li>Review <a href='/orders'>Orders</a> after connecting a channel.</li>"
+                "<li>Update <a href='/products-stock'>Products &amp; Stock</a> to keep inventory accurate.</li>"
+                "</ul></section>"
+            )
 
         return (
             "<!doctype html>"
