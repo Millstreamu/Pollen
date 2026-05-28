@@ -694,7 +694,8 @@ class MaterialService:
         status: str = "draft",
     ) -> PurchaseRecord | None:
         context = self._auth_service.resolve_context(authorization_header)
-        if context is None or status not in {"draft", "ordered"}:
+        normalized_status = (status or "draft").strip().lower()
+        if context is None or normalized_status not in {"draft", "ordered"}:
             return None
         draft_items = self.list_purchase_draft(authorization_header=authorization_header)
         if not draft_items:
@@ -704,7 +705,7 @@ class MaterialService:
         normalized_expected_date = (expected_date or "").strip() or None
         purchase = self._purchase_repository.create(
             shop_id=context.shop.shop_id,
-            status=status,
+            status=normalized_status.title(),
             supplier=normalized_supplier,
             expected_date=normalized_expected_date,
         )

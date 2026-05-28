@@ -27,7 +27,7 @@ def test_create_purchase_persists_and_does_not_mutate_stock() -> None:
         status="ordered",
     )
     assert purchase is not None
-    assert purchase.status == "ordered"
+    assert purchase.status == "Ordered"
     assert purchase.supplier == "Acme Supply"
     assert purchase.expected_date == "2026-06-10"
     assert service.list_purchase_draft(authorization_header=header) == []
@@ -62,5 +62,5 @@ def test_make_buy_ui_shows_created_purchases_list() -> None:
     assert response.status_code == 200
     assert "Created purchases" in response.body
     assert "pur-1" in response.body
-    assert "draft" in response.body
+    assert "Draft" in response.body
     assert "Northwind" in response.body

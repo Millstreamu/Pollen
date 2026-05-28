@@ -9,13 +9,13 @@ Status: in-progress
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
 ## Required Scope Checklist
-- [ ] Create purchase from Make/Buy flow.
-- [ ] Add purchase line items (material + quantity).
-- [ ] Support optional supplier and expected date fields.
-- [ ] Persist status with Milestone scope (`Draft`/`Ordered`).
-- [ ] Ensure purchase creation does not increase material stock.
-- [ ] Show created purchases in Buy page list.
-- [ ] Add tests for creation + no stock mutation behavior.
+- [x] Create purchase from Make/Buy flow.
+- [x] Add purchase line items (material + quantity).
+- [x] Support optional supplier and expected date fields.
+- [x] Persist status with Milestone scope (`Draft`/`Ordered`).
+- [x] Ensure purchase creation does not increase material stock.
+- [x] Show created purchases in Buy page list.
+- [x] Add tests for creation + no stock mutation behavior.
 
 ## Required Verification Checklist
 - [x] Typecheck *(Python compile check used in current repo flow)*
@@ -29,7 +29,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 
 ## Remaining Required Work
 - Milestone 5.2 startup planning + scope lock completed on 2026-05-28.
-- Milestone 5.2 first vertical-slice implementation pending.
+- Milestone 5.2 first vertical-slice implementation completed (2026-05-28).
 
 ## Optional Post-Milestone Work
 - Additional Make/Buy UX polish remains out of scope unless explicitly requested.
