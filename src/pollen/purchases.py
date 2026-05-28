@@ -65,3 +65,30 @@ class PurchaseRepository:
 
     def list_for_shop(self, *, shop_id: str) -> list[PurchaseRecord]:
         return [purchase for purchase in self._purchases.values() if purchase.shop_id == shop_id]
+
+    def get_for_shop(self, *, shop_id: str, purchase_id: str) -> PurchaseRecord | None:
+        purchase = self._purchases.get(purchase_id)
+        if purchase is None or purchase.shop_id != shop_id:
+            return None
+        return purchase
+
+    def list_items_for_purchase(self, *, shop_id: str, purchase_id: str) -> list[PurchaseItemRecord]:
+        return [
+            item
+            for item in self._items.values()
+            if item.shop_id == shop_id and item.purchase_id == purchase_id
+        ]
+
+    def update_status_for_shop(self, *, shop_id: str, purchase_id: str, status: str) -> PurchaseRecord | None:
+        purchase = self.get_for_shop(shop_id=shop_id, purchase_id=purchase_id)
+        if purchase is None:
+            return None
+        updated = PurchaseRecord(
+            purchase_id=purchase.purchase_id,
+            shop_id=purchase.shop_id,
+            status=status,
+            supplier=purchase.supplier,
+            expected_date=purchase.expected_date,
+        )
+        self._purchases[purchase_id] = updated
+        return updated
