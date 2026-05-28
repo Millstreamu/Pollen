@@ -636,6 +636,52 @@ class MaterialService:
         self._material_repository = material_repository or MaterialRepository()
         self._movement_repository = movement_repository or InventoryMovementRepository()
         self._activity_repository = activity_repository or ActivityLogRepository()
+        self._purchase_draft_by_shop: dict[str, set[str]] = {}
+
+    def list_low_stock_suggestions(self, *, authorization_header: str | None) -> list[dict[str, int | str]]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return []
+
+        rows: list[dict[str, int | str]] = []
+        for material in self._material_repository.list_for_shop(shop_id=context.shop.shop_id, include_archived=False):
+            if not material.is_low_stock:
+                continue
+            suggested_quantity = max(1, (material.reorder_point * 2) - material.stock_on_hand)
+            rows.append(
+                {
+                    "material_id": material.material_id,
+                    "name": material.name,
+                    "unit": material.unit,
+                    "stock_on_hand": material.stock_on_hand,
+                    "reorder_point": material.reorder_point,
+                    "suggested_quantity": suggested_quantity,
+                }
+            )
+        return rows
+
+    def add_to_purchase_draft(self, *, authorization_header: str | None, material_id: str) -> bool:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return False
+        material = self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=material_id)
+        if material is None or not material.is_active:
+            return False
+        draft = self._purchase_draft_by_shop.setdefault(context.shop.shop_id, set())
+        draft.add(material_id)
+        return True
+
+    def list_purchase_draft(self, *, authorization_header: str | None) -> list[MaterialRecord]:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return []
+        draft_ids = self._purchase_draft_by_shop.get(context.shop.shop_id, set())
+        selected: list[MaterialRecord] = []
+        for material_id in draft_ids:
+            material = self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=material_id)
+            if material is not None and material.is_active:
+                selected.append(material)
+        return sorted(selected, key=lambda m: m.name)
 
     def create_material(
         self,
