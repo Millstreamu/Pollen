@@ -4,11 +4,40 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 8.1 — Integration Architecture (complete)  
-Overall status: Milestone 8.1 completion closeout validation sign-off is complete; next is Milestone 9.1 startup planning + scope lock.
+Current milestone: Milestone 9.1 — UI Consistency Pass (in-progress)  
+Overall status: Milestone 9.1 startup planning + scope lock is complete; next is Milestone 9.1 first vertical slice implementation.
 
 
 ## Latest Summary
+
+
+### 2026-05-28 — Milestone 9.1 startup planning + scope lock
+
+Branch/PR/Issue:
+- local Milestone 9.1 planning/reporting update
+
+Completed:
+- Read roadmap context and resolved Milestone 9.1 objective as UI Consistency Pass (beginner-friendly consistency across pages).
+- Locked first-slice scope to one targeted page/workflow consistency pass with explicit no-new-workflow constraint.
+- Transitioned active milestone tracking from Milestone 8.1 complete to Milestone 9.1 in-progress.
+- Updated next-chat handoff and completion-status checklists for Milestone 9.1 implementation readiness.
+- Added durable startup planning evidence report for Milestone 9.1.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 9.1 first vertical slice (single workflow/page UI consistency pass).
+
+
 
 
 
@@ -108,7 +137,7 @@ Completed:
 Checks run:
 - `python -m pip install --upgrade pip` — pass
 - `pip install -r requirements.txt` — pass
-- `pip install -r requirements-dev.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
 - `python -m compileall -q src tests` — pass
 - `ruff check src tests` — pass
 - `pytest -q` — pass
@@ -298,7 +327,7 @@ Completed:
 Checks run:
 - `python -m pip install --upgrade pip` — pass
 - `pip install -r requirements.txt` — pass
-- `pip install -r requirements-dev.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
 - `python -m compileall -q src tests` — pass
 - `ruff check src tests` — pass
 - `pytest -q` — pass
