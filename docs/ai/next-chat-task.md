@@ -1,22 +1,20 @@
 # Next Chat Task — Milestone 9.1 First Vertical Slice Implementation
 
 ## Active Milestone
-- Milestone 9.1 — UI Consistency Pass (`in-progress`)
+- Milestone 9.1 — UI Consistency Pass (`stabilising`)
 
 ## Objective
-Implement the first vertical slice of Milestone 9.1 by applying a consistent beginner-friendly layout and copy pass to one user-facing workflow page.
+Run Milestone 9.1 release-candidate validation and prepare sign-off evidence for the UI consistency slice.
 
 ## Scope Lock (current)
 In scope for current next task:
-- apply Milestone 9.1 consistency rules to one targeted page/workflow
-- keep page to no more than 3 main content areas (Today excluded)
-- normalize button treatment, status badge presentation, and empty-state guidance on that page
-- remove enterprise-style labels on touched surfaces
-- add/update tests that verify adjusted copy/layout-facing output where practical
+- run full Codex-cloud validation command set for Milestone 9.1
+- verify first-slice UI consistency behavior remains regression-safe
+- record release-candidate sign-off evidence and status advancement
 
 Out of scope for current slice:
-- full app-wide redesign across all pages
-- new functional workflows unrelated to UI consistency
+- new feature expansion beyond Milestone 9.1 first slice
+- app-wide redesign beyond existing implemented surfaces
 - headed-browser-only manual verification requirements
 
 ## Validation Commands (Codex cloud)
