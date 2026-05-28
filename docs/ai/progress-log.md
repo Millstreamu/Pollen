@@ -4,11 +4,40 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 9.1 — UI Consistency Pass (complete)  
-Overall status: Milestone 9.1 completion closeout validation is complete; next is post-9.1 roadmap planning + next milestone startup/scope-lock.
+Current milestone: Milestone 10.1 — Full Journey Suite (in-progress)  
+Overall status: Milestone 10.1 first-slice stabilization validation passed compile/lint/full tests, but release-candidate advancement is held until the required money-summary journey coverage gap is closed.
 
 
 ## Latest Summary
+
+
+### 2026-05-28 — Milestone 10.1 stabilization validation
+
+Branch/PR/Issue:
+- local Milestone 10.1 stabilization validation update
+
+Completed:
+- Ran the full available Codex-cloud validation sequence for Milestone 10.1 stabilization.
+- Confirmed the first vertical journey slice remains green through compile, lint, and full test-suite checks.
+- Compared current journey coverage against the Milestone 10.1 required journeys.
+- Determined that release-candidate advancement should wait for one additional bounded money-summary journey slice.
+- Added durable stabilization validation report evidence for Milestone 10.1.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`97 passed`)
+
+Notes:
+- Current Milestone 10.1 journey coverage validates setup, product/material/recipe creation, order creation, stock reservation, pack/ship, batch make, buy/receive material, and Today low-stock visibility.
+- `money summary updates` remains the missing required journey evidence, so Milestone 10.1 stays `in-progress`.
+
+Follow-up:
+- Implement or explicitly document one bounded money-summary journey slice, then rerun stabilization validation.
+
 
 ### 2026-05-28 — Milestone 10.1 first vertical slice journey implementation
 

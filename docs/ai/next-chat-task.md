@@ -1,21 +1,22 @@
-# Next Chat Task — Milestone 10.1 Stabilization Validation
+# Next Chat Task — Milestone 10.1 Money Journey Slice
 
 ## Active Milestone
 - Milestone 10.1 — Full Journey Suite (`in-progress`)
 
 ## Objective
-Validate the Milestone 10.1 first vertical journey slice and decide whether the journey suite can advance toward release-candidate sign-off or needs another bounded journey slice.
+Close the remaining Milestone 10.1 journey coverage gap for `money summary updates` before release-candidate validation.
 
 ## Scope Lock (current)
 In scope for current next task:
-- run the full Codex-cloud validation sequence
-- inspect the new Milestone 10.1 journey-test coverage against the required core workflows
-- record stabilization validation evidence under `docs/ai/reports/`
-- update milestone status only if the validation evidence supports it
+- inspect existing Milestone 7.1 product cost/profit behavior and the current Money page surface
+- add one bounded deterministic journey assertion for the required money-summary workflow, or document a precise limitation if the current product intentionally does not yet expose a real Money summary
+- keep changes limited to the smallest safe implementation needed to satisfy the Milestone 10.1 journey requirement
+- update Milestone 10.1 evidence under `docs/ai/reports/`
 
 Out of scope for current slice:
 - Milestone 10.2 release-freeze bookkeeping
-- introducing net-new product features unrelated to journey verification
+- full accounting, taxes, analytics, or advanced money dashboards
+- new external integrations or live payment data
 - optional screenshot evidence unless explicitly scoped
 
 ## Validation Commands (Codex cloud)
@@ -27,4 +28,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- add stabilization validation report under `docs/ai/reports/` for Milestone 10.1
+- add a bounded implementation/validation report under `docs/ai/reports/` for the Milestone 10.1 money journey slice
