@@ -23,6 +23,14 @@ class OrderItemRecord:
     quantity: int
 
 
+@dataclass(frozen=True)
+class ExternalOrderLinkRecord:
+    shop_id: str
+    source: str
+    external_order_id: str
+    order_id: str
+
+
 class OrderRepository:
     """In-memory repository with strict shop scoping semantics."""
 
@@ -31,6 +39,7 @@ class OrderRepository:
         self._items: dict[str, OrderItemRecord] = {}
         self._next_id = 1
         self._next_item_id = 1
+        self._external_links: dict[tuple[str, str, str], ExternalOrderLinkRecord] = {}
 
     def create(self, *, shop_id: str, customer_name: str, source: str, status: str) -> OrderRecord:
         order_id = f"ord-{self._next_id}"
@@ -86,3 +95,39 @@ class OrderRepository:
         )
         self._records[order_id] = updated
         return updated
+
+    def get_by_external_order(
+        self,
+        *,
+        shop_id: str,
+        source: str,
+        external_order_id: str,
+    ) -> OrderRecord | None:
+        link = self._external_links.get((shop_id, source, external_order_id))
+        if link is None:
+            return None
+        return self.get_for_shop(shop_id=shop_id, order_id=link.order_id)
+
+    def bind_external_order(
+        self,
+        *,
+        shop_id: str,
+        source: str,
+        external_order_id: str,
+        order_id: str,
+    ) -> ExternalOrderLinkRecord | None:
+        key = (shop_id, source, external_order_id)
+        if key in self._external_links:
+            return None
+        order = self.get_for_shop(shop_id=shop_id, order_id=order_id)
+        if order is None:
+            return None
+        created = ExternalOrderLinkRecord(
+            shop_id=shop_id,
+            source=source,
+            external_order_id=external_order_id,
+            order_id=order_id,
+        )
+        self._external_links[key] = created
+        return created
+
