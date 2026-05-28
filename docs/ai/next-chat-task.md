@@ -1,22 +1,26 @@
-# Next Chat Task — Milestone 4.3 Startup Planning + Scope Lock
+# Next Chat Task — Milestone 4.3 First Vertical Slice Implementation
 
 Use this brief in future chats to continue work without re-planning completed slices.
 
 ## Active Milestone
-- Milestone 4.3 — Complete Batch (`not-started`)
+- Milestone 4.3 — Complete Batch (`in-progress`)
 
 ## Objective
-Run startup planning + scope-lock for Milestone 4.3 and produce the first implementation slice plan for safe batch completion stock mutations.
+Implement the first Milestone 4.3 vertical slice for Complete Batch lifecycle transition with safe stock mutation behavior and test coverage.
 
 ## Scope Lock (current)
 In scope for current next task:
-- confirm Milestone 4.2 is treated as complete baseline
-- define Milestone 4.3 slice boundaries for complete-batch workflow
-- lock required acceptance criteria and journey coverage
-- produce startup planning report for Milestone 4.3
+- add Complete Batch action in service/app flow for in-progress batches
+- enforce transition gate (`in-progress` -> `complete` only)
+- decrease material quantities according to recipe requirements × batch quantity
+- increase finished product stock by batch quantity
+- persist completion timestamp/status metadata
+- add/extend tests for successful completion + blocked invalid transitions
+- add/extend journey test coverage for create -> start -> complete integrity
 
 Out of scope for current slice:
-- implementing Milestone 4.3 stock/movement mutation logic itself
+- partial completion or rollback workflows
+- post-completion rework/cancel flows
 - Money module features
 - unrelated UX redesign
 
@@ -29,4 +33,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-4.2-completion-closeout-signoff-2026-05-28.md`
+- `docs/ai/reports/milestone-4.3-startup-planning-scope-lock-report-2026-05-28.md`

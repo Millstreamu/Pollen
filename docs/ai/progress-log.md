@@ -4,11 +4,37 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 4.2 — Start Batch (release-candidate)  
-Overall status: Milestone 4.2 release-candidate validation/sign-off is complete; next execution target is completion closeout validation/sign-off.
+Current milestone: Milestone 4.3 — Complete Batch (in-progress)  
+Overall status: Milestone 4.3 startup planning + scope lock is complete; next execution target is first vertical slice implementation.
 
 ## Latest Summary
-Milestone 4.2 release-candidate validation/sign-off is complete; milestone status is now `release-candidate`.
+Milestone 4.3 startup planning + scope lock is complete; milestone status is now `in-progress` with implementation-slice boundaries locked.
+
+### 2026-05-28 — Milestone 4.3 startup planning + scope lock
+
+Branch/PR/Issue:
+- local Milestone 4.3 planning/reporting update
+
+Completed:
+- Read roadmap/rules context for Milestone 4.3 Complete Batch scope.
+- Locked first implementation slice boundaries (complete transition gate, atomic stock mutation, completion metadata, tests).
+- Documented explicit out-of-scope items (partial completion/rollback, Money module, broad UX redesign).
+- Updated completion status and next-chat handoff to Milestone 4.3 first vertical implementation task.
+- Added durable startup planning evidence report for Milestone 4.3.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass
+
+Notes:
+- This slice is planning/scope-lock/reporting only; no runtime behavior changes were introduced.
+
+Follow-up:
+- Implement Milestone 4.3 first vertical slice (Complete Batch transition + stock mutation + tests + implementation report).
 
 ### 2026-05-27 — Milestone 4.2 release-candidate validation + sign-off
 
