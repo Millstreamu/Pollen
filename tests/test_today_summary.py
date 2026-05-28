@@ -109,3 +109,20 @@ def test_today_page_renders_summary_counts() -> None:
     assert "Today summary" in response.body
     assert "Orders to pack: 1" in response.body
     assert "Low stock: 0" in response.body
+
+
+def test_today_page_renders_action_links_to_existing_workflows() -> None:
+    header = _auth_header("today-actions", "today-actions@example.com")
+    app = AppShell()
+
+    response = app.get("/", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "Today actions" in response.body
+    assert "href='/orders'" in response.body
+    assert "Pack and ship orders" in response.body
+    assert "href='/products-stock'" in response.body
+    assert "Review low-stock products" in response.body
+    assert response.body.count("href='/make-buy'") >= 3
+    assert "Create a batch" in response.body
+    assert "Create a purchase" in response.body

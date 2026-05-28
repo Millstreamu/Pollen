@@ -1,24 +1,21 @@
-# Next Chat Task — Milestone 6.2 Startup Planning + Scope Lock
+# Next Chat Task — Milestone 6.2 Stabilization Validation
 
 ## Active Milestone
-- Milestone 6.2 — Today Actions (`not-started`)
+- Milestone 6.2 — Today Actions (`in-progress`)
 
 ## Objective
-Execute startup planning and scope lock for Milestone 6.2 and prepare the first implementation-slice handoff.
+Run stabilization validation for Milestone 6.2 after first-slice implementation and advance status if checks remain green.
 
 ## Scope Lock (current)
 In scope for current next task:
-- review roadmap and relevant existing Today/Orders/Make-Buy flows
-- lock first vertical-slice boundaries for Milestone 6.2
-- define explicit in-scope and out-of-scope behavior
-- capture acceptance criteria and validation plan
-- transition milestone status from `not-started` to `in-progress`
-- produce startup planning report evidence
+- run full Codex-cloud validation sequence
+- verify Today action affordances remain routing-only and explicit
+- update milestone status to `stabilising` if validation passes
+- publish stabilization validation report evidence
 
 Out of scope for current slice:
-- implementing new Today action buttons/workflows
-- workflow automation beyond explicit user-triggered actions
-- adding Milestone 7+ work
+- new Today actions beyond current milestone scope
+- Milestone 7+ features
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -29,4 +26,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-6.2-startup-planning-scope-lock-report-2026-05-28.md`
+- `docs/ai/reports/milestone-6.2-first-vertical-slice-implementation-report-2026-05-28.md`
