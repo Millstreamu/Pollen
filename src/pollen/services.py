@@ -154,6 +154,10 @@ class OrderService:
                 stock_on_hand=product.stock_on_hand - item.quantity,
                 reserved_stock=product.reserved_stock - item.quantity,
                 reorder_point=product.reorder_point,
+                sale_price=product.sale_price,
+                estimated_material_cost=product.estimated_material_cost,
+                estimated_packaging_shipping_cost=product.estimated_packaging_shipping_cost,
+                platform_fee_percent=product.platform_fee_percent,
             )
             if updated is None:
                 return None
@@ -243,6 +247,10 @@ class ProductService:
         stock_on_hand: int,
         reorder_point: int,
         requested_shop_id: str | None = None,
+        sale_price: float = 0.0,
+        estimated_material_cost: float = 0.0,
+        estimated_packaging_shipping_cost: float = 0.0,
+        platform_fee_percent: float = 0.0,
     ) -> ProductRecord | None:
         _ = requested_shop_id
         context = self._auth_service.resolve_context(authorization_header)
@@ -255,6 +263,10 @@ class ProductService:
             sku=sku,
             stock_on_hand=stock_on_hand,
             reorder_point=reorder_point,
+            sale_price=sale_price,
+            estimated_material_cost=estimated_material_cost,
+            estimated_packaging_shipping_cost=estimated_packaging_shipping_cost,
+            platform_fee_percent=platform_fee_percent,
         )
 
     def list_products(self, *, authorization_header: str | None, include_archived: bool = False) -> list[ProductRecord]:
@@ -283,6 +295,10 @@ class ProductService:
         sku: str,
         stock_on_hand: int,
         reorder_point: int,
+        sale_price: float | None = None,
+        estimated_material_cost: float | None = None,
+        estimated_packaging_shipping_cost: float | None = None,
+        platform_fee_percent: float | None = None,
     ) -> ProductRecord | None:
         context = self._auth_service.resolve_context(authorization_header)
         if context is None:
@@ -299,6 +315,16 @@ class ProductService:
             stock_on_hand=stock_on_hand,
             reserved_stock=existing.reserved_stock,
             reorder_point=reorder_point,
+            sale_price=existing.sale_price if sale_price is None else sale_price,
+            estimated_material_cost=(
+                existing.estimated_material_cost if estimated_material_cost is None else estimated_material_cost
+            ),
+            estimated_packaging_shipping_cost=(
+                existing.estimated_packaging_shipping_cost
+                if estimated_packaging_shipping_cost is None
+                else estimated_packaging_shipping_cost
+            ),
+            platform_fee_percent=existing.platform_fee_percent if platform_fee_percent is None else platform_fee_percent,
         )
 
     def archive_product(self, *, authorization_header: str | None, product_id: str) -> ProductRecord | None:
@@ -335,6 +361,10 @@ class ProductService:
             stock_on_hand=updated_stock,
             reserved_stock=existing.reserved_stock,
             reorder_point=existing.reorder_point,
+            sale_price=existing.sale_price,
+            estimated_material_cost=existing.estimated_material_cost,
+            estimated_packaging_shipping_cost=existing.estimated_packaging_shipping_cost,
+            platform_fee_percent=existing.platform_fee_percent,
         )
         if updated is None:
             return None
@@ -599,6 +629,10 @@ class BatchService:
             stock_on_hand=product.stock_on_hand + batch.quantity,
             reserved_stock=product.reserved_stock,
             reorder_point=product.reorder_point,
+            sale_price=product.sale_price,
+            estimated_material_cost=product.estimated_material_cost,
+            estimated_packaging_shipping_cost=product.estimated_packaging_shipping_cost,
+            platform_fee_percent=product.platform_fee_percent,
         )
         if product_updated is None:
             return None, "Batch complete failed"

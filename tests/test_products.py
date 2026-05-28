@@ -191,3 +191,41 @@ def test_restore_product_makes_archived_product_visible_again() -> None:
     assert restored is not None
     assert restored.is_active
     assert [p.product_id for p in service.list_products(authorization_header=header)] == [created.product_id]
+
+
+def test_estimated_profit_fields_can_be_saved_and_computed() -> None:
+    service = ProductService()
+    header = _auth_header("owner", "owner@example.com")
+
+    created = service.create_product(
+        authorization_header=header,
+        name="Profit Product",
+        sku="PRF-001",
+        stock_on_hand=5,
+        reorder_point=2,
+        sale_price=25.0,
+        estimated_material_cost=8.5,
+        estimated_packaging_shipping_cost=3.0,
+        platform_fee_percent=10.0,
+    )
+
+    assert created is not None
+    assert created.estimated_platform_fee == 2.5
+    assert created.estimated_profit_per_sale == 11.0
+
+    updated = service.update_product(
+        authorization_header=header,
+        product_id=created.product_id,
+        name=created.name,
+        sku=created.sku,
+        stock_on_hand=created.stock_on_hand,
+        reorder_point=created.reorder_point,
+        sale_price=30.0,
+        estimated_material_cost=10.0,
+        estimated_packaging_shipping_cost=2.0,
+        platform_fee_percent=5.0,
+    )
+
+    assert updated is not None
+    assert updated.estimated_platform_fee == 1.5
+    assert updated.estimated_profit_per_sale == 16.5
