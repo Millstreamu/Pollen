@@ -18,6 +18,7 @@ pip install -r requirements-dev.txt
 
 ```bash
 python -m compileall -q src tests
+ruff check src tests
 pytest -q
 ```
 
