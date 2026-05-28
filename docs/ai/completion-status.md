@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 8.1 — Integration Architecture  
-Status: release-candidate
+Status: complete
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -25,13 +25,13 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Execute Milestone 8.1 completion closeout validation sign-off.
+- None. Milestone 8.1 completion closeout validation sign-off finished on 2026-05-28.
 
 ## Optional Post-Milestone Work
 - Optional future adapters for additional marketplaces beyond Etsy after 8.x hardening.
 
 ## Next Required Milestone
-- Milestone 8.1 — Integration Architecture (completion closeout validation sign-off).
+- Milestone 9.1 — TBD startup planning + scope lock (next project roadmap slice).
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.
