@@ -79,4 +79,4 @@ def test_orders_page_manual_creation_flow_shows_order_in_list() -> None:
     assert response.status_code == 200
     assert "Chris" in response.body
     assert "manual" in response.body
-    assert "ready_to_pack" in response.body
+    assert "Ready to pack" in response.body

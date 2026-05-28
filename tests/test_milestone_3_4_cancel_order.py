@@ -92,7 +92,7 @@ def test_orders_page_supports_cancel_action() -> None:
         form_data={"action": "cancel", "order_id": "ord-1"},
     )
     assert cancel_response.status_code == 200
-    assert "cancelled" in cancel_response.body
+    assert "Cancelled" in cancel_response.body
 
     invalid_transition = app.post(
         "/orders",

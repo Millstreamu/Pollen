@@ -850,35 +850,54 @@ class AppShell:
             )
         if page_title == "Orders" and authorization_header is not None:
             orders = self._order_service.list_orders(authorization_header=authorization_header)
+            status_badges = {
+                "waiting_on_stock": "Waiting on stock",
+                "ready_to_pack": "Ready to pack",
+                "packed": "Packed",
+                "shipped": "Shipped",
+                "cancelled": "Cancelled",
+            }
             rows = "".join(
                 "<tr>"
-                f"<td>{o.order_id}</td><td>{o.customer_name}</td><td>{o.source}</td><td>{o.status}</td>"
+                f"<td>{o.order_id}</td><td>{o.customer_name}</td><td>{o.source}</td>"
+                f"<td><span>{status_badges.get(o.status, o.status)}</span></td>"
                 "<td>"
                 "<form method='post' action='/orders' style='display:inline'>"
                 "<input type='hidden' name='action' value='pack'>"
                 f"<input type='hidden' name='order_id' value='{o.order_id}'>"
-                "<button type='submit'>Pack</button></form> "
+                "<button type='submit'>Mark packed</button></form> "
                 "<form method='post' action='/orders' style='display:inline'>"
                 "<input type='hidden' name='action' value='ship'>"
                 f"<input type='hidden' name='order_id' value='{o.order_id}'>"
-                "<button type='submit'>Ship</button></form> "
+                "<button type='submit'>Mark shipped</button></form> "
                 "<form method='post' action='/orders' style='display:inline'>"
                 "<input type='hidden' name='action' value='cancel'>"
                 f"<input type='hidden' name='order_id' value='{o.order_id}'>"
-                "<button type='submit'>Cancel</button></form>"
+                "<button type='submit'>Cancel order</button></form>"
                 "</td></tr>"
                 for o in orders
             )
+            list_content = (
+                "<p>No orders yet. Create an order to start your shipping queue.</p>"
+                if not orders
+                else "<table><thead><tr><th>ID</th><th>Customer</th><th>Source</th><th>Status</th><th>Actions</th></tr></thead>"
+                f"<tbody>{rows}</tbody></table>"
+            )
             page_content = (
+                "<section><h3>Order actions</h3>"
+                "<p>Create and update orders from one place.</p>"
+                "<ul>"
+                "<li>Use <strong>Create order</strong> to add manual orders.</li>"
+                "<li>Use status actions to move orders forward.</li>"
+                "</ul></section>"
                 "<section><h3>Create order</h3>"
                 "<form method='post' action='/orders'>"
                 "<label>Customer <input name='customer_name' required></label>"
                 "<label>Product SKU <input name='product_sku' required></label>"
                 "<label>Quantity <input type='number' min='1' name='quantity' required></label>"
                 "<button type='submit'>Create order</button></form></section>"
-                "<section><h3>Orders</h3>"
-                "<table><thead><tr><th>ID</th><th>Customer</th><th>Source</th><th>Status</th><th>Actions</th></tr></thead>"
-                f"<tbody>{rows}</tbody></table></section>"
+                "<section><h3>Order queue</h3>"
+                f"{list_content}</section>"
             )
 
         return (
