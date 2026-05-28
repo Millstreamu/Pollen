@@ -4,11 +4,37 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 1 — App Foundation  
-Current milestone: Milestone 6.2 — Today Actions (complete)  
-Overall status: Milestone 6.2 is complete; next is Milestone 7.1 stabilization validation.
+Current milestone: Milestone 7.1 — Product Cost and Estimated Profit (stabilising)  
+Overall status: Milestone 7.1 stabilization validation is complete; next is release-candidate validation.
 
 
 ## Latest Summary
+
+### 2026-05-28 — Milestone 7.1 stabilization validation + status advancement
+
+Branch/PR/Issue:
+- local milestone stabilization update
+
+Completed:
+- Executed full Codex-cloud validation sequence for Milestone 7.1 stabilization gate.
+- Confirmed product estimated cost/profit behavior remains regression-safe through compile, lint, and full test-suite checks.
+- Advanced milestone status from `in-progress` to `stabilising`.
+- Added durable stabilization validation report evidence and updated next-task handoff.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`87 passed`)
+
+Notes:
+- Dev dependency installation for pinned `pytest==8.4.2` remains blocked by environment proxy/index constraints, but full validation executed successfully with available tooling.
+
+Follow-up:
+- Execute Milestone 7.1 release-candidate validation + sign-off.
+
 
 
 ### 2026-05-28 — Milestone 6.2 completion closeout validation + sign-off
