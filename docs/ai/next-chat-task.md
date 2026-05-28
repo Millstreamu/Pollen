@@ -1,22 +1,20 @@
-# Next Chat Task — Milestone 5.2 First Vertical Slice Implementation
+# Next Chat Task — Milestone 5.2 Release-Candidate Validation + Sign-off
 
 Use this brief in future chats to continue work without re-planning completed slices.
 
 ## Active Milestone
-- Milestone 5.2 — Purchase Workflow Persistence (`in-progress`)
+- Milestone 5.2 — Purchase Workflow Persistence (`stabilising`)
 
 ## Objective
-Implement the Milestone 5.2 first vertical slice for purchase creation persistence, including tests and report evidence.
+Execute Milestone 5.2 release-candidate validation + sign-off after stabilization, including full validation evidence and status transition updates.
 
 ## Scope Lock (current)
 In scope for current next task:
-- create persisted Purchase records from Make/Buy flow
-- add purchase line items (material + quantity)
-- support optional supplier and expected date fields
-- persist purchase status in Milestone scope (`Draft`/`Ordered`)
-- ensure purchase creation does **not** mutate material stock
-- show created purchases in Buy page list
-- add tests for creation + no-stock-mutation behavior
+- run full Codex-cloud validation sequence
+- confirm Milestone 5.2 purchase creation persistence behavior remains regression-safe
+- record release-candidate validation/sign-off report evidence
+- transition milestone status from `stabilising` to `release-candidate` if checks pass
+- update progress log and next-chat handoff
 
 Out of scope for current slice:
 - purchase receiving stock mutation workflow (Milestone 5.3)
@@ -32,5 +30,5 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- `docs/ai/reports/milestone-5.1-completion-closeout-signoff-2026-05-28.md`
-- `docs/ai/reports/milestone-5.2-startup-planning-scope-lock-report-2026-05-28.md`
+- `docs/ai/reports/milestone-5.2-first-vertical-slice-implementation-report-2026-05-28.md`
+- `docs/ai/reports/milestone-5.2-stabilization-validation-report-2026-05-28.md`
