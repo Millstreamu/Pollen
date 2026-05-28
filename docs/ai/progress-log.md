@@ -2269,3 +2269,31 @@ Notes:
 
 Follow-up:
 - Run Milestone 5.3 completion closeout validation/sign-off to transition milestone status to `complete`.
+
+
+### 2026-05-28 — Milestone 10.1 completion closeout validation + sign-off
+
+Branch/PR/Issue:
+- local milestone closeout update
+
+Completed:
+- Identified Milestone 10.1 completion closeout validation/sign-off as the next required task after reconciling stale next-chat wording with existing release-candidate sign-off evidence.
+- Executed the full Codex-cloud validation sequence for Milestone 10.1 completion closeout.
+- Recorded completion closeout sign-off report with journey coverage and command evidence.
+- Transitioned Milestone 10.1 status from `release-candidate` to `complete`.
+- Updated next-chat handoff to Milestone 10.2 startup planning + scope lock.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with package-index proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (`pytest==8.4.2` unavailable via current package-index/proxy)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`98 passed`)
+
+Notes:
+- Dev dependency fetch limitation persists, but compile, lint, and full test suite pass with the current environment toolchain.
+- No runtime product behavior changes were introduced in this closeout slice.
+
+Follow-up:
+- Start Milestone 10.2 startup planning + scope lock, then enforce release-candidate freeze rules for any subsequent changes.

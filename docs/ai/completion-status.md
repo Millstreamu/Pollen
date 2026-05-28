@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 10.1 — Full Journey Suite
-Status: release-candidate
+Status: complete
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -26,16 +26,16 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Journey tests if applicable
 - [x] Build *(compile check: `python -m compileall -q src tests`)*
 - [x] Environment-specific checks or exceptions documented
-- [ ] Release smoke test if applicable *(not applicable in current local-only workflow)*
+- [x] Release smoke test if applicable *(not applicable in current local-only workflow)*
 
 ## Remaining Required Work
-- Run Milestone 10.1 completion closeout validation/sign-off.
+None for Milestone 10.1.
 
 ## Optional Post-Milestone Work
 - Milestone 9.2 optional screenshot evidence may still be done later if desired.
 
 ## Next Required Milestone
-- Milestone 10.1 completion closeout validation/sign-off.
+- Milestone 10.2 — Release Candidate Freeze startup planning and scope lock.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.

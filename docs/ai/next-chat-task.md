@@ -1,25 +1,25 @@
-# Next Chat Task — Milestone 10.1 Release-Candidate Validation
+# Next Chat Task — Milestone 10.2 Startup Planning + Scope Lock
 
 ## Active Milestone
-- Milestone 10.1 — Full Journey Suite (`release-candidate`)
+- Milestone 10.2 — Release Candidate Freeze (`not-started`)
 
 ## Objective
-Run release-candidate validation/sign-off for Milestone 10.1 now that the money-summary journey coverage gap is closed.
+Start Milestone 10.2 by locking release-candidate freeze scope and reconciling current blocker/backlog documents after Milestone 10.1 completion closeout.
 
 ## Scope Lock (current)
 In scope for current next task:
-- inspect Milestone 10.1 completion status, progress log, and latest money-summary journey report
-- run the required validation sequence
-- confirm the full journey suite covers the required workflows, including money summary updates
-- add release-candidate validation/sign-off evidence under `docs/ai/reports/`
-- update completion/progress tracking based on the validation decision
+- inspect `project-roadmap.md` Milestone 10.2 acceptance criteria
+- inspect `docs/ai/completion-status.md`, `docs/ai/known-issues.md`, `docs/ai/do-not-build-yet.md`, and `docs/ai/progress-log.md`
+- confirm Milestone 10.1 completion closeout evidence exists
+- define the Milestone 10.2 freeze boundaries: blocker fixes only, no feature growth
+- update completion/progress tracking for Milestone 10.2 startup planning
+- add a bounded startup planning/scope-lock report under `docs/ai/reports/`
 
 Out of scope for current slice:
-- Milestone 10.2 release-freeze bookkeeping unless Milestone 10.1 is explicitly completed first
-- new product features or journey expansion beyond validation fixes
-- full accounting, taxes, analytics, or advanced money dashboards
-- new external integrations or live payment data
-- optional screenshot evidence unless explicitly scoped
+- V1 release declaration
+- new features, new screens, new integrations, or speculative polish
+- optional Milestone 9.2 screenshot evidence unless explicitly scoped
+- fixing non-blocking issues before they are classified under the freeze rules
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -30,4 +30,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- add a bounded implementation/validation report under `docs/ai/reports/` for the Milestone 10.1 money journey slice
+- add a bounded startup planning/scope-lock report under `docs/ai/reports/` for Milestone 10.2
