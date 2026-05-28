@@ -390,22 +390,22 @@ class AppShell:
         )
         archived_only = [product for product in archived_products if not product.is_active]
         create_form = (
-            "<section><h3>Create product</h3>"
+            "<section><h3>Add product</h3>"
             "<form method='post' action='/products-stock'>"
             "<input type='hidden' name='action' value='create'>"
             "<label>Name <input name='name' required></label>"
             "<label>SKU <input name='sku' required></label>"
             "<label>Stock <input name='stock_on_hand' type='number' min='0' required></label>"
             "<label>Reorder <input name='reorder_point' type='number' min='0' required></label>"
-            "<button type='submit'>Create</button>"
+            "<button type='submit'>Save product</button>"
             "</form></section>"
         )
         if not products and not archived_only:
             return (
-                "<section><h2>Products</h2>"
-                "<p>No products yet. Add your first product to start tracking stock.</p>"
-                f"{create_form}</section>"
-            )
+            "<section><h2>Product list</h2>"
+            "<p>No products yet. Add your first product to start tracking stock.</p>"
+            f"{create_form}</section>"
+        )
 
         rows = "".join(
             self._render_product_row(product=product, edit_product_id=edit_product_id)
@@ -430,12 +430,14 @@ class AppShell:
             for product in archived_only
         )
         filter_nav = (
+            "<section><h3>View</h3>"
+            "<p>Choose what to show in the product list.</p>"
             "<nav aria-label='Product view filters'>"
             "<ul>"
-            "<li><a href='/products-stock?view=active'>Active</a></li>"
-            "<li><a href='/products-stock?view=archived'>Archived</a></li>"
-            "<li><a href='/products-stock?view=all'>All</a></li>"
-            "</ul></nav>"
+            "<li><a href='/products-stock?view=active'>Show active</a></li>"
+            "<li><a href='/products-stock?view=archived'>Show archived</a></li>"
+            "<li><a href='/products-stock?view=all'>Show all</a></li>"
+            "</ul></nav></section>"
         )
 
         archived_section = (
@@ -453,17 +455,17 @@ class AppShell:
 
         bulk_actions = (
             "<section><h3>Bulk actions</h3>"
-            "<p>Archive or restore multiple products by entering comma-separated product IDs.</p>"
+            "<p>Archive or restore several products by entering comma-separated IDs.</p>"
             "<form method='post' action='/products-stock'>"
             "<label>Product IDs <input name='product_ids' placeholder='prd-1, prd-2'></label>"
-            "<button type='submit' name='action' value='bulk_archive'>Archive selected</button>"
-            "<button type='submit' name='action' value='bulk_restore'>Restore selected</button>"
+            "<button type='submit' name='action' value='bulk_archive'>Archive products</button>"
+            "<button type='submit' name='action' value='bulk_restore'>Restore products</button>"
             "</form></section>"
         )
 
         active_section = (
-            "<section><h2>Products</h2>"
-            "<p>Manage products with create, per-row edit, archive, restore, and bulk actions.</p>"
+            "<section><h2>Product list</h2>"
+            "<p>Review product stock and use row actions to edit or archive.</p>"
             f"{create_form}"
             f"{bulk_actions}"
             "<table><thead><tr>"
