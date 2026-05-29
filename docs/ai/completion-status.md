@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 10.2 — Release Candidate Freeze
-Status: in-progress
+Status: release-candidate
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -14,7 +14,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Reconcile blocker and backlog sources for freeze entry.
 - [x] Confirm no feature growth, new screens, new integrations, speculative polish, or unrelated refactors are allowed during the freeze.
 - [x] Record startup planning evidence for Milestone 10.2 handoff.
-- [ ] Run release-candidate freeze validation/sign-off after startup planning.
+- [x] Run release-candidate freeze validation/sign-off after startup planning.
 
 ## Freeze Boundaries
 Allowed during Milestone 10.2:
@@ -32,17 +32,17 @@ Not allowed during Milestone 10.2:
 - unrelated refactors
 
 ## Required Verification Checklist
-- [ ] Typecheck *(Python compile check used in current repo flow)*
-- [ ] Lint *(configured via `ruff check src tests`)*
-- [ ] Unit tests
-- [ ] Relevant service/integration tests
-- [ ] Journey tests if applicable
-- [ ] Build *(compile check: `python -m compileall -q src tests`)*
+- [x] Typecheck *(Python compile check used in current repo flow)*
+- [x] Lint *(configured via `ruff check src tests`)*
+- [x] Unit tests
+- [x] Relevant service/integration tests
+- [x] Journey tests if applicable
+- [x] Build *(compile check: `python -m compileall -q src tests`)*
 - [x] Environment-specific checks or exceptions documented
-- [ ] Release smoke test if applicable
+- [ ] Release smoke test if applicable *(deferred to Milestone 10.2 completion closeout or supported release environment if required)*
 
 ## Remaining Required Work
-- Run Milestone 10.2 release-candidate freeze validation/sign-off using the full Codex-cloud validation sequence.
+- Run Milestone 10.2 completion closeout validation/sign-off before V1 release declaration.
 
 ## Optional Post-Milestone Work
 - Milestone 9.2 optional screenshot evidence may still be done later if desired.
@@ -51,7 +51,7 @@ Not allowed during Milestone 10.2:
 None recorded.
 
 ## Next Required Milestone
-- Milestone 10.2 — Release Candidate Freeze validation/sign-off.
+- Milestone 10.2 — Completion closeout validation/sign-off.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.

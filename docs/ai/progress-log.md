@@ -4,11 +4,39 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 
 ## Current Status
 Project phase: Phase 10 — Stabilisation and Release Candidate
-Current milestone: Milestone 10.2 — Release Candidate Freeze (startup planning complete; validation/sign-off next)
-Overall status: Milestone 10.2 release-candidate freeze boundaries are locked. No product blockers are currently recorded; only freeze-allowed blocker fixes, install/build fixes, broken-core-workflow fixes, failing-test fixes, and incorrect-doc fixes may proceed before validation/sign-off.
+Current milestone: Milestone 10.2 — Release Candidate Freeze (release-candidate sign-off complete; completion closeout next)
+Overall status: Milestone 10.2 release-candidate freeze validation passed with no product blockers recorded. Only freeze-allowed blocker fixes, install/build fixes, broken-core-workflow fixes, failing-test fixes, and incorrect-doc fixes may proceed before completion closeout.
 
 
 ## Latest Summary
+
+
+### 2026-05-28 — Milestone 10.2 release-candidate freeze validation + sign-off
+
+Branch/PR/Issue:
+- local Milestone 10.2 release-candidate validation update
+
+Completed:
+- Executed the full available Codex-cloud validation sequence for the Milestone 10.2 release-candidate freeze gate.
+- Confirmed completion tracking, known issues, deferred work, and progress tracking remain aligned with freeze boundaries.
+- Confirmed no product blockers are currently recorded and no new features, screens, integrations, speculative polish, or unrelated refactors were introduced.
+- Transitioned Milestone 10.2 from `in-progress` to `release-candidate` and updated the next-task handoff toward completion closeout validation/sign-off.
+- Added durable release-candidate freeze validation/sign-off report evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with package-index proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`98 passed`)
+
+Notes:
+- No runtime product behavior changes were introduced in this validation/sign-off slice.
+- The dev dependency install warning remains an environment/package-index limitation because compile, lint, and the full pytest suite pass with the current environment tooling.
+
+Follow-up:
+- Run Milestone 10.2 completion closeout validation/sign-off before any V1 release declaration.
 
 
 ### 2026-05-28 — Milestone 10.2 startup planning + scope lock
