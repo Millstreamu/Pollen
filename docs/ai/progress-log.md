@@ -3,12 +3,45 @@
 Records meaningful completed work. Update after feature completion, bug fix completion, milestone completion, release verification, important decision, or server-run evidence that changes status.
 
 ## Current Status
-Project phase: Phase 10 — Stabilisation and Release Candidate
-Current milestone: Milestone 10.2 — Release Candidate Freeze (complete)
-Overall status: Milestone 10.2 completion closeout validation passed with no product blockers recorded. The next required task is Milestone 10.3 V1 Release startup/readiness validation and release declaration decision.
+Project phase: V1 Release
+Current milestone: Milestone 10.3 — V1 Release (complete)
+Overall status: V1 is declared complete after Milestone 10.3 readiness validation. No critical blockers are recorded; future work requires an explicitly scoped post-V1 task.
 
 
 ## Latest Summary
+
+
+### 2026-05-29 — Milestone 10.3 V1 release readiness validation + declaration
+
+Branch/PR/Issue:
+- local Milestone 10.3 V1 release decision update
+
+Completed:
+- Identified Milestone 10.3 V1 Release readiness validation and release declaration decision as the next task from `docs/ai/next-chat-task.md`.
+- Confirmed Milestone 10.2 completion closeout evidence exists in `docs/ai/reports/milestone-10.2-completion-closeout-signoff-2026-05-29.md`.
+- Reconfirmed Milestone 10.3 acceptance criteria from `project-roadmap.md`.
+- Verified manual core workflow evidence through the Milestone 10.1 journey coverage and fresh full-suite validation.
+- Verified stock-changing action traceability evidence through inventory movement and activity log records for manual stock adjustment and purchase receipt workflows.
+- Reconfirmed auth/shop ownership MVP safety evidence through server-resolved shop context and cross-shop denial tests.
+- Reconciled known issues and deferred work; no critical blockers are recorded and optional Milestone 9.2 screenshot evidence remains deferred.
+- Executed the full Codex-cloud validation sequence for the V1 release decision gate.
+- Declared V1 complete and recorded release-decision evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with package-index proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`98 passed`)
+
+Notes:
+- No runtime product behavior changes were introduced in this V1 release-decision slice.
+- The dev dependency install warning remains an environment/package-index limitation because compile, lint, and the full pytest suite pass with the current environment tooling.
+- V1 release is complete as of 2026-05-29.
+
+Follow-up:
+- Do not continue feature work automatically. Select an explicitly scoped post-V1 task or backlog item before implementation.
 
 
 ### 2026-05-29 — Milestone 10.2 completion closeout validation + sign-off

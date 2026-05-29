@@ -44,10 +44,10 @@ Current rule: Do not build.
 
 Status: deferred
 Earliest milestone: Post-V1 or an explicitly scoped evidence task
-Current rule: Do not build during Milestone 10.2 release-candidate freeze.
+Current rule: Do not build after V1 unless a future scoped evidence task explicitly unlocks it.
 
 ### Why deferred
-Milestone 9.2 screenshot evidence is optional and not required for Milestone 10.2 release-candidate freeze acceptance.
+Milestone 9.2 screenshot evidence is optional and was not required for V1 release acceptance.
 
 ### Unlock conditions
 - [ ] A scoped follow-up explicitly asks for screenshot evidence.
