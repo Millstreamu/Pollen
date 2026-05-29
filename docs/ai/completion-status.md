@@ -4,7 +4,7 @@ Tracks the current milestone/release finish line to prevent endless asymptotic d
 
 ## Current Milestone
 Name: Milestone 10.2 — Release Candidate Freeze
-Status: release-candidate
+Status: complete
 
 Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidate`, `complete`, `blocked`.
 
@@ -15,6 +15,7 @@ Allowed statuses: `not-started`, `in-progress`, `stabilising`, `release-candidat
 - [x] Confirm no feature growth, new screens, new integrations, speculative polish, or unrelated refactors are allowed during the freeze.
 - [x] Record startup planning evidence for Milestone 10.2 handoff.
 - [x] Run release-candidate freeze validation/sign-off after startup planning.
+- [x] Run completion closeout validation/sign-off before V1 release declaration.
 
 ## Freeze Boundaries
 Allowed during Milestone 10.2:
@@ -39,10 +40,10 @@ Not allowed during Milestone 10.2:
 - [x] Journey tests if applicable
 - [x] Build *(compile check: `python -m compileall -q src tests`)*
 - [x] Environment-specific checks or exceptions documented
-- [ ] Release smoke test if applicable *(deferred to Milestone 10.2 completion closeout or supported release environment if required)*
+- [x] Release smoke test if applicable *(not applicable in Codex cloud for this documentation/validation closeout; deterministic compile, lint, and full test suite passed; V1 release declaration remains separate)*
 
 ## Remaining Required Work
-- Run Milestone 10.2 completion closeout validation/sign-off before V1 release declaration.
+None for Milestone 10.2. V1 release declaration remains a separate Milestone 10.3 task.
 
 ## Optional Post-Milestone Work
 - Milestone 9.2 optional screenshot evidence may still be done later if desired.
@@ -51,7 +52,7 @@ Not allowed during Milestone 10.2:
 None recorded.
 
 ## Next Required Milestone
-- Milestone 10.2 — Completion closeout validation/sign-off.
+- Milestone 10.3 — V1 Release startup/readiness validation and release declaration decision.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.

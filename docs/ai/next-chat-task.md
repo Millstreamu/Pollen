@@ -1,26 +1,25 @@
-# Next Chat Task — Milestone 10.2 Completion Closeout Validation + Sign-off
+# Next Chat Task — Milestone 10.3 V1 Release Startup / Readiness Validation
 
 ## Active Milestone
-- Milestone 10.2 — Release Candidate Freeze (`release-candidate`)
+- Milestone 10.3 — V1 Release (`not-started`)
 
 ## Objective
-Validate the Milestone 10.2 completion closeout after release-candidate freeze sign-off. Confirm no blockers have appeared, run the full validation sequence, and decide whether Milestone 10.2 can be marked complete before any V1 release declaration.
+Start Milestone 10.3 only after confirming Milestone 10.2 completion closeout evidence exists. Validate whether the repository is ready for a V1 release declaration, then either declare V1 complete with evidence or document any blocker that prevents declaration.
 
 ## Scope Lock (current)
-In scope for current next task:
-- inspect `project-roadmap.md` Milestone 10.2 acceptance criteria
+In scope for the next task:
+- inspect `project-roadmap.md` Milestone 10.3 acceptance criteria
 - inspect `docs/ai/completion-status.md`, `docs/ai/known-issues.md`, `docs/ai/do-not-build-yet.md`, and `docs/ai/progress-log.md`
-- inspect `docs/ai/reports/milestone-10.2-release-candidate-freeze-validation-signoff-2026-05-28.md`
+- inspect `docs/ai/reports/milestone-10.2-completion-closeout-signoff-2026-05-29.md`
+- confirm manual core workflow evidence and stock-changing action traceability evidence remain present
 - run the full Codex-cloud validation sequence
-- confirm blocker/backlog documents still list only blockers, optional backlog, deferred work, or documented environment limitations
-- update completion/progress tracking for Milestone 10.2 completion closeout
-- add a bounded completion closeout report under `docs/ai/reports/`
+- decide whether V1 can be declared complete or whether a blocker must be recorded
+- update completion/progress tracking and add a bounded report under `docs/ai/reports/`
 
-Out of scope for current slice:
-- V1 release declaration
+Out of scope unless the next task explicitly scopes it:
 - new features, new screens, new integrations, or speculative polish
-- optional Milestone 9.2 screenshot evidence unless explicitly scoped
-- fixing non-blocking issues before they are classified under the freeze rules
+- optional Milestone 9.2 screenshot evidence
+- post-V1 backlog work
 - unrelated refactors
 
 ## Validation Commands (Codex cloud)
@@ -32,4 +31,4 @@ Out of scope for current slice:
 - `pytest -q`
 
 ## Evidence
-- add a bounded completion closeout report under `docs/ai/reports/` for Milestone 10.2
+- add a bounded Milestone 10.3 startup/readiness or V1 release-decision report under `docs/ai/reports/`
