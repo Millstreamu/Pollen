@@ -2385,3 +2385,32 @@ Notes:
 
 Follow-up:
 - Start Milestone 10.2 startup planning + scope lock, then enforce release-candidate freeze rules for any subsequent changes.
+
+### 2026-05-29 — Milestone 10.3 V1 release readiness validation + declaration
+
+Branch/PR/Issue:
+- local Milestone 10.3 release decision update
+
+Completed:
+- Identified Milestone 10.3 V1 Release readiness validation/declaration as the next required task from `docs/ai/next-chat-task.md`.
+- Confirmed Milestone 10.2 completion closeout evidence exists.
+- Reconciled V1 release criteria against manual core workflow evidence, stock-changing action traceability evidence, core journey tests, MVP auth/shop ownership tests, known issues, deferred backlog, and release-summary requirements.
+- Executed baseline and final Codex-cloud validation sequences.
+- Declared V1 complete and recorded durable release-decision evidence.
+- Updated completion tracking and next-chat handoff so future work must be explicitly scoped as post-V1 backlog or maintenance.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass (with package-index proxy retry warnings)
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — environment-limited (proxy/index restriction for `pytest==8.4.2`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`98 passed`)
+
+Notes:
+- No runtime product behavior changes were introduced in this release-decision slice.
+- The dev dependency install warning remains an environment/package-index limitation because compile, lint, and the full pytest suite pass with the current environment tooling.
+- Optional Milestone 9.2 screenshot evidence remains deferred and is not required for V1 release declaration.
+
+Follow-up:
+- Do not continue feature development automatically. Select one explicitly scoped post-V1 maintenance or backlog item in the next task.
