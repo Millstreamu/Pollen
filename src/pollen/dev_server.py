@@ -35,8 +35,19 @@ class DevServerAdapter:
         self._demo_auth_header = demo_auth_header
 
     def handle_get(self, path: str) -> HttpResponse:
+        if self._is_health_check_path(path):
+            return self._plain_response(HTTPStatus.OK, "OK")
+
         app_response = self._app.get(path, authorization_header=self._demo_auth_header)
         return self._to_http_response(app_response)
+
+    def handle_head(self, path: str) -> HttpResponse:
+        response = self.handle_get(path)
+        return HttpResponse(
+            status_code=response.status_code,
+            body=b"",
+            headers=response.headers,
+        )
 
     def handle_post(
         self,
@@ -88,6 +99,9 @@ class DevServerAdapter:
         media_type = content_type.split(";", maxsplit=1)[0].strip().lower()
         return media_type in {"", "application/x-www-form-urlencoded"}
 
+    def _is_health_check_path(self, path: str) -> bool:
+        return urlsplit(path).path == "/healthz"
+
 
 class PollenDevRequestHandler(BaseHTTPRequestHandler):
     """Small local-only request handler for browsing the app shell."""
@@ -96,6 +110,9 @@ class PollenDevRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         self._send_response(self._adapter.handle_get(self.path))
+
+    def do_HEAD(self) -> None:  # noqa: N802
+        self._send_response(self._adapter.handle_head(self.path))
 
     def do_POST(self) -> None:  # noqa: N802
         content_length = int(self.headers.get("Content-Length", "0") or 0)

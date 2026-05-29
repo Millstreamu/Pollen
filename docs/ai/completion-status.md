@@ -50,15 +50,15 @@ None for V1.
 - Future post-V1 improvements should be explicitly scoped before implementation.
 
 ## Current Post-V1 Task
-Name: Post-V1 Local Browser UI Run Command
+Name: Post-V1 Local Readiness Check
 Status: complete
-Evidence: `docs/ai/reports/post-v1-local-browser-ui-run-command-implementation-report-2026-05-29.md`
+Evidence: `docs/ai/reports/post-v1-local-readiness-check-implementation-report-2026-05-29.md`
 
 ## Current Blockers
 None recorded.
 
 ## Next Required Milestone
-None. V1 is complete; the selected local browser UI run command post-V1 task is complete. Select a separate scoped post-V1 task before further implementation.
+None. V1 is complete; the selected local readiness check post-V1 task is complete. Select a separate scoped post-V1 task before further implementation.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.

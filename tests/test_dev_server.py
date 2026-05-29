@@ -15,6 +15,22 @@ def test_dev_server_adapter_get_today_page_uses_demo_auth() -> None:
     assert response.headers["Content-Type"].startswith("text/html")
 
 
+def test_dev_server_adapter_get_health_check_is_plain_ok() -> None:
+    response = DevServerAdapter().handle_get("/healthz")
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.body == b"OK"
+    assert response.headers["Content-Type"].startswith("text/plain")
+
+
+def test_dev_server_adapter_head_health_check_returns_headers_without_body() -> None:
+    response = DevServerAdapter().handle_head("/healthz")
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.body == b""
+    assert response.headers["Content-Type"].startswith("text/plain")
+
+
 def test_dev_server_adapter_get_navigation_routes() -> None:
     adapter = DevServerAdapter()
 

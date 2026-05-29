@@ -5,28 +5,21 @@
 
 ## Selected Post-V1 Task
 - Post-V1 Local Browser UI Run Command — complete
+- Post-V1 Local Readiness Check — complete
 
 ## Objective
-The selected local browser UI run command task is complete. Select a new bounded post-V1 task before any further implementation.
+The selected local readiness check task is complete. Select a new bounded post-V1 task before any further implementation.
 
-Implementation evidence is recorded in `docs/ai/reports/post-v1-local-browser-ui-run-command-implementation-report-2026-05-29.md`.
+Implementation evidence is recorded in `docs/ai/reports/post-v1-local-readiness-check-implementation-report-2026-05-29.md`.
 
 ## Completed Scope
-Implemented in the completed task:
-- added a local development server entrypoint under `src/pollen/`
-- used Python standard-library HTTP serving without adding runtime dependencies
-- exposed the existing app-shell pages in a browser:
-  - `/`
-  - `/orders`
-  - `/products-stock`
-  - `/make-buy`
-  - `/money`
-  - `/settings`
-- adapted supported browser form submissions to the existing `AppShell.post()` flow
-- used a deterministic local demo auth header so private pages can be opened without adding login/session work
-- documented the command in `README.md`
-- added tests for the run-command/server adapter path
-- added a bounded implementation report under `docs/ai/reports/`
+Implemented in the completed readiness task:
+- added a local development readiness endpoint at `/healthz`
+- supported `GET /healthz` with a plain-text `OK` response
+- supported `HEAD /healthz` with success headers and no response body
+- documented the readiness endpoint in `README.md`
+- added deterministic adapter tests for readiness behavior
+- kept runtime dependencies unchanged
 
 Out of scope unless separately scoped:
 - production hosting/server hardening
@@ -40,13 +33,11 @@ Out of scope unless separately scoped:
 - replacing the app shell with a full web framework
 
 ## Acceptance Criteria
-- [x] One documented command starts a local browser server.
-- [x] Opening `http://localhost:8000` renders the existing Today page.
-- [x] Existing navigation links work in the browser.
-- [x] Supported forms continue to use existing app-shell service logic.
-- [x] Unsupported paths return a non-success status rather than crashing.
+- [x] Local development server exposes a readiness endpoint at `/healthz`.
+- [x] `GET /healthz` returns HTTP 200 with `OK`.
+- [x] `HEAD /healthz` returns HTTP 200 with no body.
+- [x] Existing app-shell server adapter behavior remains covered.
 - [x] Runtime dependencies remain unchanged.
-- [x] Tests cover the new server adapter/run-command path.
 - [x] Full Codex-cloud validation passes.
 
 ## Validation Commands (Codex cloud)
@@ -55,11 +46,12 @@ Out of scope unless separately scoped:
 - `pip install -r requirements-dev.txt`
 - `python -m compileall -q src tests`
 - `ruff check src tests`
+- `pytest -q tests/test_dev_server.py`
+- `PYTHONPATH=src python -m pollen.dev_server --port 8766` plus local `curl` smoke checks for `/healthz`
 - `pytest -q`
 
 ## Evidence
-- Startup/scope-lock report: `docs/ai/reports/post-v1-local-browser-ui-run-command-startup-report-2026-05-29.md`
-- Implementation report: `docs/ai/reports/post-v1-local-browser-ui-run-command-implementation-report-2026-05-29.md`
+- Implementation report: `docs/ai/reports/post-v1-local-readiness-check-implementation-report-2026-05-29.md`
 
 ## Next Required Action
 Select a new bounded post-V1 task before further implementation.

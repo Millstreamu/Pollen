@@ -5,11 +5,38 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 ## Current Status
 Project phase: Post-V1
 Current milestone: Milestone 10.3 — V1 Release (complete)
-Overall status: V1 is declared complete after Milestone 10.3 readiness validation. The selected post-V1 local browser UI run command task is complete. No critical blockers are recorded; select a separate scoped post-V1 task before further implementation.
+Overall status: V1 is declared complete after Milestone 10.3 readiness validation. The selected post-V1 local readiness check task is complete. No critical blockers are recorded; select a separate scoped post-V1 task before further implementation.
 
+## Recent Updates
 
-## Latest Summary
+### 2026-05-29 — Post-V1 local readiness check implementation
 
+Branch/PR/Issue:
+- local post-V1 readiness-check implementation task
+
+Completed:
+- Selected a bounded post-V1 follow-up to improve smoke-testability of the local browser development server.
+- Added `GET /healthz` and `HEAD /healthz` readiness behavior to the standard-library development server adapter.
+- Documented the `/healthz` readiness check in `README.md`.
+- Added tests for the readiness endpoint behavior.
+- Recorded bounded implementation evidence in `docs/ai/reports/post-v1-local-readiness-check-implementation-report-2026-05-29.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q tests/test_dev_server.py` — pass (`10 passed`)
+- `PYTHONPATH=src python -m pollen.dev_server --port 8766` plus `curl -i http://127.0.0.1:8766/healthz` and `curl -I http://127.0.0.1:8766/healthz` — pass; returned HTTP 200 readiness responses
+- `pytest -q` — pass
+
+Notes:
+- No runtime dependencies were added.
+- The readiness check is local-development-only and does not imply production deployment health coverage.
+
+Follow-up:
+- Select a separate scoped post-V1 task before further implementation.
 
 ### 2026-05-29 — Post-V1 local browser UI run command implementation
 
