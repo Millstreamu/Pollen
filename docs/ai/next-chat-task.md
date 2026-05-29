@@ -1,26 +1,26 @@
-# Next Chat Task — Milestone 10.3 V1 Release Startup / Readiness Validation
+# Next Chat Task — Post-V1 Scope Selection
 
 ## Active Milestone
-- Milestone 10.3 — V1 Release (`not-started`)
+- V1 Release — complete
 
 ## Objective
-Start Milestone 10.3 only after confirming Milestone 10.2 completion closeout evidence exists. Validate whether the repository is ready for a V1 release declaration, then either declare V1 complete with evidence or document any blocker that prevents declaration.
+V1 has been declared complete. The next chat should not start feature work automatically. Select an explicitly scoped post-V1 task or backlog item before making code changes.
 
 ## Scope Lock (current)
 In scope for the next task:
-- inspect `project-roadmap.md` Milestone 10.3 acceptance criteria
-- inspect `docs/ai/completion-status.md`, `docs/ai/known-issues.md`, `docs/ai/do-not-build-yet.md`, and `docs/ai/progress-log.md`
-- inspect `docs/ai/reports/milestone-10.2-completion-closeout-signoff-2026-05-29.md`
-- confirm manual core workflow evidence and stock-changing action traceability evidence remain present
-- run the full Codex-cloud validation sequence
-- decide whether V1 can be declared complete or whether a blocker must be recorded
-- update completion/progress tracking and add a bounded report under `docs/ai/reports/`
+- inspect `docs/ai/completion-status.md`
+- inspect `docs/ai/progress-log.md`
+- inspect `docs/ai/known-issues.md`
+- inspect `docs/ai/do-not-build-yet.md`
+- inspect `docs/ai/reports/milestone-10.3-v1-release-decision-report-2026-05-29.md`
+- choose or receive one bounded post-V1 task before implementation
 
 Out of scope unless the next task explicitly scopes it:
-- new features, new screens, new integrations, or speculative polish
+- automatic feature expansion
+- broad redesigns or refactors
+- new integrations
 - optional Milestone 9.2 screenshot evidence
-- post-V1 backlog work
-- unrelated refactors
+- backlog implementation without explicit acceptance criteria
 
 ## Validation Commands (Codex cloud)
 - `python -m pip install --upgrade pip`
@@ -31,4 +31,4 @@ Out of scope unless the next task explicitly scopes it:
 - `pytest -q`
 
 ## Evidence
-- add a bounded Milestone 10.3 startup/readiness or V1 release-decision report under `docs/ai/reports/`
+- for any future change, add a bounded report under `docs/ai/reports/`
