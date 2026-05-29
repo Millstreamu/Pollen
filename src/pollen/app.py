@@ -839,9 +839,12 @@ class AppShell:
         authorization_header: str | None = None,
         query: dict[str, list[str]] | None = None,
     ) -> str:
-        nav_links = "".join(
-            f'<li><a href="{href}">{label}</a></li>' for label, href in NAV_ITEMS
-        )
+        current_path = next((href for label, href in NAV_ITEMS if label == page_title), "")
+        nav_link_parts = []
+        for label, href in NAV_ITEMS:
+            current_attr = " aria-current='page'" if href == current_path else ""
+            nav_link_parts.append(f'<li><a href="{href}"{current_attr}>{label}</a></li>')
+        nav_links = "".join(nav_link_parts)
         page_description = self._DESCRIPTIONS[page_title]
         page_content = f"<p>{page_description}</p>"
         if page_title == "Today" and authorization_header is not None:
@@ -1007,17 +1010,51 @@ class AppShell:
             "<meta charset='utf-8'>"
             "<meta name='viewport' content='width=device-width, initial-scale=1'>"
             f"<title>{page_title} · Pollen</title>"
+            f"{self._render_styles()}"
             "</head>"
             "<body>"
+            "<a class='skip-link' href='#main-content'>Skip to main content</a>"
             "<header>"
-            "<div><strong>Pollen</strong><p>Simple shop operating system</p></div>"
+            "<div class='brand'><strong>Pollen</strong><p>Simple shop operating system</p></div>"
             "<nav aria-label='Primary'><ul>"
             f"{nav_links}"
             "</ul></nav>"
             "</header>"
-            f"<main><h1>{page_title}</h1>{page_content}</main>"
+            f"<main id='main-content'><div class='page-heading'><p class='eyebrow'>Small seller workspace</p><h1>{page_title}</h1></div>{page_content}</main>"
             "</body>"
             "</html>"
+        )
+
+
+    def _render_styles(self) -> str:
+        return (
+            "<style>"
+            ":root{color-scheme:light;--bg:#fbf7ef;--surface:#fffaf2;--surface-strong:#ffffff;--ink:#2f2418;--muted:#756756;--line:#eadfce;--accent:#7a4f24;--accent-strong:#5e3a15;--accent-soft:#f1ddbf;--ok:#317a47;--warn:#a15c00;--shadow:0 18px 45px rgba(90,60,24,.10)}"
+            "*{box-sizing:border-box}"
+            "body{margin:0;background:radial-gradient(circle at top left,#fff4dc 0,#fbf7ef 34rem),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5}"
+            "a{color:var(--accent-strong);font-weight:700;text-decoration:none}a:hover{text-decoration:underline}"
+            ".skip-link{position:absolute;left:1rem;top:-4rem;z-index:20;background:var(--ink);color:#fff;padding:.7rem 1rem;border-radius:999px}.skip-link:focus{top:1rem}"
+            "header{position:sticky;top:0;z-index:10;display:flex;gap:1.5rem;align-items:center;justify-content:space-between;padding:1rem clamp(1rem,4vw,3rem);background:rgba(255,250,242,.92);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}"
+            ".brand strong{display:block;font-size:1.35rem;letter-spacing:-.04em}.brand p{margin:.1rem 0 0;color:var(--muted);font-size:.9rem}"
+            "nav ul{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:0;padding:0;list-style:none}"
+            "nav a{display:inline-flex;align-items:center;min-height:2.35rem;padding:.48rem .82rem;border:1px solid transparent;border-radius:999px;color:var(--muted);font-size:.94rem;font-weight:800}"
+            "nav a:hover{background:var(--accent-soft);text-decoration:none;color:var(--accent-strong)}nav a[aria-current='page']{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 8px 18px rgba(47,36,24,.16)}"
+            "main{width:min(1180px,100%);margin:0 auto;padding:clamp(1.5rem,4vw,3rem)}"
+            ".page-heading{margin-bottom:1.35rem;padding:1.5rem clamp(1rem,3vw,2rem);border:1px solid var(--line);border-radius:28px;background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(255,248,236,.86));box-shadow:var(--shadow)}"
+            ".eyebrow{margin:0 0 .3rem;color:var(--accent);font-size:.78rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}"
+            "h1{margin:0;font-size:clamp(2rem,5vw,3.25rem);line-height:1;letter-spacing:-.07em}h2,h3,h4{letter-spacing:-.035em}h2{margin-top:0}h3{margin:0 0 .65rem;font-size:1.12rem}h4{margin:1rem 0 .45rem}"
+            "main>section{margin:1rem 0;padding:1.15rem;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.82);box-shadow:0 12px 30px rgba(90,60,24,.07)}"
+            "section section{margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:18px;background:var(--surface)}"
+            "main>section:nth-of-type(1){border-color:#dfc194;background:linear-gradient(135deg,#fff,#fff5df)}"
+            "p{color:var(--muted)}ul{padding-left:1.25rem}li+li{margin-top:.28rem}strong{color:var(--ink)}"
+            "form{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end}label{display:grid;gap:.32rem;color:var(--muted);font-size:.88rem;font-weight:800}"
+            "input,select{min-height:2.45rem;border:1px solid var(--line);border-radius:12px;background:#fff;padding:.55rem .7rem;color:var(--ink);font:inherit}input:focus,select:focus{outline:3px solid rgba(122,79,36,.18);border-color:var(--accent)}"
+            "button{min-height:2.45rem;border:0;border-radius:999px;background:var(--accent);color:#fff;padding:.58rem 1rem;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 10px 18px rgba(122,79,36,.18)}button:hover{background:var(--accent-strong)}button:disabled{background:#c6b9a7;color:#fff;cursor:not-allowed;box-shadow:none}"
+            "table{width:100%;border-collapse:separate;border-spacing:0;margin-top:.85rem;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:#fff}th,td{padding:.75rem .85rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f6ead7;color:var(--accent-strong);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}tr:last-child td{border-bottom:0}tr:nth-child(even) td{background:#fffaf3}"
+            "td form{display:inline-flex;margin:.1rem .2rem .1rem 0}td button{min-height:2rem;padding:.35rem .7rem;font-size:.86rem}"
+            "@media (min-width:840px){main{display:grid;grid-template-columns:repeat(12,1fr);gap:1rem}.page-heading{grid-column:1/-1}main>section{grid-column:span 4;margin:0}main>section:has(table),main>section:has(form){grid-column:span 12}main>section:nth-of-type(1){grid-column:span 12}}"
+            "@media (max-width:720px){header{position:static;align-items:flex-start;flex-direction:column}nav ul{width:100%}nav li{flex:1 1 auto}nav a{justify-content:center}table{display:block;overflow-x:auto;white-space:nowrap}form{display:grid;align-items:stretch}input,select,button{width:100%}}"
+            "</style>"
         )
 
 

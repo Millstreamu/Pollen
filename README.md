@@ -43,6 +43,34 @@ Optional flags are available for local port conflicts:
 PYTHONPATH=src python -m pollen.dev_server --host 127.0.0.1 --port 8001
 ```
 
+## Optional UI screenshot review
+
+The app shell includes screenshot-friendly styling and two optional visual-review helpers.
+
+For a no-dependency fallback, export standalone HTML pages and open them in a browser or screenshot tool:
+
+```bash
+PYTHONPATH=src python scripts/export_ui_review_pages.py
+```
+
+Review pages are written to `docs/ai/ui-review-pages/` by default and are ignored by git so they can be regenerated locally.
+
+If your GitHub Codespace already has Playwright available, capture PNG screenshots directly:
+
+```bash
+PYTHONPATH=src python scripts/capture_ui_screenshots.py
+```
+
+If Playwright is missing in the Codespace, install the optional browser tooling first:
+
+```bash
+python -m pip install playwright
+python -m playwright install chromium
+PYTHONPATH=src python scripts/capture_ui_screenshots.py
+```
+
+Screenshots are written to `docs/ai/ui-screenshots/` by default and are ignored by git.
+
 ## Validation
 
 ```bash

@@ -1,0 +1,5 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+docs/ai/ui-review-pages/
+docs/ai/ui-screenshots/

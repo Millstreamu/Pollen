@@ -122,3 +122,19 @@ def test_today_page_uses_beginner_friendly_consistency_sections_and_empty_state(
     assert "<h3>Next steps</h3>" in response.body
     assert "No work is waiting right now. Create your first order or add inventory to begin." in response.body
     assert "<button type='button' disabled>Open today checklist</button>" in response.body
+
+
+def test_app_shell_includes_screenshot_friendly_visual_system() -> None:
+    header = _auth_header("visual-system", "visual-system@example.com")
+    app = AppShell()
+
+    response = app.get("/", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "<style>" in response.body
+    assert "--accent:#7a4f24" in response.body
+    assert "class='skip-link'" in response.body
+    assert "class='page-heading'" in response.body
+    assert "Small seller workspace" in response.body
+    assert "aria-current='page'" in response.body
+    assert "nav a[aria-current='page']" in response.body
