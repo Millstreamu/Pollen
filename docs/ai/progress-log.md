@@ -3,12 +3,39 @@
 Records meaningful completed work. Update after feature completion, bug fix completion, milestone completion, release verification, important decision, or server-run evidence that changes status.
 
 ## Current Status
-Project phase: V1 Release
+Project phase: Post-V1
 Current milestone: Milestone 10.3 — V1 Release (complete)
-Overall status: V1 is declared complete after Milestone 10.3 readiness validation. No critical blockers are recorded; future work requires an explicitly scoped post-V1 task.
+Overall status: V1 is declared complete after Milestone 10.3 readiness validation. No critical blockers are recorded. The next selected post-V1 task is adding a local browser UI run command.
 
 
 ## Latest Summary
+
+
+### 2026-05-29 — Post-V1 local browser UI run command startup/scope lock
+
+Branch/PR/Issue:
+- local post-V1 browser run-command planning task
+
+Completed:
+- Selected a bounded post-V1 implementation task to add a local browser UI run command.
+- Recorded startup/scope-lock evidence with task source, files reviewed, implementation boundaries, acceptance criteria, risks, and validation plan.
+- Updated the next-chat handoff so the next implementation slice can add the run command without reopening broad post-V1 scope selection.
+- Updated completion tracking with the selected post-V1 task.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings for the optional pip upgrade lookup
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `pytest -q` — pass (`98 passed`)
+
+Notes:
+- No runtime product behavior changes were introduced.
+- The selected implementation should prefer Python standard-library HTTP serving and avoid new runtime dependencies unless explicitly justified.
+
+Follow-up:
+- Implement the local browser UI run command according to the scope lock in `docs/ai/next-chat-task.md`.
 
 
 ### 2026-05-29 — Post-V1 dev dependency installability cleanup
