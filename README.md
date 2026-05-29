@@ -35,6 +35,8 @@ The command serves the current app-shell pages:
 - `/money`
 - `/settings`
 
+It also exposes a simple local readiness check at `/healthz`, which returns `OK` for browser-server smoke tests.
+
 Optional flags are available for local port conflicts:
 
 ```bash
