@@ -5,10 +5,40 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 ## Current Status
 Project phase: Post-V1
 Current milestone: Milestone 10.3 — V1 Release (complete)
-Overall status: V1 is declared complete after Milestone 10.3 readiness validation. No critical blockers are recorded. The next selected post-V1 task is adding a local browser UI run command.
+Overall status: V1 is declared complete after Milestone 10.3 readiness validation. The selected post-V1 local browser UI run command task is complete. No critical blockers are recorded; select a separate scoped post-V1 task before further implementation.
 
 
 ## Latest Summary
+
+
+### 2026-05-29 — Post-V1 local browser UI run command implementation
+
+Branch/PR/Issue:
+- local post-V1 browser run-command implementation task
+
+Completed:
+- Added a Python standard-library local development server entrypoint for browsing the existing app shell.
+- Exposed the existing Today, Orders, Products & Stock, Make / Buy, Money, and Settings routes through HTTP with deterministic local demo auth.
+- Adapted URL-encoded browser form submissions to the existing `AppShell.post()` service flow.
+- Added non-success HTTP handling for unknown paths, unsupported methods, and unsupported POST content types.
+- Documented the one-command local browser run flow in `README.md`.
+- Added dev-server adapter and server factory tests.
+- Recorded bounded implementation evidence in `docs/ai/reports/post-v1-local-browser-ui-run-command-implementation-report-2026-05-29.md`.
+
+Checks run:
+- `PYTHONPATH=src pytest -q tests/test_dev_server.py` — pass (`8 passed`)
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `PYTHONPATH=src python -m pollen.dev_server --help` — pass
+- `PYTHONPATH=src python -m pollen.dev_server --port 8765` plus `curl -i http://localhost:8765/` — pass; returned `HTTP/1.0 200 OK` and the Today page
+- Full validation sequence — pass after implementation (`106 passed`)
+
+Notes:
+- Runtime dependencies remain unchanged.
+- The server is local-development only and keeps the app's existing in-memory data behavior.
+
+Follow-up:
+- Select a separate scoped post-V1 task before adding production hosting, auth/session work, persistence, or visual polish.
 
 
 ### 2026-05-29 — Post-V1 local browser UI run command startup/scope lock
