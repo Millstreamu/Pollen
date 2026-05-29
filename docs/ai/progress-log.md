@@ -11,6 +11,34 @@ Overall status: V1 is declared complete after Milestone 10.3 readiness validatio
 ## Latest Summary
 
 
+### 2026-05-29 — Post-V1 dev dependency installability cleanup
+
+Branch/PR/Issue:
+- local post-V1 setup reliability task
+
+Completed:
+- Selected a bounded post-V1 maintenance task from the V1 handoff: make Codex cloud dev dependency setup pass without requiring exact pinned package downloads.
+- Updated `requirements-dev.txt` from exact pytest/ruff pins to conservative compatible ranges that accept already-installed newer compatible tooling.
+- Re-ran the full required Codex-cloud validation sequence, including runtime dependency install, dev dependency install, compile, lint, and full tests.
+- Confirmed the previous dev dependency installation limitation is resolved in the current Codex environment.
+- Added durable task report evidence and updated known issues.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings for the optional pip upgrade lookup
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests` — pass
+- `ruff check src tests` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`98 passed`)
+
+Notes:
+- No runtime product behavior changes were introduced.
+- Package-index/proxy retry warnings still appear for the optional pip upgrade lookup, but repository dependency setup now succeeds.
+
+Follow-up:
+- Future post-V1 work should still be explicitly scoped before implementation.
+
+
 ### 2026-05-29 — Milestone 10.3 V1 release readiness validation + declaration
 
 Branch/PR/Issue:
