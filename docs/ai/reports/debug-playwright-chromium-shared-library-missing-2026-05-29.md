@@ -119,8 +119,42 @@ python -m playwright install-deps chromium
 
 The script guidance was refined so future failures do not echo the full Playwright browser log by default. It now extracts the missing shared library from the launch details, explicitly says that installing Python `playwright` plus Chromium is not enough when OS libraries are absent, and repeats the screenshot command to retry after installing deps.
 
+## 2026-05-30 Final Setup Reliability Fix
+Repository inspection found no checked-in `.devcontainer/devcontainer.json` or other Codespaces devcontainer setup file, so there is no repo-native devcontainer hook where this project can safely automate OS package installation during Codespace creation. The repo-native fix is therefore documentation plus a small optional local helper:
+
+- `README.md` now lists the complete Codespaces/local Linux setup sequence, including the missing `python -m playwright install-deps chromium` step before `python -m playwright install chromium`.
+- `scripts/setup_playwright_screenshots.py` now provides an optional one-command setup helper for screenshot tooling. It installs the Python `playwright` package, runs `python -m playwright install-deps chromium`, installs the Chromium browser binary, and prints the screenshot verification command.
+- Playwright remains intentionally absent from `requirements.txt` and `requirements-dev.txt`, so normal runtime installs and Codex-cloud tests do not require browser tooling.
+- `tests/test_ui_review_scripts.py` verifies that the optional helper keeps the expected command order and exposes the `install-deps` and screenshot retry commands without running the installers during tests.
+
+Final Codespaces verification commands:
+
+```bash
+python -m pip install playwright
+python -m playwright install-deps chromium
+python -m playwright install chromium
+PYTHONPATH=src python scripts/capture_ui_screenshots.py
+```
+
+Equivalent helper flow:
+
+```bash
+python scripts/setup_playwright_screenshots.py
+PYTHONPATH=src python scripts/capture_ui_screenshots.py
+```
+
+Codex validation after the final setup fix:
+
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable.
+- `pip install -r requirements.txt` — pass.
+- `pip install -r requirements-dev.txt` — pass.
+- `python -m compileall -q src tests scripts` — pass.
+- `ruff check src tests scripts` — pass.
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`113 passed`).
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — expected Codex-cloud optional-tooling limitation because Playwright is not installed; the script printed controlled setup guidance instead of a raw traceback.
+
 ## Follow-Up
 Optional future work, not included in this fix:
 
-- Add a devcontainer setup step for Playwright browser dependencies if screenshot capture becomes a required Codespaces workflow.
+- If a devcontainer is later added and screenshot capture becomes a standard Codespaces workflow, move the optional setup helper into a devcontainer `postCreateCommand` or documented manual setup step.
 - Keep Milestone 9.2 screenshot evidence deferred unless a future scoped evidence task explicitly unlocks it.

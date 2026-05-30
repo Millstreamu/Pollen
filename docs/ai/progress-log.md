@@ -9,6 +9,33 @@ Overall status: V1 is declared complete after Milestone 10.3 readiness validatio
 
 ## Recent Updates
 
+### 2026-05-30 — Optional Playwright screenshot dependency setup reliability
+
+Branch/PR/Issue:
+- local/Codespaces screenshot capture setup reliability task
+
+Completed:
+- Confirmed the repository has no checked-in devcontainer/Codespaces setup file to host automatic browser dependency installation.
+- Documented the complete optional Playwright screenshot setup sequence in `README.md`, including `python -m playwright install-deps chromium`.
+- Added `scripts/setup_playwright_screenshots.py` as an optional checked-in helper for local/Codespaces screenshot tooling without adding Playwright to runtime or normal dev requirements.
+- Updated the Playwright shared-library debug report with the final chosen fix and verification steps.
+- Added regression coverage for the optional setup helper command sequence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`113 passed`)
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — expected optional-tooling limitation in Codex cloud because Playwright is not installed; controlled setup guidance printed
+
+Notes:
+- Playwright remains optional for normal Codex-cloud tests and production/runtime installs.
+
+Follow-up:
+- If a devcontainer is added later and screenshots become a standard Codespaces workflow, wire the optional setup helper into that devcontainer flow.
+
 ### 2026-05-29 — Post-V1 local readiness check implementation
 
 Branch/PR/Issue:
