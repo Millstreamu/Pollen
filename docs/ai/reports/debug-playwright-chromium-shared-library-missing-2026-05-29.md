@@ -102,6 +102,23 @@ PYTHONPATH=src python scripts/capture_ui_screenshots.py
 
 If `install-deps` requires elevated package installation in a particular Codespace image, run the command in the Codespaces environment where OS package installation is allowed, or bake the Playwright dependency set into the devcontainer image.
 
+## 2026-05-30 Follow-Up From Codespaces Re-Test
+The user re-ran:
+
+```bash
+python -m pip install playwright
+python -m playwright install chromium
+PYTHONPATH=src python scripts/capture_ui_screenshots.py
+```
+
+and still received the `libatk-1.0.so.0` launch failure. That confirms the original diagnosis: Playwright's Python package and browser download are installed, but the Codespaces image is still missing OS-level browser libraries. The omitted command is:
+
+```bash
+python -m playwright install-deps chromium
+```
+
+The script guidance was refined so future failures do not echo the full Playwright browser log by default. It now extracts the missing shared library from the launch details, explicitly says that installing Python `playwright` plus Chromium is not enough when OS libraries are absent, and repeats the screenshot command to retry after installing deps.
+
 ## Follow-Up
 Optional future work, not included in this fix:
 

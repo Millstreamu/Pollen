@@ -11,6 +11,7 @@ import argparse
 import asyncio
 import importlib
 import importlib.util
+import re
 import sys
 from pathlib import Path
 from typing import Iterable
@@ -29,18 +30,42 @@ create_app = importlib.import_module("pollen.app").create_app
 def _playwright_missing_message() -> str:
     return (
         "Playwright is not installed in this Python environment. "
-        "In Codespaces, run `python -m pip install playwright` and "
+        "In Codespaces/Linux, run `python -m pip install playwright`, "
+        "`python -m playwright install-deps chromium`, and "
         "`python -m playwright install chromium`, then retry."
     )
 
 
+def _first_non_empty_line(text: str) -> str:
+    for line in text.splitlines():
+        if line.strip():
+            return line.strip()
+    return "unknown launch error"
+
+
+def _missing_shared_library(details: str) -> str | None:
+    match = re.search(r"error while loading shared libraries: ([^:]+):", details)
+    if match is None:
+        return None
+    return match.group(1)
+
+
 def _playwright_launch_failure_message(details: str) -> str:
+    missing_library = _missing_shared_library(details)
+    missing_library_sentence = (
+        f" Detected missing shared library: {missing_library}." if missing_library else ""
+    )
+
     return (
-        "Playwright Chromium could not launch. The browser package may be installed, "
-        "but required Linux shared libraries are missing. In Codespaces/Linux, run "
-        "`python -m playwright install-deps chromium` and "
-        "`python -m playwright install chromium`, then retry. "
-        f"Original launch error: {details}"
+        "Playwright Chromium could not launch because required Linux browser "
+        "dependencies are missing."
+        f"{missing_library_sentence} "
+        "Installing the Python `playwright` package and the Chromium browser is not enough "
+        "when OS-level libraries are absent. In Codespaces/Linux, run "
+        "`python -m playwright install-deps chromium`, then "
+        "`python -m playwright install chromium`, then retry "
+        "`PYTHONPATH=src python scripts/capture_ui_screenshots.py`. "
+        f"Playwright error summary: {_first_non_empty_line(details)}"
     )
 
 

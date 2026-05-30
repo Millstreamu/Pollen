@@ -41,14 +41,23 @@ def test_capture_ui_screenshot_script_exposes_playwright_guidance() -> None:
 
     assert "Playwright is not installed" in message
     assert "python -m pip install playwright" in message
+    assert "python -m playwright install-deps chromium" in message
     assert "python -m playwright install chromium" in message
 
 
 def test_capture_ui_screenshot_script_exposes_browser_dependency_guidance() -> None:
     module = _load_script("capture_ui_screenshots.py")
 
-    message = module._playwright_launch_failure_message("libatk-1.0.so.0")
+    message = module._playwright_launch_failure_message(
+        "BrowserType.launch: Target page, context or browser has been closed\n"
+        "Browser logs:\n"
+        "[pid=14284][err] chrome-headless-shell: error while loading shared "
+        "libraries: libatk-1.0.so.0: cannot open shared object file"
+    )
 
-    assert "required Linux shared libraries are missing" in message
+    assert "required Linux browser dependencies are missing" in message
+    assert "Detected missing shared library: libatk-1.0.so.0" in message
+    assert "Installing the Python `playwright` package and the Chromium browser is not enough" in message
     assert "python -m playwright install-deps chromium" in message
-    assert "libatk-1.0.so.0" in message
+    assert "PYTHONPATH=src python scripts/capture_ui_screenshots.py" in message
+    assert "Browser logs:" not in message

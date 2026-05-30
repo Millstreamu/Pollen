@@ -2554,3 +2554,27 @@ Checks run:
 
 Notes:
 - Codex cloud could not verify Chromium screenshot capture because Playwright is absent here. Codespaces verification requires `python -m playwright install-deps chromium` plus `python -m playwright install chromium`.
+
+
+### 2026-05-30 — Playwright screenshot helper Codespaces re-test follow-up
+
+Branch/PR/Issue:
+- follow-up to local/Codespaces screenshot helper failure report
+
+Completed:
+- Reviewed the user-provided Codespaces re-test showing `python -m pip install playwright` and `python -m playwright install chromium` were not sufficient.
+- Confirmed the remaining problem is still missing OS-level browser dependencies, specifically `libatk-1.0.so.0`, because `python -m playwright install-deps chromium` had not been run.
+- Refined the screenshot helper error message to extract the missing shared library and avoid echoing the full Playwright browser log by default.
+- Updated the debug report with the 2026-05-30 re-test evidence.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index/proxy retry warnings
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass using already-installed compatible tooling
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — environment-limited in Codex cloud because Playwright is not installed; controlled guidance message shown
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass
+
+Notes:
+- Browser screenshot capture remains a Codespaces/local environment check until Playwright and native browser dependencies are available.
