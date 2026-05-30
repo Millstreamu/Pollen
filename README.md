@@ -61,15 +61,23 @@ If your GitHub Codespace already has Playwright available, capture PNG screensho
 PYTHONPATH=src python scripts/capture_ui_screenshots.py
 ```
 
-If Playwright is missing in the Codespace, install the optional browser tooling first:
+If Playwright or Chromium's Linux shared libraries are missing in a Codespace/local Linux environment, install the optional browser tooling first. The `install-deps` step is required on fresh Codespaces because installing the Python package and downloading Chromium does not install OS-level shared libraries such as `libatk-1.0.so.0`.
 
 ```bash
 python -m pip install playwright
+python -m playwright install-deps chromium
 python -m playwright install chromium
 PYTHONPATH=src python scripts/capture_ui_screenshots.py
 ```
 
-Screenshots are written to `docs/ai/ui-screenshots/` by default and are ignored by git.
+You can also run the checked-in optional setup helper, which prints the same verification command after installing Playwright, Chromium's Linux system dependencies, and the Chromium browser binary:
+
+```bash
+python scripts/setup_playwright_screenshots.py
+PYTHONPATH=src python scripts/capture_ui_screenshots.py
+```
+
+Screenshots are written to `docs/ai/ui-screenshots/` by default and are ignored by git. Playwright remains optional and is not part of normal runtime or Codex-cloud test dependencies.
 
 ## Validation
 

@@ -61,3 +61,17 @@ def test_capture_ui_screenshot_script_exposes_browser_dependency_guidance() -> N
     assert "python -m playwright install-deps chromium" in message
     assert "PYTHONPATH=src python scripts/capture_ui_screenshots.py" in message
     assert "Browser logs:" not in message
+
+
+def test_setup_playwright_screenshots_keeps_browser_deps_optional(capsys) -> None:
+    module = _load_script("setup_playwright_screenshots.py")
+
+    assert module.SETUP_COMMANDS[0][2:] == ("pip", "install", "playwright")
+    assert module.SETUP_COMMANDS[1][2:] == ("playwright", "install-deps", "chromium")
+    assert module.SETUP_COMMANDS[2][2:] == ("playwright", "install", "chromium")
+
+    module.setup_playwright_screenshots(dry_run=True)
+
+    output = capsys.readouterr().out
+    assert "python -m playwright install-deps chromium" in output
+    assert "PYTHONPATH=src python scripts/capture_ui_screenshots.py" in output
