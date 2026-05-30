@@ -2530,3 +2530,27 @@ Notes:
 
 Follow-up:
 - Start Milestone 10.2 startup planning + scope lock, then enforce release-candidate freeze rules for any subsequent changes.
+
+
+### 2026-05-29 — Playwright screenshot helper dependency debug report
+
+Branch/PR/Issue:
+- local/Codespaces screenshot helper failure report
+
+Completed:
+- Diagnosed user-reported Playwright Chromium launch failure as missing native Linux browser dependency `libatk-1.0.so.0`.
+- Added actionable Chromium launch-failure guidance to the optional screenshot helper without making Playwright part of normal Codex-cloud test dependencies.
+- Added regression coverage for the new browser dependency guidance.
+- Recorded debug evidence in `docs/ai/reports/debug-playwright-chromium-shared-library-missing-2026-05-29.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index/proxy retry warnings
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass using already-installed compatible tooling
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — environment-limited in Codex cloud because Playwright is not installed; controlled guidance message shown
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass
+
+Notes:
+- Codex cloud could not verify Chromium screenshot capture because Playwright is absent here. Codespaces verification requires `python -m playwright install-deps chromium` plus `python -m playwright install chromium`.
