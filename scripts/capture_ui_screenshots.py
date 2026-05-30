@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import importlib
+import importlib.util
 import sys
 from pathlib import Path
 from typing import Iterable
@@ -17,8 +19,11 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from export_ui_review_pages import AUTH_HEADER, PAGES, seed_demo_data
-from pollen.app import create_app
+_ui_review_pages = importlib.import_module("export_ui_review_pages")
+AUTH_HEADER = _ui_review_pages.AUTH_HEADER
+PAGES = _ui_review_pages.PAGES
+seed_demo_data = _ui_review_pages.seed_demo_data
+create_app = importlib.import_module("pollen.app").create_app
 
 
 def _playwright_missing_message() -> str:
@@ -29,6 +34,28 @@ def _playwright_missing_message() -> str:
     )
 
 
+def _playwright_launch_failure_message(details: str) -> str:
+    return (
+        "Playwright Chromium could not launch. The browser package may be installed, "
+        "but required Linux shared libraries are missing. In Codespaces/Linux, run "
+        "`python -m playwright install-deps chromium` and "
+        "`python -m playwright install chromium`, then retry. "
+        f"Original launch error: {details}"
+    )
+
+
+def _load_async_playwright():
+    try:
+        playwright_spec = importlib.util.find_spec("playwright.async_api")
+    except ModuleNotFoundError as exc:  # pragma: no cover - optional local tooling
+        raise SystemExit(_playwright_missing_message()) from exc
+
+    if playwright_spec is None:  # pragma: no cover - optional local tooling
+        raise SystemExit(_playwright_missing_message())
+
+    return importlib.import_module("playwright.async_api").async_playwright
+
+
 async def capture_screenshots(
     output_dir: Path,
     *,
@@ -36,10 +63,7 @@ async def capture_screenshots(
     viewport_height: int,
 ) -> list[Path]:
     """Render seeded app-shell pages and capture them as PNG screenshots."""
-    try:
-        from playwright.async_api import async_playwright
-    except ModuleNotFoundError as exc:  # pragma: no cover - depends on optional local tooling
-        raise SystemExit(_playwright_missing_message()) from exc
+    async_playwright = _load_async_playwright()
 
     output_dir.mkdir(parents=True, exist_ok=True)
     app = create_app()
@@ -47,7 +71,11 @@ async def capture_screenshots(
     written: list[Path] = []
 
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch()
+        try:
+            browser = await playwright.chromium.launch()
+        except Exception as exc:  # pragma: no cover - depends on optional browser tooling
+            raise SystemExit(_playwright_launch_failure_message(str(exc))) from exc
+
         page = await browser.new_page(viewport={"width": viewport_width, "height": viewport_height})
         for slug, route in PAGES:
             response = app.get(route, authorization_header=AUTH_HEADER)

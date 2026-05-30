@@ -42,3 +42,13 @@ def test_capture_ui_screenshot_script_exposes_playwright_guidance() -> None:
     assert "Playwright is not installed" in message
     assert "python -m pip install playwright" in message
     assert "python -m playwright install chromium" in message
+
+
+def test_capture_ui_screenshot_script_exposes_browser_dependency_guidance() -> None:
+    module = _load_script("capture_ui_screenshots.py")
+
+    message = module._playwright_launch_failure_message("libatk-1.0.so.0")
+
+    assert "required Linux shared libraries are missing" in message
+    assert "python -m playwright install-deps chromium" in message
+    assert "libatk-1.0.so.0" in message
