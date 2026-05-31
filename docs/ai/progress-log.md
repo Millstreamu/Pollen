@@ -32,6 +32,32 @@ Overall status: V1 is declared complete after Milestone 10.3 readiness validatio
 
 ## Recent Updates
 
+### 2026-05-31 — Post-V1 Playwright screenshot UI review polish
+
+Branch/PR/Issue:
+- direct screenshot review and UI streamlining request
+
+Completed:
+- Reviewed saved Playwright screenshots for Today, Orders, Products & Stock, Make / Buy, Money, and Settings.
+- Implemented a bounded UI polish slice focused on scanability: metric cards for Today/Money summaries, action pills, status badges, enabled next-step links, and clearer coming-soon states instead of disabled pseudo-actions.
+- Updated UI/journey assertions to verify the new scan-friendly markup.
+- Added a durable screenshot review report at `docs/ai/reports/post-v1-playwright-screenshot-ui-review-report-2026-05-31.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass using already-installed compatible tooling
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `pytest -q tests/test_milestone_9_1_ui_consistency.py tests/test_ui_review_scripts.py` — pass (`13 passed`)
+- `pytest -q tests/test_today_summary.py tests/test_journey_milestone_10_1.py tests/test_milestone_9_1_ui_consistency.py` — pass (`13 passed`)
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`114 passed`)
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — expected optional-tooling limitation in Codex cloud because Playwright is not installed; controlled setup guidance printed
+
+Notes:
+- No new dependencies were added.
+- Broader Products & Stock / Make / Buy information-architecture cleanup was documented as follow-up, not bundled into this small polish slice.
+
 ### 2026-05-30 — Optional Playwright screenshot dependency setup reliability
 
 Branch/PR/Issue:

@@ -71,8 +71,8 @@ def test_order_fulfillment_to_make_and_buy_replenishment_journey() -> None:
 
     today_after_order = app.get("/", authorization_header=header)
     assert today_after_order.status_code == 200
-    assert "Orders to pack: 1" in today_after_order.body
-    assert "Low stock: 1" in today_after_order.body
+    assert "<span class='metric-value'>1</span><span class='metric-label'>Orders to pack</span>" in today_after_order.body
+    assert "<span class='metric-value'>1</span><span class='metric-label'>Low-stock products</span>" in today_after_order.body
 
     pack_response = app.post(
         "/orders",
@@ -99,11 +99,11 @@ def test_order_fulfillment_to_make_and_buy_replenishment_journey() -> None:
 
     money_page_after_shipping = app.get("/money", authorization_header=header)
     assert money_page_after_shipping.status_code == 200
-    assert "Shipped orders: 1" in money_page_after_shipping.body
-    assert "Items shipped: 2" in money_page_after_shipping.body
-    assert "Estimated revenue: $50.00" in money_page_after_shipping.body
-    assert "Estimated cost: $28.00" in money_page_after_shipping.body
-    assert "Estimated profit: $22.00" in money_page_after_shipping.body
+    assert "<span class='metric-value'>1</span><span class='metric-label'>Shipped orders</span>" in money_page_after_shipping.body
+    assert "<span class='metric-value'>2</span><span class='metric-label'>Items shipped</span>" in money_page_after_shipping.body
+    assert "<span class='metric-value'>$50.00</span><span class='metric-label'>Estimated revenue</span>" in money_page_after_shipping.body
+    assert "<span class='metric-value'>$28.00</span><span class='metric-label'>Estimated cost</span>" in money_page_after_shipping.body
+    assert "<span class='metric-value'>$22.00</span><span class='metric-label'>Estimated profit</span>" in money_page_after_shipping.body
 
     create_batch_response = app.post(
         "/make-buy",
