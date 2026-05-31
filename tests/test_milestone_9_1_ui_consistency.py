@@ -91,8 +91,8 @@ def test_money_page_uses_beginner_friendly_consistency_sections_and_empty_state(
     assert "<h3>Money overview</h3>" in response.body
     assert "<h3>Estimated profit and cost</h3>" in response.body
     assert "<h3>Next steps</h3>" in response.body
-    assert "No money data yet. Finish a few orders and purchases to unlock estimated totals." in response.body
-    assert "<button type='button' disabled>View estimates</button>" in response.body
+    assert "No money data yet. Ship orders with product pricing to unlock estimated totals." in response.body
+    assert "<a class='button-link' href='/orders'>Ship orders first</a>" in response.body
 
 
 def test_settings_page_uses_beginner_friendly_consistency_sections_and_empty_state() -> None:
@@ -106,8 +106,8 @@ def test_settings_page_uses_beginner_friendly_consistency_sections_and_empty_sta
     assert "<h3>Sales channels</h3>" in response.body
     assert "<h3>Next steps</h3>" in response.body
     assert "No connected sales channels yet. Add one when you are ready to import orders." in response.body
-    assert "<button type='button' disabled>Save settings</button>" in response.body
-    assert "<button type='button' disabled>Connect channel</button>" in response.body
+    assert "<p class='coming-soon'>Settings forms are coming soon.</p>" in response.body
+    assert "<p class='coming-soon'>Channel connections are coming soon.</p>" in response.body
 
 
 def test_today_page_uses_beginner_friendly_consistency_sections_and_empty_state() -> None:
@@ -121,7 +121,8 @@ def test_today_page_uses_beginner_friendly_consistency_sections_and_empty_state(
     assert "<h3>Today actions</h3>" in response.body
     assert "<h3>Next steps</h3>" in response.body
     assert "No work is waiting right now. Create your first order or add inventory to begin." in response.body
-    assert "<button type='button' disabled>Open today checklist</button>" in response.body
+    assert "<span class='metric-label'>Orders to pack</span>" in response.body
+    assert "<a class='button-link' href='/orders'>Open highest-priority workflow</a>" in response.body
 
 
 def test_app_shell_includes_screenshot_friendly_visual_system() -> None:
@@ -138,3 +139,5 @@ def test_app_shell_includes_screenshot_friendly_visual_system() -> None:
     assert "Small seller workspace" in response.body
     assert "aria-current='page'" in response.body
     assert "nav a[aria-current='page']" in response.body
+    assert ".metric-grid" in response.body
+    assert ".status-badge" in response.body

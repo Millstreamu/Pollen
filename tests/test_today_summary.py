@@ -107,8 +107,8 @@ def test_today_page_renders_summary_counts() -> None:
 
     assert response.status_code == 200
     assert "Today summary" in response.body
-    assert "Orders to pack: 1" in response.body
-    assert "Low stock: 0" in response.body
+    assert "<span class='metric-value'>1</span><span class='metric-label'>Orders to pack</span>" in response.body
+    assert "<span class='metric-value'>0</span><span class='metric-label'>Low-stock products</span>" in response.body
 
 
 def test_today_page_renders_action_links_to_existing_workflows() -> None:
