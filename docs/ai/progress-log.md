@@ -1,3 +1,26 @@
+### 2026-05-31 — Trackable Playwright screenshot evidence folder
+
+Branch/PR/Issue:
+- allow reviewed Playwright screenshots to be committed for Codex context
+
+Completed:
+- Removed the `docs/ai/ui-screenshots/` ignore rule so generated PNG screenshots can be staged normally after review.
+- Added a tracked screenshot-folder README with privacy and regeneration guidance.
+- Updated the main README to document that reviewed screenshots may be committed for future Codex context.
+- Added regression coverage to keep the screenshot output folder trackable while leaving generated HTML review pages ignored.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`114 passed`)
+- `git check-ignore -v docs/ai/ui-screenshots/README.md docs/ai/ui-screenshots/example.png` — pass (exit 1 confirms the screenshot files are not ignored)
+
+Notes:
+- Screenshot commits still require human review to avoid committing secrets or private data.
+
 # Progress Log
 
 Records meaningful completed work. Update after feature completion, bug fix completion, milestone completion, release verification, important decision, or server-run evidence that changes status.

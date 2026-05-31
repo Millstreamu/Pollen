@@ -77,7 +77,7 @@ python scripts/setup_playwright_screenshots.py
 PYTHONPATH=src python scripts/capture_ui_screenshots.py
 ```
 
-Screenshots are written to `docs/ai/ui-screenshots/` by default and are ignored by git. Playwright remains optional and is not part of normal runtime or Codex-cloud test dependencies.
+Screenshots are written to `docs/ai/ui-screenshots/` by default. This folder is intentionally tracked so reviewed screenshots can be committed to the main branch for future Codex context. Before committing generated screenshots, confirm they do not contain secrets, private customer data, or other sensitive information. Playwright remains optional and is not part of normal runtime or Codex-cloud test dependencies.
 
 ## Validation
 
