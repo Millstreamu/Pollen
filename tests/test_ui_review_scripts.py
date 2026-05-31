@@ -75,3 +75,16 @@ def test_setup_playwright_screenshots_keeps_browser_deps_optional(capsys) -> Non
     output = capsys.readouterr().out
     assert "python -m playwright install-deps chromium" in output
     assert "PYTHONPATH=src python scripts/capture_ui_screenshots.py" in output
+
+
+def test_playwright_screenshot_directory_is_trackable_for_codex_context() -> None:
+    gitignore = Path(__file__).resolve().parents[1] / ".gitignore"
+
+    ignored_paths = {
+        line.strip()
+        for line in gitignore.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    }
+
+    assert "docs/ai/ui-review-pages/" in ignored_paths
+    assert "docs/ai/ui-screenshots/" not in ignored_paths
