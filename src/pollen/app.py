@@ -164,6 +164,14 @@ class AppShell:
                 ),
                 platform_fee_percent=float(payload.get("platform_fee_percent", "0") or 0),
             )
+        elif action == "create_material":
+            self._material_service.create_material(
+                authorization_header=authorization_header,
+                name=payload.get("name", ""),
+                unit=payload.get("unit", ""),
+                stock_on_hand=int(payload.get("stock_on_hand", "0")),
+                reorder_point=int(payload.get("reorder_point", "0")),
+            )
         elif action == "edit":
             product_id = payload.get("product_id")
             if product_id is not None:
@@ -1189,7 +1197,24 @@ class AppShell:
             f"<tr><td>{self._h(material.name)}</td><td>{material.stock_on_hand} {self._h(material.unit)}</td><td>{material.reorder_point}</td>"
             f"<td>{self._badge('Low' if material.is_low_stock else 'In Stock', 'gold' if material.is_low_stock else 'green')}</td></tr>"
             for material in materials[:5]
-        ) or "<tr><td colspan='4'>No materials yet.</td></tr>"
+        ) or "<tr><td colspan='4'>No materials yet. Add your first material to track supplies.</td></tr>"
+        add_material_form = (
+            "<form class='form-grid compact-form' method='post' action='/products-stock'>"
+            "<input type='hidden' name='action' value='create_material'>"
+            "<label>Name <input name='name' required></label>"
+            "<label>Unit <input name='unit' required></label>"
+            "<label>Stock <input name='stock_on_hand' type='number' min='0' required></label>"
+            "<label>Reorder <input name='reorder_point' type='number' min='0' required></label>"
+            "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>"
+            "<a class='outline' href='#'>Cancel</a></div>"
+            "</form>"
+        )
+        add_material_dialog = self._render_workflow_dialog(
+            dialog_id="add-material-dialog",
+            title="Add material",
+            description="Add a supply item so product stock planning has accurate material counts.",
+            body=add_material_form,
+        )
         archived_label = "<section class='workflow-card'><h3>Archived products</h3></section>" if view in {"archived", "all"} and archived_only else ""
         return (
             "<section class='metric-grid three'>"
@@ -1201,8 +1226,9 @@ class AppShell:
             f"<table><thead><tr><th>Product</th><th>SKU</th><th>In Stock</th><th>Reorder Point</th><th>Price</th><th>Status</th></tr></thead><tbody>{product_rows}</tbody></table><a class='text-link' href='#products-workflow'>Manage product records ›</a></article>"
             "<aside class='stack'><article class='panel'><div class='panel-header'><h3>Low Stock</h3><a class='outline' href='/products-stock'>View all</a></div>"
             f"<ul class='media-list compact'>{low_list}</ul></article>"
-            "<article class='panel'><div class='panel-header'><h3>Materials</h3><a class='outline' href='/make-buy'>View Materials</a></div>"
+            "<article class='panel'><div class='panel-header'><h3>Materials</h3><a class='outline' href='#add-material-dialog'>Add Material</a></div>"
             f"<table><thead><tr><th>Material</th><th>On Hand</th><th>Reorder Point</th><th>Status</th></tr></thead><tbody>{material_rows}</tbody></table></article></aside></section>"
+            f"{add_material_dialog}"
             f"<section class='panel wide workflow-panel' id='products-workflow'>{legacy}{archived_label}</section>"
         )
 
