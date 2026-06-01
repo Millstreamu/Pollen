@@ -32,6 +32,32 @@ Overall status: V1 is declared complete after Milestone 10.3 readiness validatio
 
 ## Recent Updates
 
+### 2026-06-01 — Post-V1 cosmetic layout UI improvements
+
+Branch/PR/Issue:
+- direct cosmetic/layout-only UI improvement request after latest server-test screenshot review
+
+Completed:
+- Implemented layout-only polish for existing app-shell pages without adding features, routes, workflows, integrations, or business logic.
+- Styled lower-page workflow cards, existing forms, inline row actions, segmented filters, recipe blocks, table containment, and empty-state presentation to better match the polished dashboard cards.
+- Added a durable report at `docs/ai/reports/post-v1-cosmetic-layout-ui-improvements-report-2026-06-01.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass using installed dependencies
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`116 passed`)
+- `PYTHONPATH=src pytest -q tests/test_milestone_9_1_ui_consistency.py tests/test_app.py tests/test_ui_review_scripts.py` — pass (`40 passed`)
+- `PYTHONPATH=src python scripts/export_ui_review_pages.py` — pass
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — expected optional-tooling limitation because Playwright is not installed
+- `python -m pip install playwright` — environment limitation: package-index proxy returned `403 Forbidden`
+
+Notes:
+- No new dependencies were added.
+- Playwright screenshots should be regenerated later in a browser-capable environment.
+
 ### 2026-05-31 — Post-V1 Playwright screenshot UI review polish
 
 Branch/PR/Issue:
