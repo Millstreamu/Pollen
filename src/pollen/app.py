@@ -223,13 +223,21 @@ class AppShell:
                     product_id=product_id,
                 )
         elif action == "adjust_stock":
-            product_id = payload.get("product_id", "")
-            self._product_service.adjust_product_stock(
-                authorization_header=authorization_header,
-                product_id=product_id,
-                delta=int(payload.get("delta", "0")),
-                reason=payload.get("reason", ""),
-            )
+            if payload.get("material_id"):
+                self._material_service.adjust_material_stock(
+                    authorization_header=authorization_header,
+                    material_id=payload.get("material_id", ""),
+                    delta=int(payload.get("delta", "0")),
+                    reason=payload.get("reason", ""),
+                )
+            else:
+                product_id = payload.get("product_id", "")
+                self._product_service.adjust_product_stock(
+                    authorization_header=authorization_header,
+                    product_id=product_id,
+                    delta=int(payload.get("delta", "0")),
+                    reason=payload.get("reason", ""),
+                )
         elif action == "bulk_restore":
             selected_ids = payload.get("product_ids", "")
             for product_id in [pid.strip() for pid in selected_ids.split(",") if pid.strip()]:
@@ -691,7 +699,7 @@ class AppShell:
         quick_actions = (
             "<section class='workflow-card workflow-actions'><h3>Material actions</h3>"
             "<p>Open add and make-planning forms as popups instead of inline bottom-page panels.</p>"
-            "<a class='primary' href='#add-material-dialog'>Add material ＋</a>"
+            "<a class='primary' href='#create-new-material-dialog'>Add material ＋</a>"
             "<a class='outline' href='#plan-batch-dialog'>Plan batch ＋</a></section>"
         )
         if not materials and not archived_only:
@@ -921,7 +929,7 @@ class AppShell:
                 f"<input type='hidden' name='product_id' value='{product.product_id}'>"
                 f"<label>Material <select name='material_id'>{material_options}</select></label>"
                 "<label>Qty per unit <input name='quantity_per_unit' type='number' min='1' required></label>"
-                "<button type='submit'>Add recipe row</button></form>"
+                "<a class='outline muted' href='#create-new-material-dialog'>+ Create new material</a><button type='submit'>+ Add material to recipe</button></form>"
                 f"<ul>{item_rows}</ul>"
                 "<form class='inline-form recipe-form' method='get' action='/products-stock'>"
                 f"<input type='hidden' name='materials_needed_for' value='{product.product_id}'>"
@@ -1221,7 +1229,6 @@ class AppShell:
         materials = self._material_service.list_materials(authorization_header=authorization_header)
         low_materials = self._material_service.list_low_stock_suggestions(authorization_header=authorization_header)
         purchases = self._material_service.list_purchases(authorization_header=authorization_header)
-        incoming_purchases = [purchase for purchase in purchases if purchase.status != "Received"]
         draft_items = self._material_service.list_purchase_draft(authorization_header=authorization_header)
 
         product_rows = "".join(
@@ -1240,14 +1247,14 @@ class AppShell:
             "<button type='submit'>Save</button></form></td>"
             "</tr>"
             for product in products
-        ) or "<tr><td colspan='6'>No finished products yet. Create products in Workshop, then track stock here.</td></tr>"
+        ) or "<tr><td colspan='7'>No finished products yet. Create products in Workshop, then track stock here.</td></tr>"
         material_rows = "".join(
             "<tr>"
             f"<td><span class='thumb'>◫</span> {self._h(material.name)}</td>"
             f"<td>{material.stock_on_hand} {self._h(material.unit)}</td>"
             f"<td>{material.reorder_point} {self._h(material.unit)}</td>"
             f"<td>{self._badge('Low' if material.is_low_stock else 'Good', 'gold' if material.is_low_stock else 'green')}</td>"
-            "<td><form class='inline-form compact-adjust' method='post' action='/make-buy'>"
+            "<td><form class='inline-form compact-adjust' method='post' action='/products-stock'>"
             "<input type='hidden' name='action' value='adjust_stock'>"
             f"<input type='hidden' name='material_id' value='{self._h(material.material_id)}'>"
             "<label>Adjust <input name='delta' type='number' value='0'></label>"
@@ -1307,7 +1314,7 @@ class AppShell:
             "<section class='metric-grid three'>"
             f"{self._metric_card('▧', 'Finished Products in Stock', sum(product.stock_on_hand for product in products), 'green', 'Total units')}"
             f"{self._metric_card('⚠', 'Materials Low', len(low_materials), 'alert', 'Need reordering')}"
-            f"{self._metric_card('▰', 'Incoming Purchases', len(incoming_purchases), 'gold', 'Receiving queue')}"
+            f"{self._metric_card('▰', 'Items to Reorder', len(low_materials), 'gold', 'On buy list')}"
             "</section>"
             "<section class='dashboard-grid two-col'>"
             "<article class='panel'><div class='panel-header'><h3>Finished Products</h3><p>Current stock counts for products you sell.</p></div>"
@@ -1439,7 +1446,7 @@ class AppShell:
             f"<input type='hidden' name='product_id' value='{self._h(selected_product_hidden)}'>"
             f"<label>Material/part <select name='material_id'>{material_options}</select></label>"
             "<label>Quantity per unit <input name='quantity_per_unit' type='number' min='1' required></label>"
-            "<button type='submit'>Add recipe row</button></form>"
+            "<a class='outline muted' href='#create-new-material-dialog'>+ Create new material</a><button type='submit'>+ Add material to recipe</button></form>"
         ) if selected_product is not None and materials else "<p class='empty-state'>Create a product and at least one material before adding recipe rows.</p>"
         return (
             "<section class='metric-grid three'>"
@@ -1450,7 +1457,7 @@ class AppShell:
             "<section class='dashboard-grid two-col'>"
             "<article class='panel' id='product-builder'><div class='panel-header'><h3>Products You Make / Product Builder</h3><a class='outline' href='#create-product-dialog'>Create Product</a></div>"
             "<p>Define what you make, then attach the materials and quantities used per unit.</p>"
-            f"<ul class='media-list compact'>{product_rows}</ul><div class='workflow-actions'><a class='primary' href='#create-product-dialog'>Create Product ＋</a><a class='outline' href='#add-material-dialog'>Add Material/Part</a></div></article>"
+            f"<ul class='media-list compact'>{product_rows}</ul><div class='workflow-actions'><a class='primary' href='#create-product-dialog'>Create Product ＋</a><a class='outline' href='#selected-product-recipe'>+ Add material to recipe</a><a class='outline' href='#create-new-material-dialog'>+ Create new material</a></div></article>"
             "<article class='panel' id='make-next'><div class='panel-header'><h3>Make Next / Batch Queue</h3><a class='outline' href='#plan-batch-dialog'>Plan Batch</a></div>"
             "<p>Planned and in-progress batches stay in Workshop until they are completed into Inventory stock.</p>"
             f"<table><thead><tr><th>Product</th><th>Batch Size/Yield</th><th>Status</th><th>Action</th></tr></thead><tbody>{batch_rows}</tbody></table></article>"
@@ -1471,24 +1478,27 @@ class AppShell:
         create_product_form = (
             "<form class='form-grid compact-form' method='post' action='/make-buy'>"
             "<input type='hidden' name='action' value='create_product'>"
-            "<label>Name <input name='name' required></label>"
+            "<label>Product name <input name='name' required></label>"
             "<label>SKU <input name='sku' required></label>"
+            "<label>Category/type <input name='category' placeholder='Candles, skincare, kits'></label>"
+            "<label>Selling price <input name='sale_price' type='number' min='0' step='0.01' value='0'></label>"
+            "<label>Default batch size/yield <input name='batch_size_yield' type='number' min='1' placeholder='12'></label>"
             "<label>Starting inventory <input name='stock_on_hand' type='number' min='0' value='0'></label>"
             "<label>Reorder point <input name='reorder_point' type='number' min='0' value='0'></label>"
-            "<label>Selling price <input name='sale_price' type='number' min='0' step='0.01' value='0'></label>"
             "<label>Material cost <input name='estimated_material_cost' type='number' min='0' step='0.01' value='0'></label>"
             "<label>Packaging/shipping <input name='estimated_packaging_shipping_cost' type='number' min='0' step='0.01' value='0'></label>"
             "<label>Platform fee % <input name='platform_fee_percent' type='number' min='0' step='0.01' value='0'></label>"
+            "<label class='full-span'>Making notes / steps <textarea name='making_notes' placeholder='Melt soy wax, add fragrance, pour, cure, label.'></textarea></label>"
             "<div class='dialog-actions'><button class='primary' type='submit'>Save product</button>"
             "<a class='outline' href='#'>Cancel</a></div></form>"
         )
         add_material_form = (
             "<form class='form-grid compact-form' method='post' action='/make-buy'>"
             "<input type='hidden' name='action' value='create'>"
-            "<label>Name <input name='name' required></label>"
+            "<label>Material name <input name='name' required></label>"
             "<label>Unit <input name='unit' required></label>"
-            "<label>Stock <input name='stock_on_hand' type='number' min='0' value='0' required></label>"
-            "<label>Reorder <input name='reorder_point' type='number' min='0' value='0' required></label>"
+            "<label>Current stock <input name='stock_on_hand' type='number' min='0' value='0' required></label>"
+            "<label>Reorder point <input name='reorder_point' type='number' min='0' value='0' required></label>"
             "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>"
             "<a class='outline' href='#'>Cancel</a></div></form>"
         )
@@ -1501,8 +1511,8 @@ class AppShell:
             "<a class='outline' href='#'>Cancel</a></div></form>"
         )
         return (
-            f"{self._render_workflow_dialog(dialog_id='create-product-dialog', title='Create product', description='Define a product you make before it appears in Inventory, Orders, Workshop, and Money.', body=create_product_form)}"
-            f"{self._render_workflow_dialog(dialog_id='add-material-dialog', title='Add material/part', description='Create materials while building a product recipe or BOM.', body=add_material_form)}"
+            f"{self._render_workflow_dialog(dialog_id='create-product-dialog', title='Create Product', description='Build your product details first, then add recipe materials and making notes.', body=create_product_form)}"
+            f"{self._render_workflow_dialog(dialog_id='create-new-material-dialog', title='+ Create new material', description='Create a material or part without leaving the product recipe flow.', body=add_material_form)}"
             f"{self._render_workflow_dialog(dialog_id='plan-batch-dialog', title='Plan a batch', description='Choose a product and batch size/yield to make in Workshop.', body=batch_form)}"
         )
 
@@ -1569,7 +1579,7 @@ class AppShell:
             ".metric-grid{display:grid;gap:1.35rem;margin:1.55rem .55rem}.metric-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.metric-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}.metric-card{min-height:120px;border:1px solid var(--line);border-radius:.72rem;background:#fff;box-shadow:var(--shadow);display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto auto;column-gap:1.25rem;align-content:center;padding:1.4rem 1.65rem}.metric-icon{grid-row:1/4;display:grid;place-items:center;width:4rem;height:4rem;border-radius:50%;background:linear-gradient(135deg,#fff7de,#ffe6a6);font-size:2rem;color:#101525}.metric-card.tone-green .metric-icon{background:var(--green-soft);color:var(--green)}.metric-card.tone-alert .metric-icon{background:#fff1cd;color:#ff8900}.metric-card.tone-peach .metric-icon{background:var(--orange-soft)}.metric-label{color:#25283a;font-size:1rem;font-weight:500}.metric-value{font-size:2.45rem;line-height:1;font-weight:800;letter-spacing:-.05em}.tone-alert .metric-value{color:#d80d14}.tone-green .metric-value{color:var(--green)}.metric-card small{color:#777e95;font-size:1rem}"
             ".dashboard-grid{display:grid;gap:1.55rem;margin:1.55rem .55rem}.two-col{grid-template-columns:1fr 1fr}.orders-layout{grid-template-columns:minmax(0,1fr) 265px}.products-layout{grid-template-columns:minmax(0,1.5fr) minmax(340px,.95fr)}.money-layout{grid-template-columns:minmax(0,1fr) 300px;align-items:start}.bottom-grid{grid-template-columns:1.15fr .85fr}.stack{display:grid;gap:1.05rem}.panel{border:1px solid var(--line);border-radius:.72rem;background:#fff;box-shadow:var(--shadow);padding:1.45rem}.panel.wide{margin:1.55rem .55rem}.panel-header,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem}.panel h3{margin:0;font-size:1.35rem;letter-spacing:-.04em}.panel p{color:#68708d;margin:.45rem 0 1rem}.outline,.primary,.tab,.button-link{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:2.55rem;border-radius:.38rem;border:1px solid #d9dce5;background:#fff;color:#111423;padding:.58rem 1rem;font:inherit;font-weight:700;box-shadow:none}.outline{border-color:#ffc21a;color:#e98200}.outline.muted{border-color:#d9dce5;color:#111423}.primary{border-color:var(--honey);background:var(--honey);color:#111423}.small{min-height:2.2rem;padding:.45rem .8rem}.tab{color:#68708d}.tab.active{border-color:#ffc21a;background:#fff8dc;color:#111423}button{cursor:pointer}"
             "table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}th,td{padding:1rem 1.05rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{background:#fffdfa;color:#25283a;font-size:.82rem;font-weight:700}tr:last-child td{border-bottom:0}td:first-child,th:first-child{font-weight:700}.status-badge,.coming-soon{display:inline-flex;width:max-content;align-items:center;border-radius:.32rem;padding:.35rem .62rem;font-size:.88rem;font-weight:600;background:#fff1d6;color:#de7d00}.badge-green{background:var(--green-soft);color:var(--green)}.badge-blue{background:var(--blue-soft);color:var(--blue)}.badge-red{background:var(--red-soft);color:var(--red)}.badge-gold{background:#fff1d6;color:#dc7800}.pill{border-radius:.32rem;padding:.35rem .75rem;font-weight:600}.pill.high{background:#fff1d6;color:#dc7800}.pill.medium{background:#e8f2ff;color:#1266d6}.pill.low{background:#eeeef2;color:#222}.pill.danger{background:var(--red-soft);color:var(--red)}.text-link{display:inline-flex;margin-top:1rem;color:#ec8700}.centered{justify-content:center;width:100%}.thumb{display:inline-grid;place-items:center;width:3.2rem;height:3.2rem;margin-right:.75rem;border-radius:.35rem;background:linear-gradient(135deg,#f8f4ed,#eee7db);vertical-align:middle}.channel{display:inline-grid;place-items:center;width:1.35rem;height:1.35rem;border-radius:.18rem;background:#f26d00;color:#fff;font-weight:800}.ready{color:#27943a;font-weight:700}"
-            ".task-list,.media-list,.queue-list,.profit-list,.channel-list,.pref-list{list-style:none;margin:0;padding:0}.task-list li,.media-list li,.queue-list li,.profit-list li,.channel-list li,.pref-list li{display:grid;align-items:center;gap:.75rem;border-bottom:1px solid var(--line);padding:.85rem 0}.task-list li{grid-template-columns:auto 1fr auto}.media-list li{grid-template-columns:auto 1fr auto auto auto}.media-list.compact li{grid-template-columns:auto 1fr auto auto}.media-list small{display:block;color:#68708d}.queue-list li{grid-template-columns:1fr auto}.queue-list span{grid-column:1;color:#68708d}.profit-list li{grid-template-columns:auto 1fr auto}.profit-list b{color:#168200;font-size:1.1rem}.details-list{display:grid;grid-template-columns:1fr 1fr;margin:1rem 0 0}.details-list dt,.details-list dd{margin:0;padding:1rem 0;border-bottom:1px solid var(--line)}.details-list dt{color:#25283a}.channel-list li{grid-template-columns:auto 1fr auto auto;border:1px solid var(--line);border-radius:.55rem;padding:1rem;margin:.75rem 0}.channel-logo{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:#f26d00;color:#fff;font-size:1.8rem;font-weight:800}.channel-logo.fb{background:#1977f3}.channel-list small,.pref-list small{display:block;color:#68708d;margin-top:.25rem}.info{padding:1rem;border-radius:.45rem;background:#f6f7fa}.pref-list li{grid-template-columns:auto 1fr auto}.small-icon{width:2.4rem;height:2.4rem;font-size:1.1rem}.toggle{width:2.6rem;height:1.35rem;border-radius:999px;background:#d5d8df;position:relative}.toggle:after{content:'';position:absolute;top:.16rem;left:.16rem;width:1.03rem;height:1.03rem;border-radius:50%;background:#fff}.toggle.on{background:var(--honey)}.toggle.on:after{left:1.38rem}.form-actions{display:flex;justify-content:flex-end;gap:1rem;margin-top:1.2rem}.legend{display:flex;justify-content:flex-end;gap:2rem;color:#25283a}.legend span:before{content:'';display:inline-block;width:1.2rem;height:.25rem;border-radius:99px;margin-right:.5rem;vertical-align:middle}.legend .sales:before{background:#83b96f}.legend .costs:before{background:#ff992a}.bar-chart{height:265px;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0 54px,#e9e9e9 55px);display:grid;grid-template-columns:repeat(4,1fr);gap:2.2rem;align-items:end;padding:0 3rem}.bar-chart div{height:100%;display:flex;align-items:end;justify-content:center;gap:.8rem;position:relative}.bar-chart i,.bar-chart b{display:block;width:1.75rem;border-radius:.18rem .18rem 0 0}.bar-chart i{background:linear-gradient(180deg,#91c47d,#cde8bf)}.bar-chart b{background:linear-gradient(180deg,#ff9d37,#ffc079)}.bar-chart span{position:absolute;bottom:-3.1rem;text-align:center;color:#68708d}.bar-chart small{display:block}.money-actions{display:flex;gap:1rem;align-items:start;justify-content:end;flex-wrap:wrap;padding:1rem}.money-actions p{width:100%;text-align:right;color:#68708d}.chart-panel{min-height:330px}.workflow-panel>section,#create-order .workflow-card,.workflow-card{margin:1rem 0;padding:1.25rem;border:1px solid var(--line);border-radius:.72rem;background:#fffdfa}.workflow-intro{margin-bottom:1rem;padding:.25rem 0}.workflow-intro h3,.workflow-card h2,.workflow-card h3,.workflow-card h4{margin-top:0}.workflow-card p{color:#68708d}.form-grid{display:grid;grid-template-columns:repeat(4,minmax(10rem,1fr));gap:1rem;align-items:end;margin:1rem 0}.compact-form{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}.form-grid label,.inline-form label{display:grid;gap:.35rem;color:#25283a;font-weight:700}.form-grid input,.form-grid select,.inline-form input,.inline-form select{width:100%;box-sizing:border-box;min-height:2.45rem;border:1px solid #d9dce5;border-radius:.42rem;background:#fff;padding:.45rem .6rem;font:inherit;color:#111423}.search input{border:0;min-height:0;padding:0}.inline-form{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin:.85rem 0}.record-tools{padding:1rem;border:1px dashed var(--line);border-radius:.6rem;background:#fff}.segmented-list{display:flex;flex-wrap:wrap;gap:.55rem;list-style:none;margin:.85rem 0 0;padding:0}.segmented-label a{display:inline-flex;margin:.2rem .25rem;padding:.35rem .7rem;border:1px solid #ffc21a;border-radius:.35rem}.empty-state{padding:1rem;border-radius:.6rem;background:#f8f9fc;color:#68708d}.chart-empty{display:inline-block;margin:.8rem 0 1rem}.recipe-card{margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:.6rem;background:#fff}.recipe-card ul{margin:.8rem 0;padding-left:1.2rem}.workflow-card table,.panel table{border:1px solid var(--line);border-radius:.6rem;overflow:hidden}.workflow-card td:first-child,.panel td:first-child{white-space:nowrap}.workflow-card td:last-child,.panel td:last-child{white-space:nowrap}.workflow-card form[style*='display:inline'],.panel form[style*='display:inline']{display:inline-flex!important;margin:.15rem .2rem .15rem 0}.workflow-card button,.panel button{border-color:#d9dce5}.workflow-card button:hover,.panel button:hover{border-color:#ffc21a}.workflow-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem}.workflow-actions h3,.workflow-actions p{width:100%;margin-bottom:0}.modal-popover{display:none;position:fixed;inset:0;z-index:50;padding:clamp(1rem,4vw,3rem);place-items:center}.modal-popover:target{display:grid}.modal-backdrop{position:absolute;inset:0;background:rgba(17,20,35,.58);backdrop-filter:blur(2px)}.modal-card{position:relative;z-index:1;width:min(58rem,100%);max-height:min(84vh,52rem);overflow:auto;padding:1.35rem;border:1px solid #ffd262;border-radius:.9rem;background:#fff;box-shadow:0 1.2rem 3.2rem rgba(17,20,35,.24)}.modal-header{display:flex;justify-content:space-between;gap:1rem;align-items:start;margin-bottom:1rem}.modal-header h3{margin:.1rem 0}.modal-header p{margin:.35rem 0 0;color:#68708d}.modal-close{display:grid;place-items:center;flex:0 0 2.35rem;width:2.35rem;height:2.35rem;border:1px solid var(--line);border-radius:50%;background:#fff8df;color:#111423;font-size:1.7rem;line-height:1}.modal-card .form-grid{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1.1rem 1.25rem;margin-bottom:0}.modal-card .dialog-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:1rem;margin-top:.35rem;padding-top:.35rem}.modal-card .dialog-actions .primary,.modal-card .dialog-actions .outline{min-width:13rem}.modal-card .dialog-actions button{border-radius:.38rem;border:1px solid var(--honey);padding:.58rem 1rem;font:inherit;font-weight:700;box-shadow:none}.status-badge{white-space:nowrap}"
+            ".task-list,.media-list,.queue-list,.profit-list,.channel-list,.pref-list{list-style:none;margin:0;padding:0}.task-list li,.media-list li,.queue-list li,.profit-list li,.channel-list li,.pref-list li{display:grid;align-items:center;gap:.75rem;border-bottom:1px solid var(--line);padding:.85rem 0}.task-list li{grid-template-columns:auto 1fr auto}.media-list li{grid-template-columns:auto 1fr auto auto auto}.media-list.compact li{grid-template-columns:auto 1fr auto auto}.media-list small{display:block;color:#68708d}.queue-list li{grid-template-columns:1fr auto}.queue-list span{grid-column:1;color:#68708d}.profit-list li{grid-template-columns:auto 1fr auto}.profit-list b{color:#168200;font-size:1.1rem}.details-list{display:grid;grid-template-columns:1fr 1fr;margin:1rem 0 0}.details-list dt,.details-list dd{margin:0;padding:1rem 0;border-bottom:1px solid var(--line)}.details-list dt{color:#25283a}.channel-list li{grid-template-columns:auto 1fr auto auto;border:1px solid var(--line);border-radius:.55rem;padding:1rem;margin:.75rem 0}.channel-logo{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:#f26d00;color:#fff;font-size:1.8rem;font-weight:800}.channel-logo.fb{background:#1977f3}.channel-list small,.pref-list small{display:block;color:#68708d;margin-top:.25rem}.info{padding:1rem;border-radius:.45rem;background:#f6f7fa}.pref-list li{grid-template-columns:auto 1fr auto}.small-icon{width:2.4rem;height:2.4rem;font-size:1.1rem}.toggle{width:2.6rem;height:1.35rem;border-radius:999px;background:#d5d8df;position:relative}.toggle:after{content:'';position:absolute;top:.16rem;left:.16rem;width:1.03rem;height:1.03rem;border-radius:50%;background:#fff}.toggle.on{background:var(--honey)}.toggle.on:after{left:1.38rem}.form-actions{display:flex;justify-content:flex-end;gap:1rem;margin-top:1.2rem}.legend{display:flex;justify-content:flex-end;gap:2rem;color:#25283a}.legend span:before{content:'';display:inline-block;width:1.2rem;height:.25rem;border-radius:99px;margin-right:.5rem;vertical-align:middle}.legend .sales:before{background:#83b96f}.legend .costs:before{background:#ff992a}.bar-chart{height:265px;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0 54px,#e9e9e9 55px);display:grid;grid-template-columns:repeat(4,1fr);gap:2.2rem;align-items:end;padding:0 3rem}.bar-chart div{height:100%;display:flex;align-items:end;justify-content:center;gap:.8rem;position:relative}.bar-chart i,.bar-chart b{display:block;width:1.75rem;border-radius:.18rem .18rem 0 0}.bar-chart i{background:linear-gradient(180deg,#91c47d,#cde8bf)}.bar-chart b{background:linear-gradient(180deg,#ff9d37,#ffc079)}.bar-chart span{position:absolute;bottom:-3.1rem;text-align:center;color:#68708d}.bar-chart small{display:block}.money-actions{display:flex;gap:1rem;align-items:start;justify-content:end;flex-wrap:wrap;padding:1rem}.money-actions p{width:100%;text-align:right;color:#68708d}.chart-panel{min-height:330px}.workflow-panel>section,#create-order .workflow-card,.workflow-card{margin:1rem 0;padding:1.25rem;border:1px solid var(--line);border-radius:.72rem;background:#fffdfa}.workflow-intro{margin-bottom:1rem;padding:.25rem 0}.workflow-intro h3,.workflow-card h2,.workflow-card h3,.workflow-card h4{margin-top:0}.workflow-card p{color:#68708d}.form-grid{display:grid;grid-template-columns:repeat(4,minmax(10rem,1fr));gap:1rem;align-items:end;margin:1rem 0}.compact-form{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}.form-grid label,.inline-form label{display:grid;gap:.35rem;color:#25283a;font-weight:700}.form-grid input,.form-grid select,.form-grid textarea,.inline-form input,.inline-form select{width:100%;box-sizing:border-box;min-height:2.45rem;border:1px solid #d9dce5;border-radius:.42rem;background:#fff;padding:.45rem .6rem;font:inherit;color:#111423}.form-grid textarea{min-height:5.6rem;resize:vertical}.form-grid .full-span{grid-column:1/-1}.search input{border:0;min-height:0;padding:0}.inline-form{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin:.85rem 0}.record-tools{padding:1rem;border:1px dashed var(--line);border-radius:.6rem;background:#fff}.segmented-list{display:flex;flex-wrap:wrap;gap:.55rem;list-style:none;margin:.85rem 0 0;padding:0}.segmented-label a{display:inline-flex;margin:.2rem .25rem;padding:.35rem .7rem;border:1px solid #ffc21a;border-radius:.35rem}.empty-state{padding:1rem;border-radius:.6rem;background:#f8f9fc;color:#68708d}.chart-empty{display:inline-block;margin:.8rem 0 1rem}.recipe-card{margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:.6rem;background:#fff}.recipe-card ul{margin:.8rem 0;padding-left:1.2rem}.workflow-card table,.panel table{border:1px solid var(--line);border-radius:.6rem;overflow:hidden}.workflow-card td:first-child,.panel td:first-child{white-space:nowrap}.workflow-card td:last-child,.panel td:last-child{white-space:nowrap}.workflow-card form[style*='display:inline'],.panel form[style*='display:inline']{display:inline-flex!important;margin:.15rem .2rem .15rem 0}.workflow-card button,.panel button{border-color:#d9dce5}.workflow-card button:hover,.panel button:hover{border-color:#ffc21a}.workflow-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem}.workflow-actions h3,.workflow-actions p{width:100%;margin-bottom:0}.modal-popover{display:none;position:fixed;inset:0;z-index:50;padding:clamp(1rem,4vw,3rem);place-items:center}.modal-popover:target{display:grid}.modal-backdrop{position:absolute;inset:0;background:rgba(17,20,35,.58);backdrop-filter:blur(2px)}.modal-card{position:relative;z-index:1;width:min(58rem,100%);max-height:min(84vh,52rem);overflow:auto;padding:1.35rem;border:1px solid #ffd262;border-radius:.9rem;background:#fff;box-shadow:0 1.2rem 3.2rem rgba(17,20,35,.24)}.modal-header{display:flex;justify-content:space-between;gap:1rem;align-items:start;margin-bottom:1rem}.modal-header h3{margin:.1rem 0}.modal-header p{margin:.35rem 0 0;color:#68708d}.modal-close{display:grid;place-items:center;flex:0 0 2.35rem;width:2.35rem;height:2.35rem;border:1px solid var(--line);border-radius:50%;background:#fff8df;color:#111423;font-size:1.7rem;line-height:1}.modal-card .form-grid{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1.1rem 1.25rem;margin-bottom:0}.modal-card .dialog-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:1rem;margin-top:.35rem;padding-top:.35rem}.modal-card .dialog-actions .primary,.modal-card .dialog-actions .outline{min-width:13rem}.modal-card .dialog-actions button{border-radius:.38rem;border:1px solid var(--honey);padding:.58rem 1rem;font:inherit;font-weight:700;box-shadow:none}.status-badge{white-space:nowrap}"
             "@media (max-width:1100px){.app-shell{grid-template-columns:1fr}.sidebar{position:static;height:auto}.brand{margin-bottom:1rem}nav ul{display:flex;flex-wrap:wrap}.bee-card{display:none}.topbar{grid-template-columns:1fr}.metric-grid.three,.metric-grid.four,.two-col,.orders-layout,.products-layout,.money-layout,.bottom-grid{grid-template-columns:1fr}.user-tools{justify-content:flex-start}.bar-chart{padding:0 1rem}}@media (max-width:720px){.workspace{padding:0 .5rem 1rem}.topbar{padding:1rem .5rem}.metric-grid,.dashboard-grid,.panel.wide{margin:1rem 0}.metric-card{grid-template-columns:1fr}.metric-icon{grid-row:auto}.panel{padding:1rem}table{display:block;overflow-x:auto;white-space:nowrap}.toolbar,.panel-header{align-items:flex-start;flex-direction:column}.details-list{grid-template-columns:1fr}.channel-list li,.pref-list li{grid-template-columns:1fr}.bar-chart{gap:.7rem}.brand strong{font-size:1.8rem}}"
             "</style>"
         )
