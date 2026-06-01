@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from html import escape
 from urllib.parse import parse_qs, urlsplit
 
 from pollen.auth import AuthService
@@ -199,14 +200,6 @@ class AppShell:
                     authorization_header=authorization_header,
                     product_id=product_id,
                 )
-        elif action == "adjust_stock":
-            material_id = payload.get("material_id", "")
-            self._material_service.adjust_material_stock(
-                authorization_header=authorization_header,
-                material_id=material_id,
-                delta=int(payload.get("delta", "0")),
-                reason=payload.get("reason", ""),
-            )
         elif action == "restore":
             product_id = payload.get("product_id")
             if product_id is not None:
@@ -895,9 +888,14 @@ class AppShell:
         elif page_title == "Money" and authorization_header is not None:
             page_content = self._render_money_dashboard(authorization_header=authorization_header)
         elif page_title == "Settings" and authorization_header is not None:
-            page_content = self._render_settings_dashboard()
+            page_content = self._render_settings_dashboard(authorization_header=authorization_header)
         else:
             page_content = f"<p>{self._DESCRIPTIONS[page_title]}</p>"
+
+        context = self._auth_service.resolve_context(authorization_header) if authorization_header else None
+        account_name = self._h(context.user.email) if context is not None else "Signed out"
+        shop_name = self._h(context.shop.name) if context is not None else "Pollen"
+        avatar = self._avatar_label(context.user.email if context is not None else "Pollen")
 
         return (
             "<!doctype html>"
@@ -916,20 +914,28 @@ class AppShell:
             "<nav aria-label='Primary'><ul>"
             f"{nav_links}"
             "</ul></nav>"
-            "<a class='bee-card' href='#help'><span class='bee'>🐝</span><span><strong>Need help?</strong><em>BeeBot Guide</em></span><span>›</span></a>"
+            "<a class='bee-card' href='/settings#help'><span class='bee'>🐝</span><span><strong>Need help?</strong><em>Open settings</em></span><span>›</span></a>"
             "</aside>"
             "<main id='main-content' class='workspace'>"
             "<header class='topbar'>"
             "<div class='page-heading'><p class='eyebrow'>Small seller workspace</p>"
             f"<h1>{page_title}</h1><p>{page_subtitles[page_title]}</p></div>"
-            "<form class='search' role='search'><span>⌕</span><input aria-label='Search' placeholder='Search orders, products, etc...' disabled></form>"
-            "<div class='user-tools'><button class='ghost-icon' aria-label='Notifications'><span class='notification-dot'>2</span>♧</button>"
-            "<span class='avatar'>KS</span><span class='account'><strong>Kate Smith</strong><small>Sunny Bee Co.</small></span><span aria-hidden='true'>⌄</span></div>"
+            "<form class='search' role='search' action='/orders' method='get'><span>⌕</span><input aria-label='Search' name='q' placeholder='Search orders, products, etc...'></form>"
+            "<div class='user-tools'><a class='ghost-icon' aria-label='Notifications' href='/#today-actions'>♧</a>"
+            f"<span class='avatar'>{avatar}</span><span class='account'><strong>{account_name}</strong><small>{shop_name}</small></span><span aria-hidden='true'>⌄</span></div>"
             "</header>"
             f"{page_content}"
             "</main></div>"
             "</body></html>"
         )
+
+    def _h(self, value: object) -> str:
+        return escape(str(value), quote=True)
+
+    def _avatar_label(self, value: str) -> str:
+        pieces = [piece for piece in value.replace("@", " ").replace(".", " ").split() if piece]
+        letters = "".join(piece[0] for piece in pieces[:2]).upper()
+        return self._h(letters or "P")
 
     def _metric_card(self, icon: str, label: str, value: str | int, tone: str = "gold", note: str = "") -> str:
         return (
@@ -946,143 +952,274 @@ class AppShell:
 
     def _render_today_dashboard(self, *, authorization_header: str) -> str:
         summary = self._today_summary_service.get_summary(authorization_header=authorization_header)
-        low_stock = max(summary["low_stock"], 2)
+        orders = self._order_service.list_orders(authorization_header=authorization_header)
+        products = self._product_service.list_products(authorization_header=authorization_header)
+        materials = self._material_service.list_materials(authorization_header=authorization_header)
+        batches = self._batch_service.list_batches(authorization_header=authorization_header)
+        money = self._money_summary_service.get_summary(authorization_header=authorization_header)
+
+        low_products = [product for product in products if product.is_low_stock]
+        low_materials = [material for material in materials if material.is_low_stock]
+        work_batches = [batch for batch in batches if batch.status in {"planned", "in-progress"}]
+        orders_to_pack = [order for order in orders if order.status in {"new", "ready_to_pack", "packed"}]
         empty_note = (
-            "<p class='visually-hidden'>No work is waiting right now. Create your first order or add inventory to begin.</p>"
-            if all(value == 0 for value in summary.values())
+            "<p>No work is waiting right now. Create your first order or add inventory to begin.</p>"
+            if not orders and not products and not materials and not batches
             else ""
         )
+        task_items: list[str] = []
+        for order in orders_to_pack[:3]:
+            task_items.append(
+                f"<li><span>Review order {self._h(order.order_id)}</span>"
+                f"<a class='outline small' href='/orders'>Open</a></li>"
+            )
+        for product in low_products[:2]:
+            task_items.append(
+                f"<li><span>Restock {self._h(product.name)}</span>"
+                f"<a class='outline small' href='/products-stock'>Open stock</a></li>"
+            )
+        for material in low_materials[:2]:
+            task_items.append(
+                f"<li><span>Add {self._h(material.name)} to the buy list</span>"
+                f"<a class='outline small' href='/make-buy#buy-list'>Open buy list</a></li>"
+            )
+        if not task_items:
+            task_items.append("<li><span>No urgent tasks yet.</span><a class='outline small' href='/orders'>Create order</a></li>")
+
+        stock_items = "".join(
+            f"<li><span class='thumb'>▧</span><strong>{self._h(item.name)}</strong>"
+            f"<span>{item.stock_on_hand} {self._h(getattr(item, 'unit', 'left'))}</span>"
+            f"<span class='pill high'>Low</span><b>›</b></li>"
+            for item in [*low_products, *low_materials][:4]
+        ) or "<li><strong>No low stock yet</strong><span>Add reorder points to unlock suggestions.</span></li>"
+
+        recent_rows = "".join(
+            f"<tr><td>{self._h(order.order_id)}</td><td>{self._h(order.source)}</td>"
+            f"<td>{self._badge(order.status.replace('_', ' ').title(), 'blue')}</td>"
+            "<td><a class='outline small' href='/orders'>Open</a></td></tr>"
+            for order in orders[:5]
+        ) or "<tr><td colspan='4'>No orders yet.</td></tr>"
+
         return (
             "<section class='metric-grid four'>"
-            f"{self._metric_card('▧', 'Orders to Pack', max(summary['orders_to_pack'], 3))}"
-            f"{self._metric_card('⚠', 'Low Stock Items', low_stock, 'alert')}"
-            f"{self._metric_card('⚒', 'Batches to Make', max(summary['batches_in_progress'], 2))}"
-            f"{self._metric_card('$', 'Estimated Profit', '$842', 'green', 'This month')}"
+            f"{self._metric_card('▧', 'Orders to Pack', len(orders_to_pack))}"
+            f"{self._metric_card('⚠', 'Low Stock Items', len(low_products) + len(low_materials), 'alert')}"
+            f"{self._metric_card('⚒', 'Batches to Make', len(work_batches))}"
+            f"{self._metric_card('$', 'Estimated Profit', self._format_currency(money['estimated_profit']), 'green', 'All time')}"
             "</section>"
             "<section class='dashboard-grid two-col'>"
-            "<article class='panel'><div class='panel-header'><h3>Today’s Tasks</h3><button class='outline'>Add Task <span>＋</span></button></div>"
-            f"{empty_note}<ul class='task-list'>"
-            "<li><input type='checkbox' aria-label='Pack Order #1042'><span>Pack Order #1042</span><span class='pill high'>High</span></li>"
-            "<li><input type='checkbox' aria-label='Make 8 Lavender Candles'><span>Make 8 Lavender Candles</span><span class='pill high'>High</span></li>"
-            "<li><input type='checkbox' aria-label='Order more soy wax'><span>Order more soy wax</span><span class='pill medium'>Medium</span></li>"
-            "<li><input type='checkbox' aria-label='Reply to customer note'><span>Reply to customer note on Order #1041</span><span class='pill medium'>Medium</span></li>"
-            "<li><input type='checkbox' aria-label='Update listing'><span>Update sold out mug listing</span><span class='pill low'>Low</span></li>"
-            "</ul><a class='text-link' href='/orders'>View all tasks ›</a></article>"
+            "<article class='panel' id='today-actions'><div class='panel-header'><h3>Today’s Tasks</h3><a class='outline' href='/orders'>Add Order ＋</a></div>"
+            f"{empty_note}<ul class='task-list'>{''.join(task_items)}</ul><a class='text-link' href='/orders'>View order queue ›</a></article>"
             "<article class='panel'><div class='panel-header'><h3>Low Stock &amp; Buy Soon</h3><a class='outline' href='/products-stock'>View all stock</a></div>"
-            "<ul class='media-list'>"
-            "<li><span class='thumb'>🕯</span><strong>Soy Wax</strong><span>1.2 kg left</span><span class='pill danger'>Buy soon</span><b>›</b></li>"
-            "<li><span class='thumb'>🟤</span><strong>Amber Jars</strong><span>8 left</span><span class='pill high'>Low</span><b>›</b></li>"
-            "<li><span class='thumb'>🎁</span><strong>Gift Boxes</strong><span>6 left</span><span class='pill high'>Low</span><b>›</b></li>"
-            "</ul></article></section>"
-            "<section class='panel wide'><div class='panel-header'><h3>Recent Orders</h3><div><button class='outline'>Add Order ＋</button><a class='primary' href='/orders'>View Orders</a></div></div>"
-            "<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>"
-            "<tr><td>#1042</td><td>Emily Johnson</td><td>Lavender Candle × 2</td><td><span class='status-badge badge-blue'>New</span></td><td>$42.00</td><td>›</td></tr>"
-            "<tr><td>#1041</td><td>Michael Brown</td><td>Candle Gift Set × 1</td><td><span class='status-badge badge-gold'>Ready to Pack</span></td><td>$38.50</td><td>›</td></tr>"
-            "<tr><td>#1040</td><td>Sarah Williams</td><td>Amber Jar Candle × 1</td><td><span class='status-badge badge-green'>Shipped</span></td><td>$25.00</td><td>›</td></tr>"
-            "<tr><td>#1039</td><td>David Lee</td><td>Mug – Bee Happy × 1</td><td><span class='status-badge badge-green'>Shipped</span></td><td>$18.00</td><td>›</td></tr>"
-            "</tbody></table><a class='text-link centered' href='/orders'>View all orders ›</a></section>"
+            f"<ul class='media-list'>{stock_items}</ul></article></section>"
+            "<section class='panel wide'><div class='panel-header'><h3>Recent Orders</h3><div><a class='outline' href='/orders#create-order'>Add Order ＋</a><a class='primary' href='/orders'>View Orders</a></div></div>"
+            f"<table><thead><tr><th>Order</th><th>Channel</th><th>Status</th><th></th></tr></thead><tbody>{recent_rows}</tbody></table></section>"
             "<section class='visually-hidden'><h3>Today summary</h3>"
             f"<span class='metric-value'>{summary['orders_to_pack']}</span><span class='metric-label'>Orders to pack</span>"
-            f"<span class='metric-value'>{sum(1 for product in self._product_service.list_products(authorization_header=authorization_header) if product.is_low_stock)}</span><span class='metric-label'>Low-stock products</span>"
+            f"<span class='metric-value'>{len(low_products)}</span><span class='metric-label'>Low-stock products</span>"
             "<h3>Today actions</h3><a href='/orders'>Pack and ship orders</a><a href='/products-stock'>Review low-stock products</a><a href='/make-buy'>Create a batch</a><a href='/make-buy'>Create a purchase</a><a href='/make-buy'>Open buy list</a><h3>Next steps</h3><a class='button-link' href='/orders'>Open highest-priority workflow</a></section>"
         )
 
     def _render_orders_dashboard(self, *, authorization_header: str) -> str:
         orders = self._order_service.list_orders(authorization_header=authorization_header)
-        status_labels = {"new": "New", "waiting_on_stock": "Waiting on stock", "ready_to_pack": "Ready to pack", "packed": "Packed", "shipped": "Shipped", "cancelled": "Cancelled"}
-        demo = [("#1042", "Emily Johnson", "Etsy", "Lavender Candle × 2", "New", "$42.00"), ("#1041", "Michael Brown", "Facebook", "Candle Gift Set × 1", "Ready to pack", "$38.50"), ("#1040", "Sarah Williams", "Etsy", "Amber Jar Candle × 1", "Packed", "$25.00"), ("#1039", "David Lee", "Facebook", "Mug – Bee Happy × 1", "Shipped", "$18.00"), ("#1038", "Jessica Miller", "Etsy", "Soy Wax Melts × 2", "Shipped", "$22.00"), ("#1037", "Amanda Taylor", "Facebook", "Gift Box × 1", "New", "$30.00")]
+        context = self._auth_service.resolve_context(authorization_header)
+        order_items = {
+            order.order_id: self._order_service._order_repository.list_items_for_order(  # noqa: SLF001
+                shop_id=context.shop.shop_id,
+                order_id=order.order_id,
+            )
+            if context is not None
+            else []
+            for order in orders
+        }
+        status_labels = {
+            "new": "New",
+            "waiting_on_stock": "Waiting on stock",
+            "ready_to_pack": "Ready to pack",
+            "packed": "Packed",
+            "shipped": "Shipped",
+            "cancelled": "Cancelled",
+        }
+        active_orders = [order for order in orders if order.status not in {"shipped", "cancelled"}]
+        ready_orders = [order for order in orders if order.status in {"ready_to_pack", "packed"}]
+        shipped_orders = [order for order in orders if order.status == "shipped"]
         rows = "".join(
-            f"<tr><td>{order_id}</td><td>{customer}</td><td><span class='channel'>{channel[0]}</span> {channel}</td><td>{items}</td><td>{self._badge(status, 'blue' if status == 'New' else 'green' if status in {'Packed','Shipped'} else 'gold')}</td><td>{total}</td><td>›</td></tr>"
-            for order_id, customer, channel, items, status, total in demo
-        )
-        dynamic_rows = "".join(
             "<tr>"
-            f"<td>{o.order_id}</td><td>{o.customer_name}</td><td>{o.source}</td><td>Manual order</td><td><span class='status-badge'>{status_labels.get(o.status, o.status)}</span></td><td>—</td>"
-            "<td><form method='post' action='/orders' style='display:inline'><input type='hidden' name='action' value='pack'>"
-            f"<input type='hidden' name='order_id' value='{o.order_id}'><button type='submit'>Mark packed</button></form> "
+            f"<td>{self._h(order.order_id)}</td><td>{self._h(order.customer_name)}</td>"
+            f"<td><span class='channel'>{self._h(order.source[:1].upper() or 'M')}</span> {self._h(order.source)}</td>"
+            f"<td>{self._h(order_items[order.order_id][0].product_sku if order_items[order.order_id] else 'No items')} × {order_items[order.order_id][0].quantity if order_items[order.order_id] else 0}</td>"
+            f"<td>{self._badge(status_labels.get(order.status, order.status), 'green' if order.status in {'packed', 'shipped'} else 'gold' if order.status == 'ready_to_pack' else 'blue')}</td>"
+            "<td>—</td><td>"
+            "<form method='post' action='/orders' style='display:inline'><input type='hidden' name='action' value='pack'>"
+            f"<input type='hidden' name='order_id' value='{self._h(order.order_id)}'><button type='submit'>Mark packed</button></form> "
             "<form method='post' action='/orders' style='display:inline'><input type='hidden' name='action' value='ship'>"
-            f"<input type='hidden' name='order_id' value='{o.order_id}'><button type='submit'>Mark shipped</button></form> "
+            f"<input type='hidden' name='order_id' value='{self._h(order.order_id)}'><button type='submit'>Mark shipped</button></form> "
             "<form method='post' action='/orders' style='display:inline'><input type='hidden' name='action' value='cancel'>"
-            f"<input type='hidden' name='order_id' value='{o.order_id}'><button type='submit'>Cancel order</button></form></td></tr>"
-            for o in orders
+            f"<input type='hidden' name='order_id' value='{self._h(order.order_id)}'><button type='submit'>Cancel order</button></form></td></tr>"
+            for order in orders
+        ) or "<tr><td colspan='7'>No orders yet. Create an order to start your shipping queue.</td></tr>"
+        queue = "".join(
+            "<li>"
+            f"<strong>{self._h(order.order_id)}</strong><span>{self._h(order.customer_name)}</span>"
+            "<form method='post' action='/orders'><input type='hidden' name='action' value='pack'>"
+            f"<input type='hidden' name='order_id' value='{self._h(order.order_id)}'><button class='outline' type='submit'>Pack</button></form></li>"
+            for order in ready_orders[:4]
+        ) or "<li><strong>No packing queue yet</strong><span>Ready orders appear here.</span><a class='outline small' href='#create-order'>Add order</a></li>"
+        legacy_create = (
+            "<section class='panel wide' id='create-order'><h3>Order actions</h3><p>Create and update orders from one place.</p>"
+            "<h3>Create order</h3><form method='post' action='/orders'>"
+            "<label>Customer <input name='customer_name' required></label>"
+            "<label>Product SKU <input name='product_sku' required></label>"
+            "<label>Quantity <input type='number' min='1' name='quantity' required></label>"
+            "<button type='submit'>Create order</button></form><h3>Order queue</h3></section>"
         )
-        empty = "<p>No orders yet. Create an order to start your shipping queue.</p>" if not orders else ""
         return (
             "<section class='metric-grid three'>"
-            f"{self._metric_card('▧', 'New', 4)}{self._metric_card('▧', 'Ready to Pack', 3)}{self._metric_card('▰', 'Shipped Today', 2, 'green')}"
+            f"{self._metric_card('▧', 'New', sum(1 for order in orders if order.status == 'new'))}"
+            f"{self._metric_card('▧', 'Ready to Pack', len(ready_orders))}"
+            f"{self._metric_card('▰', 'Shipped', len(shipped_orders), 'green')}"
             "</section><section class='dashboard-grid orders-layout'>"
-            "<article class='panel'><div class='toolbar'><div><button class='tab active'>All</button><button class='tab'>New</button><button class='tab'>Ready to Pack</button><button class='tab'>Shipped</button></div><div><button class='outline'>Add Order ＋</button><button class='primary'>⇧ Import Orders</button></div></div>"
-            f"{empty}<table><thead><tr><th>Order</th><th>Customer</th><th>Channel</th><th>Items</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>{dynamic_rows}{rows}</tbody></table><a class='text-link' href='/orders'>View all orders ›</a></article>"
-            "<aside class='panel side-panel'><h3>Packing Queue</h3><p>Orders ready for your attention.</p><ul class='queue-list'>"
-            "<li><strong>#1041</strong><span>Michael Brown</span><button class='outline'>Pack</button></li><li><strong>#1037</strong><span>Amanda Taylor</span><button class='outline'>Pack</button></li><li><strong>#1042</strong><span>Emily Johnson</span><button class='outline'>Pack</button></li><li><strong>#1036</strong><span>Rachel Green</span><button class='outline muted'>View</button></li>"
-            "</ul><a class='text-link' href='/orders'>View full queue ›</a></aside></section>"
-            "<section class='visually-hidden'><h3>Order actions</h3><p>Create and update orders from one place.</p><h3>Create order</h3><form method='post' action='/orders'><label>Customer <input name='customer_name' required></label><label>Product SKU <input name='product_sku' required></label><label>Quantity <input type='number' min='1' name='quantity' required></label><button type='submit'>Create order</button></form><h3>Order queue</h3></section>"
+            "<article class='panel'><div class='toolbar'><div><a class='tab active' href='/orders'>All</a><a class='tab' href='/orders?status=new'>New</a><a class='tab' href='/orders?filter=ready-to-pack'>Ready to Pack</a><a class='tab' href='/orders?status=shipped'>Shipped</a></div><div><a class='outline' href='#create-order'>Add Order ＋</a><a class='primary' href='/settings#sales-channels'>⇧ Import Orders</a></div></div>"
+            f"<table><thead><tr><th>Order</th><th>Customer</th><th>Channel</th><th>Items</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>{rows}</tbody></table></article>"
+            f"<aside class='panel side-panel'><h3>Packing Queue</h3><p>{len(active_orders)} active orders need attention.</p><ul class='queue-list'>{queue}</ul><a class='text-link' href='/orders'>View full queue ›</a></aside></section>"
+            f"{legacy_create}"
         )
 
-    def _render_products_dashboard(self, *, authorization_header: str, view: str = "active", edit_product_id: str | None = None, query: dict[str, list[str]] | None = None) -> str:
-        legacy = self._render_products_page(authorization_header=authorization_header, view=view, edit_product_id=edit_product_id, query=query)
+    def _render_products_dashboard(
+        self,
+        *,
+        authorization_header: str,
+        view: str = "active",
+        edit_product_id: str | None = None,
+        query: dict[str, list[str]] | None = None,
+    ) -> str:
+        legacy = self._render_products_page(
+            authorization_header=authorization_header,
+            view=view,
+            edit_product_id=edit_product_id,
+            query=query,
+        )
         products = self._product_service.list_products(authorization_header=authorization_header)
         archived = self._product_service.list_products(authorization_header=authorization_header, include_archived=True)
         archived_only = [product for product in archived if not product.is_active]
         display_products = products if view in {"active", "all"} else archived_only
-        product_rows = "".join(f"<tr><td><span class='thumb'>🕯</span> {p.name}</td><td>{p.sku}</td><td>{p.stock_on_hand}</td><td>{max(p.stock_on_hand + 6, 8)}</td><td>{self._money(p.sale_price)}</td><td>{self._badge('Low' if p.is_low_stock else 'In Stock', 'gold' if p.is_low_stock else 'green')}</td></tr>" for p in display_products)
-        demo_rows = "".join([
-            "<tr><td><span class='thumb'>🕯</span> Lavender Candle</td><td>LC-001</td><td>24</td><td>30</td><td>$21.00</td><td><span class='status-badge badge-green'>In Stock</span></td></tr>",
-            "<tr><td><span class='thumb'>🎁</span> Candle Gift Set</td><td>CGS-001</td><td>8</td><td>12</td><td>$38.50</td><td><span class='status-badge badge-green'>In Stock</span></td></tr>",
-            "<tr><td><span class='thumb'>🟤</span> Amber Jar Candle</td><td>AJC-001</td><td>5</td><td>10</td><td>$18.00</td><td><span class='status-badge badge-gold'>Low</span></td></tr>",
-            "<tr><td><span class='thumb'>☕</span> Bee Happy Mug</td><td>MUG-001</td><td>0</td><td>15</td><td>$16.00</td><td><span class='status-badge badge-red'>Sold Out</span></td></tr>",
-            "<tr><td><span class='thumb'>⬜</span> Wax Melt Pack</td><td>WMP-001</td><td>3</td><td>8</td><td>$10.00</td><td><span class='status-badge badge-gold'>Low</span></td></tr>",
-            "<tr><td><span class='thumb'>📦</span> Gift Box Set</td><td>GBS-001</td><td>6</td><td>20</td><td>$4.50</td><td><span class='status-badge badge-green'>In Stock</span></td></tr>",
-        ])
-        empty = "<p>No products yet. Add your first product to start tracking stock.</p>" if not products and not archived_only else ""
-        demo_rows = demo_rows if view in {"active", "all"} else ""
+        low_products = [product for product in products if product.is_low_stock]
+        materials = self._material_service.list_materials(authorization_header=authorization_header)
+        product_rows = "".join(
+            f"<tr><td><span class='thumb'>▧</span> {self._h(product.name)}</td><td>{self._h(product.sku)}</td>"
+            f"<td>{product.stock_on_hand}</td><td>{product.reorder_point}</td><td>{self._money(product.sale_price)}</td>"
+            f"<td>{self._badge('Low' if product.is_low_stock else 'In Stock', 'gold' if product.is_low_stock else 'green')}</td></tr>"
+            for product in display_products
+        ) or "<tr><td colspan='6'>No products yet. Add your first product to start tracking stock.</td></tr>"
+        low_list = "".join(
+            f"<li><span class='thumb'>▧</span><strong>{self._h(product.name)}</strong><small>{product.stock_on_hand} left</small><span class='pill high'>Low</span><b>›</b></li>"
+            for product in low_products[:4]
+        ) or "<li><strong>No low stock products</strong><small>Products below reorder point appear here.</small></li>"
+        material_rows = "".join(
+            f"<tr><td>{self._h(material.name)}</td><td>{material.stock_on_hand} {self._h(material.unit)}</td><td>{material.reorder_point}</td>"
+            f"<td>{self._badge('Low' if material.is_low_stock else 'In Stock', 'gold' if material.is_low_stock else 'green')}</td></tr>"
+            for material in materials[:5]
+        ) or "<tr><td colspan='4'>No materials yet.</td></tr>"
         archived_label = "<section><h3>Archived products</h3></section>" if view in {"archived", "all"} and archived_only else ""
         return (
             "<section class='metric-grid three'>"
-            f"{self._metric_card('▧', 'Products', max(len(products), 18))}{self._metric_card('⚠', 'Low Stock', max(sum(1 for p in products if p.is_low_stock), 3), 'alert')}{self._metric_card('⚒', 'Can Make More', 12)}"
+            f"{self._metric_card('▧', 'Products', len(products))}"
+            f"{self._metric_card('⚠', 'Low Stock', len(low_products), 'alert')}"
+            f"{self._metric_card('⚒', 'Archived', len(archived_only))}"
             "</section><section class='dashboard-grid products-layout'>"
-            "<article class='panel'><div class='panel-header'><h3>Products</h3><div><button class='outline'>Add Product ＋</button><button class='primary'>Adjust Stock</button></div></div>"
-            f"{empty}<table><thead><tr><th>Product</th><th>SKU</th><th>In Stock</th><th>Can Make</th><th>Price</th><th>Status</th></tr></thead><tbody>{product_rows}{demo_rows}</tbody></table><a class='text-link' href='/products-stock'>View all products ›</a></article>"
-            "<aside class='stack'><article class='panel'><div class='panel-header'><h3>Low Stock</h3><a class='outline' href='/products-stock'>View all</a></div><ul class='media-list compact'>"
-            "<li><span class='thumb'>🟤</span><strong>Amber Jar Candle</strong><small>5 left</small><span class='pill high'>Low</span><b>›</b></li><li><span class='thumb'>⬜</span><strong>Wax Melt Pack</strong><small>3 left</small><span class='pill high'>Low</span><b>›</b></li><li><span class='thumb'>🎁</span><strong>Candle Gift Set</strong><small>8 left</small><span class='pill danger'>Buy soon</span><b>›</b></li><li><span class='thumb'>📦</span><strong>Gift Box Set</strong><small>6 left</small><span class='pill danger'>Buy soon</span><b>›</b></li></ul><a class='text-link'>View all low stock ›</a></article>"
-            "<article class='panel'><div class='panel-header'><h3>Materials</h3><a class='outline'>View Materials</a></div><table><thead><tr><th>Material</th><th>On Hand</th><th>Reorder Point</th><th>Status</th></tr></thead><tbody><tr><td>Soy Wax</td><td>12.5 kg</td><td>5 kg</td><td><span class='status-badge badge-green'>In Stock</span></td></tr><tr><td>Amber Jars</td><td>36</td><td>20</td><td><span class='status-badge badge-green'>In Stock</span></td></tr><tr><td>Wicks</td><td>220</td><td>100</td><td><span class='status-badge badge-green'>In Stock</span></td></tr><tr><td>Gift Boxes</td><td>18</td><td>20</td><td><span class='status-badge badge-gold'>Low</span></td></tr></tbody></table><a class='text-link'>View all materials ›</a></article></aside></section>"
-            f"<section class='visually-hidden'>{legacy}{archived_label}<th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th></section>"
+            "<article class='panel'><div class='panel-header'><h3>Products</h3><div><a class='outline' href='#products-workflow'>Add Product ＋</a><a class='primary' href='#products-workflow'>Adjust Stock</a></div></div>"
+            f"<table><thead><tr><th>Product</th><th>SKU</th><th>In Stock</th><th>Reorder Point</th><th>Price</th><th>Status</th></tr></thead><tbody>{product_rows}</tbody></table><a class='text-link' href='#products-workflow'>Manage product records ›</a></article>"
+            "<aside class='stack'><article class='panel'><div class='panel-header'><h3>Low Stock</h3><a class='outline' href='/products-stock'>View all</a></div>"
+            f"<ul class='media-list compact'>{low_list}</ul></article>"
+            "<article class='panel'><div class='panel-header'><h3>Materials</h3><a class='outline' href='/make-buy'>View Materials</a></div>"
+            f"<table><thead><tr><th>Material</th><th>On Hand</th><th>Reorder Point</th><th>Status</th></tr></thead><tbody>{material_rows}</tbody></table></article></aside></section>"
+            f"<section class='panel wide workflow-panel' id='products-workflow'>{legacy}{archived_label}</section>"
         )
 
-    def _render_make_buy_dashboard(self, *, authorization_header: str, view: str = "active", edit_material_id: str | None = None, query: dict[str, list[str]] | None = None) -> str:
-        legacy = self._render_materials_page(authorization_header=authorization_header, view=view, edit_material_id=edit_material_id, query=query)
+    def _render_make_buy_dashboard(
+        self,
+        *,
+        authorization_header: str,
+        view: str = "active",
+        edit_material_id: str | None = None,
+        query: dict[str, list[str]] | None = None,
+    ) -> str:
+        legacy = self._render_materials_page(
+            authorization_header=authorization_header,
+            view=view,
+            edit_material_id=edit_material_id,
+            query=query,
+        )
+        materials = self._material_service.list_materials(authorization_header=authorization_header)
+        products = self._product_service.list_products(authorization_header=authorization_header)
+        batches = self._batch_service.list_batches(authorization_header=authorization_header)
+        purchases = self._material_service.list_purchases(authorization_header=authorization_header)
+        low_materials = [material for material in materials if material.is_low_stock]
+        active_batches = [batch for batch in batches if batch.status != "complete"]
+        product_by_id = {product.product_id: product for product in products}
+        batch_rows = "".join(
+            "<tr>"
+            f"<td><span class='thumb'>▧</span> {self._h(product_by_id.get(batch.product_id).name if product_by_id.get(batch.product_id) else batch.product_id)}</td>"
+            f"<td>{batch.quantity}</td><td>{self._badge(batch.status.replace('-', ' ').title(), 'green' if batch.status == 'in-progress' else 'gold')}</td><td>"
+            "<form method='post' action='/make-buy' style='display:inline'><input type='hidden' name='action' value='start_batch'>"
+            f"<input type='hidden' name='batch_id' value='{self._h(batch.batch_id)}'><button class='primary small' type='submit'>Start Batch</button></form></td></tr>"
+            for batch in active_batches[:6]
+        ) or "<tr><td colspan='4'>No batches planned yet.</td></tr>"
+        buy_rows = "".join(
+            f"<tr><td><span class='thumb'>▧</span> {self._h(material.name)}</td><td>{max(material.reorder_point - material.stock_on_hand, 0)} {self._h(material.unit)}</td>"
+            f"<td>—</td><td>{self._badge('Low', 'gold')}</td></tr>"
+            for material in low_materials[:6]
+        ) or "<tr><td colspan='4'>No low materials right now. Add materials and reorder points to unlock suggestions.</td></tr>"
+        purchase_rows = "".join(
+            "<tr>"
+            f"<td>{self._h(purchase.purchase_id)}</td><td>{self._h(purchase.supplier or '-')}</td>"
+            f"<td>{self._h(purchase.expected_date or '-')}</td><td>{self._badge(purchase.status, 'green' if purchase.status == 'Received' else 'blue')}</td><td>"
+            "<form method='post' action='/make-buy' style='display:inline'><input type='hidden' name='action' value='receive_purchase'>"
+            f"<input type='hidden' name='purchase_id' value='{self._h(purchase.purchase_id)}'><button class='outline muted' type='submit'>Mark Received</button></form></td></tr>"
+            for purchase in purchases
+        ) or "<tr><td colspan='5'>No purchases yet.</td></tr>"
         return (
             "<section class='metric-grid three'>"
-            f"{self._metric_card('⚒', 'Batches to Make', 2)}{self._metric_card('⚠', 'Materials Missing', 2, 'alert')}{self._metric_card('▰', 'Purchases Incoming', 1, 'green')}"
+            f"{self._metric_card('⚒', 'Batches to Make', len(active_batches))}"
+            f"{self._metric_card('⚠', 'Materials Missing', len(low_materials), 'alert')}"
+            f"{self._metric_card('▰', 'Purchases Incoming', sum(1 for purchase in purchases if purchase.status != 'Received'), 'green')}"
             "</section><section class='dashboard-grid two-col'>"
-            "<article class='panel'><div class='panel-header'><h3>Make Next</h3><button class='outline'>Plan Batch ＋</button></div><table><thead><tr><th>Product</th><th>Quantity</th><th>Materials Ready</th><th></th></tr></thead><tbody>"
-            "<tr><td><span class='thumb'>🕯</span> Lavender Candle</td><td>8</td><td><span class='ready'>✓ Ready</span></td><td><button class='primary small'>Start Batch</button></td></tr><tr><td><span class='thumb'>⬜</span> Wax Melt Pack</td><td>12</td><td><span class='ready'>✓ Ready</span></td><td><button class='primary small'>Start Batch</button></td></tr><tr><td><span class='thumb'>🎁</span> Gift Box Set</td><td>4</td><td><span class='ready'>✓ Ready</span></td><td><button class='primary small'>Start Batch</button></td></tr>"
-            "</tbody></table><a class='text-link'>View all batches ›</a></article>"
-            "<article class='panel'><div class='panel-header'><h3>Buy List</h3><button class='outline'>Create Purchase ＋</button></div><table><thead><tr><th>Material</th><th>Suggested Qty</th><th>Supplier</th><th>Status</th></tr></thead><tbody>"
-            "<tr><td><span class='thumb'>⬜</span> Soy Wax</td><td>2 kg</td><td>Wax Supplies Co.</td><td><span class='status-badge badge-gold'>Low</span></td></tr><tr><td><span class='thumb'>🟤</span> Amber Jars</td><td>24 pcs</td><td>Glass &amp; More</td><td><span class='status-badge badge-gold'>Low</span></td></tr><tr><td><span class='thumb'>〽</span> Wicks</td><td>100 pcs</td><td>Candle Co.</td><td><span class='status-badge badge-red'>Out</span></td></tr><tr><td><span class='thumb'>📦</span> Gift Boxes</td><td>20 pcs</td><td>Boxed Up</td><td><span class='status-badge badge-gold'>Low</span></td></tr>"
-            "</tbody></table><a class='text-link'>View full list ›</a></article></section>"
-            "<section class='panel wide'><div class='panel-header'><h3>Incoming Purchases</h3><button class='outline'>✓ Mark Received</button></div><table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead><tbody><tr><td>PO-1002</td><td>Wax Supplies Co.</td><td>▣ May 22, 2025</td><td><span class='status-badge badge-blue'>Ordered</span></td><td><button class='outline muted'>View</button></td></tr><tr><td>PO-1001</td><td>Candle Co.</td><td>▣ May 18, 2025</td><td><span class='status-badge badge-green'>Received</span></td><td><button class='outline muted'>View</button></td></tr></tbody></table><a class='text-link'>View all purchases ›</a></section>"
-            f"<section class='visually-hidden'>{legacy}</section>"
+            "<article class='panel'><div class='panel-header'><h3>Make Next</h3><a class='outline' href='#make-buy-workflow'>Plan Batch ＋</a></div><table><thead><tr><th>Product</th><th>Quantity</th><th>Status</th><th></th></tr></thead>"
+            f"<tbody>{batch_rows}</tbody></table><a class='text-link' href='#make-buy-workflow'>View all batches ›</a></article>"
+            "<article class='panel' id='buy-list'><div class='panel-header'><h3>Buy List</h3><a class='outline' href='#make-buy-workflow'>Create Purchase ＋</a></div><table><thead><tr><th>Material</th><th>Suggested Qty</th><th>Supplier</th><th>Status</th></tr></thead>"
+            f"<tbody>{buy_rows}</tbody></table><a class='text-link' href='#make-buy-workflow'>View full list ›</a></article></section>"
+            "<section class='panel wide'><div class='panel-header'><h3>Incoming Purchases</h3><a class='outline' href='#make-buy-workflow'>Create or Receive</a></div><table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead>"
+            f"<tbody>{purchase_rows}</tbody></table></section>"
+            f"<section class='panel wide workflow-panel' id='make-buy-workflow'>{legacy}</section>"
         )
 
     def _render_money_dashboard(self, *, authorization_header: str) -> str:
         summary = self._money_summary_service.get_summary(authorization_header=authorization_header)
+        products = self._product_service.list_products(authorization_header=authorization_header)
+        orders = self._order_service.list_orders(authorization_header=authorization_header)
         if summary["shipped_item_count"] == 0:
             empty = "<p>No money data yet. Ship orders with product pricing to unlock estimated totals.</p><a class='button-link' href='/orders'>Ship orders first</a>"
-            sales, costs, profit = "$2,480", "$904", "$1,576"
         else:
             empty = ""
-            sales = self._format_currency(summary["estimated_revenue"])
-            costs = self._format_currency(summary["estimated_cost"])
-            profit = self._format_currency(summary["estimated_profit"])
+        rows = "".join(
+            f"<tr><td>{self._h(order.order_id)}</td><td>Order</td><td>{self._h(order.customer_name)}</td><td>Estimated after shipment</td><td><a class='outline small' href='/orders'>Open</a></td></tr>"
+            for order in orders[:5]
+        ) or "<tr><td colspan='5'>No transactions yet.</td></tr>"
+        profit_rows = "".join(
+            f"<li><span class='thumb'>▧</span><strong>{self._h(product.name)}</strong><b>{self._format_currency(product.estimated_profit_per_sale)}</b></li>"
+            for product in products[:5]
+        ) or "<li><strong>No product pricing yet</strong><b>$0.00</b></li>"
         return (
             "<section class='metric-grid four'>"
-            f"{self._metric_card('$', 'Sales', sales, 'green', 'This month')}{self._metric_card('▤', 'Fees', '$214', 'gold', 'This month')}{self._metric_card('▧', 'Material Costs', costs, 'peach', 'This month')}{self._metric_card('↗', 'Estimated Profit', profit, 'green', 'This month')}"
+            f"{self._metric_card('$', 'Sales', self._format_currency(summary['estimated_revenue']), 'green', 'Estimated')}"
+            f"{self._metric_card('▤', 'Fees', self._format_currency(0), 'gold', 'Not tracked yet')}"
+            f"{self._metric_card('▧', 'Material Costs', self._format_currency(summary['estimated_cost']), 'peach', 'Estimated')}"
+            f"{self._metric_card('↗', 'Estimated Profit', self._format_currency(summary['estimated_profit']), 'green', 'Estimated')}"
             "</section><section class='dashboard-grid money-layout'>"
-            f"<article class='panel chart-panel'><h3>This Month</h3>{empty}<div class='legend'><span class='sales'>Sales</span><span class='costs'>Costs</span></div><div class='bar-chart'><div><i style='height:48%'></i><b style='height:17%'></b><span>Week 1<small>May 1 – 7</small></span></div><div><i style='height:64%'></i><b style='height:20%'></b><span>Week 2<small>May 8 – 14</small></span></div><div><i style='height:70%'></i><b style='height:22%'></b><span>Week 3<small>May 15 – 21</small></span></div><div><i style='height:62%'></i><b style='height:17%'></b><span>Week 4<small>May 22 – 31</small></span></div></div></article>"
-            "<div class='money-actions'><button class='outline'>Add Expense ＋</button><button class='primary'>View Reports</button><p>* All values are estimated.</p></div></section>"
-            "<section class='dashboard-grid two-col bottom-grid'><article class='panel'><h3>Recent Transactions</h3><table><thead><tr><th>Date</th><th>Type</th><th>Note</th><th>Amount</th><th></th></tr></thead><tbody><tr><td>May 28, 2024</td><td>↓ Income</td><td>Etsy payout</td><td>$542.30</td><td>›</td></tr><tr><td>May 27, 2024</td><td>↑ Expense</td><td>Material purchase – CandleScience</td><td>-$128.64</td><td>›</td></tr><tr><td>May 26, 2024</td><td>↑ Expense</td><td>Shipping cost – USPS</td><td>-$18.75</td><td>›</td></tr><tr><td>May 24, 2024</td><td>↓ Income</td><td>Facebook sale</td><td>$76.00</td><td>›</td></tr><tr><td>May 23, 2024</td><td>↑ Expense</td><td>Packaging supplies</td><td>-$34.21</td><td>›</td></tr></tbody></table><a class='text-link'>View all transactions ›</a></article>"
-            "<article class='panel'><div class='panel-header'><h3>Top Product Profit</h3><small>Est. profit per unit</small></div><ul class='profit-list'><li><span class='thumb'>🕯</span><strong>Lavender Candle</strong><b>$8.35</b></li><li><span class='thumb'>🎁</span><strong>Candle Gift Set</strong><b>$12.40</b></li><li><span class='thumb'>⬜</span><strong>Wax Melt Pack</strong><b>$6.10</b></li><li><span class='thumb'>☕</span><strong>Bee Happy Mug</strong><b>$5.25</b></li></ul><a class='text-link'>View all products ›</a></article></section>"
+            f"<article class='panel chart-panel'><h3>This Month</h3>{empty}<div class='legend'><span class='sales'>Sales</span><span class='costs'>Costs</span></div><div class='bar-chart'><div><i style='height:0%'></i><b style='height:0%'></b><span>Week 1<small>No data</small></span></div><div><i style='height:0%'></i><b style='height:0%'></b><span>Week 2<small>No data</small></span></div><div><i style='height:0%'></i><b style='height:0%'></b><span>Week 3<small>No data</small></span></div><div><i style='height:0%'></i><b style='height:0%'></b><span>Week 4<small>No data</small></span></div></div></article>"
+            "<div class='money-actions'><a class='outline' href='/make-buy#create-purchase'>Add Expense ＋</a><a class='primary' href='/money'>View Reports</a><p>* All values are estimated from recorded products and shipped orders.</p></div></section>"
+            f"<section class='dashboard-grid two-col bottom-grid'><article class='panel'><h3>Recent Transactions</h3><table><thead><tr><th>Record</th><th>Type</th><th>Note</th><th>Amount</th><th></th></tr></thead><tbody>{rows}</tbody></table></article>"
+            f"<article class='panel'><div class='panel-header'><h3>Top Product Profit</h3><small>Est. profit per unit</small></div><ul class='profit-list'>{profit_rows}</ul><a class='text-link' href='/products-stock'>View all products ›</a></article></section>"
             "<section class='visually-hidden'><h3>Money overview</h3>"
             f"<span class='metric-value'>{summary['shipped_order_count']}</span><span class='metric-label'>Shipped orders</span>"
             f"<span class='metric-value'>{summary['shipped_item_count']}</span><span class='metric-label'>Items shipped</span>"
@@ -1092,15 +1229,20 @@ class AppShell:
             "<h3>Estimated profit and cost</h3><h3>Next steps</h3></section>"
         )
 
-    def _render_settings_dashboard(self) -> str:
+    def _render_settings_dashboard(self, *, authorization_header: str) -> str:
+        context = self._auth_service.resolve_context(authorization_header)
+        shop_name = self._h(context.shop.name) if context is not None else "Your shop"
+        owner_email = self._h(context.user.email) if context is not None else "Not signed in"
         return (
             "<section class='metric-grid three'>"
-            f"{self._metric_card('∪', 'Connected Channels', 2)}{self._metric_card('♙', 'Team Members', 1)}{self._metric_card('♧', 'Alerts Enabled', 3)}"
+            f"{self._metric_card('∪', 'Connected Channels', 0)}{self._metric_card('♙', 'Team Members', 1)}{self._metric_card('♧', 'Alerts Enabled', 0)}"
             "</section><section class='dashboard-grid two-col'>"
-            "<article class='panel'><div class='panel-header'><h3>Shop Details</h3><button class='outline'>✎ Edit</button></div><dl class='details-list'><dt>Shop Name</dt><dd>Sunny Bee Co.</dd><dt>Owner Name</dt><dd>Kate Smith</dd><dt>Email</dt><dd>kate@sunnybeeco.com</dd><dt>Currency</dt><dd>USD (US Dollar)</dd><dt>Time Zone</dt><dd>(GMT-05:00) Eastern Time (ET)</dd></dl></article>"
-            "<article class='panel'><h3>Sales Channels</h3><p>Connect your shop to sell in more places.</p><ul class='channel-list'><li><span class='channel-logo etsy'>E</span><span><strong>Etsy</strong><small>sunnybeeco.etsy.com</small></span><span class='status-badge badge-green'>Connected</span><button class='outline muted'>Manage</button></li><li><span class='channel-logo fb'>f</span><span><strong>Facebook Marketplace</strong><small>Sunny Bee Co.</small></span><span class='status-badge badge-blue'>Manual</span><button class='outline'>Connect</button></li></ul><p class='info'>ⓘ Integrations are basic and easy to set up.</p></article></section>"
-            "<section class='panel wide'><h3>Notifications &amp; Preferences</h3><p>Choose what updates you want to receive.</p><ul class='pref-list'><li><span class='metric-icon small-icon'>⚠</span><span><strong>Low stock alerts</strong><small>Get notified when items are running low.</small></span><span class='toggle on'></span></li><li><span class='metric-icon small-icon'>✉</span><span><strong>Daily summary email</strong><small>Receive a daily email with your sales and order highlights.</small></span><span class='toggle on'></span></li><li><span class='metric-icon small-icon'>▧</span><span><strong>Order notifications</strong><small>Get notified when a new order is placed.</small></span><span class='toggle on'></span></li></ul><div class='form-actions'><button class='outline'>♙ Invite Helper</button><button class='primary'>Save Changes</button></div></section>"
-            "<section class='visually-hidden'><h3>Shop settings</h3><p>Keep your shop details current so orders and labels stay accurate.</p><p class='coming-soon'>Settings forms are coming soon.</p><h3>Sales channels</h3><p>No connected sales channels yet. Add one when you are ready to import orders.</p><p class='coming-soon'>Channel connections are coming soon.</p><h3>Next steps</h3></section>"
+            "<article class='panel' id='shop-details'><div class='panel-header'><h3>Shop Details</h3><a class='outline' href='#shop-settings'>✎ Edit</a></div>"
+            f"<dl class='details-list'><dt>Shop Name</dt><dd>{shop_name}</dd><dt>Owner Email</dt><dd>{owner_email}</dd><dt>Currency</dt><dd>Not configured</dd><dt>Time Zone</dt><dd>Not configured</dd></dl></article>"
+            "<article class='panel' id='sales-channels'><h3>Sales Channels</h3><p>Connect your shop to sell in more places.</p>"
+            "<ul class='channel-list'><li><span class='channel-logo etsy'>E</span><span><strong>Etsy</strong><small>Not connected</small></span><span class='status-badge badge-gold'>Not connected</span><a class='outline' href='#shop-settings'>Connect</a></li>"
+            "<li><span class='channel-logo fb'>f</span><span><strong>Facebook Marketplace</strong><small>Not connected</small></span><span class='status-badge badge-gold'>Not connected</span><a class='outline' href='#shop-settings'>Connect</a></li></ul><p class='info'>ⓘ Integrations are basic and easy to set up.</p></article></section>"
+            "<section class='panel wide' id='shop-settings'><h3>Shop settings</h3><p>Keep your shop details current so orders and labels stay accurate.</p><p class='coming-soon'>Settings forms are coming soon.</p><h3>Sales channels</h3><p>No connected sales channels yet. Add one when you are ready to import orders.</p><p class='coming-soon'>Channel connections are coming soon.</p><h3>Next steps</h3></section>"
         )
 
     def _render_styles(self) -> str:
