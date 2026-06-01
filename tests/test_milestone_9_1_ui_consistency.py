@@ -75,14 +75,19 @@ def test_make_buy_page_uses_beginner_friendly_sections_and_empty_state_guidance(
     response = app.get("/make-buy", authorization_header=header)
 
     assert response.status_code == 200
-    assert "id='add-material-dialog-title'>Add material</h3>" in response.body
+    assert "Batches to Make" in response.body
+    assert "Materials Missing" in response.body
+    assert "Purchases Incoming" in response.body
     assert "id='plan-batch-dialog-title'>Plan a batch</h3>" in response.body
-    assert "href='#add-material-dialog'" in response.body
     assert "href='#plan-batch-dialog'" in response.body
-    assert "<button class='primary' type='submit'>Save material</button>" in response.body
+    assert "href='#create-purchase-dialog'" in response.body
     assert "<button class='primary' type='submit'>Save batch plan</button>" in response.body
-    assert "No low materials right now. Add materials and reorder points to unlock suggestions." in response.body
+    assert "No materials missing right now. Low materials will appear here when it is time to restock." in response.body
     assert "<button class='primary' type='submit'>Save purchase</button>" in response.body
+    assert "Buy list suggestions" not in response.body
+    assert "Product recipes" not in response.body
+    assert "Inventory movements" not in response.body
+    assert "Activity log" not in response.body
 
 
 def test_money_page_uses_beginner_friendly_consistency_sections_and_empty_state() -> None:
@@ -185,7 +190,7 @@ def test_workflow_dialog_forms_use_polished_controls_and_spaced_actions() -> Non
     assert "width:100%;box-sizing:border-box;min-height:2.45rem" in combined
     assert ".modal-card .dialog-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:1rem" in combined
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save product</button>" in products
-    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>" in make_buy
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>" not in make_buy
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save batch plan</button>" in make_buy
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save purchase</button>" in make_buy
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Create order</button>" in orders
@@ -207,6 +212,7 @@ def test_dashboard_primary_controls_are_links_or_real_post_forms() -> None:
     assert "id='add-product-dialog' role='dialog'" in products
     assert "href='#plan-batch-dialog'" in make_buy
     assert "href='#create-purchase-dialog'" in make_buy
-    assert "<section class='panel wide workflow-panel' id='make-buy-workflow'>" in make_buy
+    assert "<section class='panel wide workflow-panel' id='make-buy-workflow'>" not in make_buy
+    assert "id='incoming-purchases'" in make_buy
     assert "href='#shop-settings'" in settings
     assert "<section class='panel wide' id='shop-settings'>" in settings

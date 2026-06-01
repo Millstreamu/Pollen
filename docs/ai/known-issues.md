@@ -9,6 +9,24 @@ None recorded.
 ## Environment Limitations
 None recorded.
 
+### Make / Buy lower-page management UI hidden pending IA follow-up
+
+Status: non-blocking
+Reported: 2026-06-01
+Area: Make / Buy information architecture
+
+Description:
+The approved Make / Buy overview now hides inline material management, archived-material filters, material stock-adjustment controls, recipe management, inventory movement history, activity logs, created-purchases debug copy, and buy-list formula/debug text from the main page. The existing services and post actions were not deleted, but these admin-oriented controls need a future drawer, modal, or detail-page home before they are visible again.
+
+Current workaround:
+Core operational flows remain visible through Plan Batch, Create Purchase, Mark Received, Make Next, Buy List, and Incoming Purchases. Existing backend/service behavior remains covered by regression tests.
+
+Required for completion:
+no
+
+Linked plan/report:
+Direct Post-V1 Make / Buy UI simplification task.
+
 ## Resolved Issues
 
 ### Codex dev dependency install accepts available compatible tooling
