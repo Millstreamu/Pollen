@@ -2816,3 +2816,27 @@ Checks run:
 
 Notes:
 - Browser screenshot capture remains a Codespaces/local environment check until Playwright and native browser dependencies are available.
+
+### 2026-06-01 — Workshop vs Inventory split UI/workflow restructuring
+
+Branch/PR/Issue:
+- Direct Codex task: Pollen Workshop vs Inventory Split
+
+Completed:
+- Reaffirmed the product model that Workshop defines products/recipes/batches while Inventory counts stock and owns restock/buying workflows.
+- Kept legacy routes (`/make-buy`, `/products-stock`) but aligned labels, page behavior, and primary sections with Workshop and Inventory.
+- Updated Workshop product builder copy and controls for product details, recipe/material rows, in-flow new-material creation, batch size/yield planning, making notes, batch queue, material availability, Start Batch, and Complete Batch actions.
+- Updated Inventory to keep finished-product/material stock visibility plus Buy List, Items to Reorder, Incoming Purchases, Create Purchase, Receive Materials, and material stock adjustments on the Inventory page.
+- Added regression coverage for Workshop recipe/material wording and Inventory-owned material stock adjustments.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass, with package-index proxy retry warnings while current pip remained installed
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass using available compatible tooling
+- `python -m compileall -q src tests && ruff check src tests && PYTHONDONTWRITEBYTECODE=1 pytest -q` — initial run failed at ruff because `incoming_purchases` became unused after the Inventory metric rename
+- `python -m compileall -q src tests && ruff check src tests && PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`119 passed`)
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — environment-limited because Playwright is not installed in Codex cloud; controlled setup guidance printed
+
+Notes:
+- Existing backend/service actions were not deleted. Legacy Workshop purchase post actions remain available for compatibility but are not exposed as primary Workshop UI sections.
+- Codex cloud dependency installation completed; pip still reported proxy retry warnings while checking for a newer pip release.

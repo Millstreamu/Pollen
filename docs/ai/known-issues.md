@@ -9,25 +9,26 @@ None recorded.
 ## Environment Limitations
 None recorded.
 
+## Resolved Issues
+
 ### Make / Buy lower-page management UI hidden pending IA follow-up
 
-Status: non-blocking
+Status: resolved
 Reported: 2026-06-01
-Area: Make / Buy information architecture
+Resolved: 2026-06-01
+Area: Workshop vs Inventory information architecture
 
 Description:
-The approved Make / Buy overview now hides inline material management, archived-material filters, material stock-adjustment controls, recipe management, inventory movement history, activity logs, created-purchases debug copy, and buy-list formula/debug text from the main page. The existing services and post actions were not deleted, but these admin-oriented controls need a future drawer, modal, or detail-page home before they are visible again.
+The earlier Make / Buy overview hid several admin-oriented controls while still exposing buying concepts in the same area. The updated information architecture makes Workshop responsible for product/recipe/batch work and Inventory responsible for stock/restock/buying work.
 
-Current workaround:
-Core operational flows remain visible through Plan Batch, Create Purchase, Mark Received, Make Next, Buy List, and Incoming Purchases. Existing backend/service behavior remains covered by regression tests.
+Resolution:
+Workshop now exposes product builder, recipe/material rows, in-flow material creation, materials-needed review, and batch queue actions. Inventory now exposes stock control, Buy List, Items to Reorder, Incoming Purchases, Create Purchase, Receive Materials, and material stock adjustments. Existing backend/service behavior was not deleted.
 
-Required for completion:
-no
+Verification:
+`python -m compileall -q src tests`, `ruff check src tests`, and `PYTHONDONTWRITEBYTECODE=1 pytest -q` passed on 2026-06-01 (`119 passed`).
 
 Linked plan/report:
-Direct Post-V1 Make / Buy UI simplification task.
-
-## Resolved Issues
+Direct Codex task: Pollen Workshop vs Inventory Split.
 
 ### Codex dev dependency install accepts available compatible tooling
 

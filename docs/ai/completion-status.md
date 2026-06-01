@@ -50,9 +50,9 @@ None for V1.
 - Future post-V1 improvements should be explicitly scoped before implementation.
 
 ## Current Post-V1 Task
-Name: Post-V1 Local Readiness Check
+Name: Workshop vs Inventory Split UI/workflow restructuring
 Status: complete
-Evidence: `docs/ai/reports/post-v1-local-readiness-check-implementation-report-2026-05-29.md`
+Evidence: `docs/ai/progress-log.md` entry dated 2026-06-01
 
 ## Current Blockers
 None recorded.

@@ -66,10 +66,13 @@ def test_products_stock_page_uses_beginner_friendly_sections_and_buttons() -> No
     assert "Materials" in response.body
     assert "Buy List" in response.body
     assert "Incoming Purchases" in response.body
+    assert "Items to Reorder" in response.body
     assert "Stock Control" in response.body
+    assert "action='/products-stock'" in response.body
     assert "Create Product" not in response.body
     assert "id='add-product-dialog-title'>Add product</h3>" not in response.body
     assert "id='add-material-dialog-title'>Add material</h3>" not in response.body
+    assert "id='create-new-material-dialog-title'>+ Create new material</h3>" not in response.body
     assert "<input type='hidden' name='action' value='create_material'>" not in response.body
     assert "<button type='submit' name='action' value='bulk_archive'>Archive selected</button>" not in response.body
 
@@ -86,6 +89,10 @@ def test_make_buy_page_uses_beginner_friendly_sections_and_empty_state_guidance(
     assert "Blocked by Materials" in response.body
     assert "Products You Make / Product Builder" in response.body
     assert "Make Next / Batch Queue" in response.body
+    assert "+ Add material to recipe" in response.body
+    assert "+ Create new material" in response.body
+    assert "Default batch size/yield" in response.body
+    assert "Making notes / steps" in response.body
     assert "id='plan-batch-dialog-title'>Plan a batch</h3>" in response.body
     assert "href='#plan-batch-dialog'" in response.body
     assert "href='#create-purchase-dialog'" not in response.body
@@ -222,8 +229,32 @@ def test_dashboard_primary_controls_are_links_or_real_post_forms() -> None:
     assert "id='create-purchase-dialog' role='dialog'" in products
     assert "href='#plan-batch-dialog'" in make_buy
     assert "href='#create-product-dialog'" in make_buy
+    assert "href='#create-new-material-dialog'" in make_buy
     assert "href='#create-purchase-dialog'" not in make_buy
     assert "<section class='panel wide workflow-panel' id='make-buy-workflow'>" not in make_buy
     assert "id='incoming-purchases'" not in make_buy
     assert "href='#shop-settings'" in settings
     assert "<section class='panel wide' id='shop-settings'>" in settings
+
+
+def test_inventory_page_owns_material_stock_adjustments() -> None:
+    header = _auth_header("inventory-material-adjust", "inventory-material-adjust@example.com")
+    app = AppShell()
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "create", "name": "Soy Wax", "unit": "g", "stock_on_hand": "8", "reorder_point": "3"},
+    )
+
+    response = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={"action": "adjust_stock", "material_id": "mat-1", "delta": "5", "reason": "cycle count"},
+    )
+
+    assert response.status_code == 200
+    assert "<h1>Inventory</h1>" in response.body
+    assert "13 g" in response.body
+    material = app._material_service.get_material(authorization_header=header, material_id="mat-1")  # noqa: SLF001
+    assert material is not None
+    assert material.stock_on_hand == 13
