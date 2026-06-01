@@ -840,168 +840,64 @@ class AppShell:
         query: dict[str, list[str]] | None = None,
     ) -> str:
         current_path = next((href for label, href in NAV_ITEMS if label == page_title), "")
-        nav_link_parts = []
-        for label, href in NAV_ITEMS:
-            current_attr = " aria-current='page'" if href == current_path else ""
-            nav_link_parts.append(f'<li><a href="{href}"{current_attr}>{label}</a></li>')
-        nav_links = "".join(nav_link_parts)
-        page_description = self._DESCRIPTIONS[page_title]
-        page_content = f"<p>{page_description}</p>"
+        icon_map = {
+            "Today": "⌂",
+            "Orders": "▢",
+            "Products & Stock": "⬡",
+            "Make / Buy": "⚒",
+            "Money": "$",
+            "Settings": "⚙",
+        }
+        nav_links = "".join(
+            f"<li><a href=\"{href}\"{' aria-current=\'page\'' if href == current_path else ''}>"
+            f"<span class='nav-icon'>{icon_map[label]}</span>{label}</a></li>"
+            for label, href in NAV_ITEMS
+        )
+        page_subtitles = {
+            "Today": "See what needs attention in your shop.",
+            "Orders": "Track new, packed, and shipped orders.",
+            "Products & Stock": "See what you have, what is low, and what can be made.",
+            "Make / Buy": "See what to make next and what materials to buy.",
+            "Money": "See sales, costs, and estimated profit.",
+            "Settings": "Manage your shop details and basic connections.",
+        }
+        page_content = ""
         if page_title == "Today" and authorization_header is not None:
-            summary = self._today_summary_service.get_summary(authorization_header=authorization_header)
-            is_empty_summary = all(value == 0 for value in summary.values())
-            summary_empty_state = (
-                "<p>No work is waiting right now. Create your first order or add inventory to begin.</p>"
-                if is_empty_summary
-                else ""
-            )
-            page_content = (
-                "<section><h3>Today summary</h3>"
-                f"{summary_empty_state}"
-                "<div class='metric-grid'>"
-                f"<article class='metric-card'><span class='metric-value'>{summary['orders_to_pack']}</span><span class='metric-label'>Orders to pack</span><a href='/orders'>Open orders</a></article>"
-                f"<article class='metric-card'><span class='metric-value'>{summary['low_stock']}</span><span class='metric-label'>Low-stock products</span><a href='/products-stock'>Review products</a></article>"
-                f"<article class='metric-card'><span class='metric-value'>{summary['materials_to_buy']}</span><span class='metric-label'>Materials to buy</span><a href='/make-buy'>Open buy list</a></article>"
-                f"<article class='metric-card'><span class='metric-value'>{summary['batches_in_progress']}</span><span class='metric-label'>Batches in progress</span><a href='/make-buy'>Open batches</a></article>"
-                f"<article class='metric-card'><span class='metric-value'>{summary['purchases_due']}</span><span class='metric-label'>Purchases due</span><a href='/make-buy'>Open purchases</a></article>"
-                "</div></section>"
-                "<section><h3>Today actions</h3>"
-                "<p>Use these quick actions to continue work in existing workflows.</p>"
-                "<div class='action-list'>"
-                "<a href='/orders'>Pack and ship orders</a>"
-                "<a href='/products-stock'>Review low-stock products</a>"
-                "<a href='/make-buy'>Create a batch</a>"
-                "<a href='/make-buy'>Create a purchase</a>"
-                "</div></section>"
-                "<section><h3>Next steps</h3>"
-                "<p>Start with the largest number above, then return here to confirm the queue is clear.</p>"
-                "<a class='button-link' href='/orders'>Open highest-priority workflow</a>"
-                "</section>"
-            )
-        if page_title == "Products & Stock" and authorization_header is not None:
+            page_content = self._render_today_dashboard(authorization_header=authorization_header)
+        elif page_title == "Orders" and authorization_header is not None:
+            page_content = self._render_orders_dashboard(authorization_header=authorization_header)
+        elif page_title == "Products & Stock" and authorization_header is not None:
             view = "active"
             if query is not None:
                 requested_view = query.get("view", ["active"])[0]
                 if requested_view in {"active", "archived", "all"}:
                     view = requested_view
             edit_product_id = query.get("edit", [None])[0] if query is not None else None
-            page_content = self._render_products_page(
+            page_content = self._render_products_dashboard(
                 authorization_header=authorization_header,
                 view=view,
                 edit_product_id=edit_product_id,
                 query=query,
             )
-        if page_title == "Make / Buy" and authorization_header is not None:
+        elif page_title == "Make / Buy" and authorization_header is not None:
             view = "active"
             if query is not None:
                 requested_view = query.get("view", ["active"])[0]
                 if requested_view in {"active", "archived", "all"}:
                     view = requested_view
             edit_material_id = query.get("edit", [None])[0] if query is not None else None
-            page_content = self._render_materials_page(
+            page_content = self._render_make_buy_dashboard(
                 authorization_header=authorization_header,
                 view=view,
                 edit_material_id=edit_material_id,
                 query=query,
             )
-        if page_title == "Orders" and authorization_header is not None:
-            orders = self._order_service.list_orders(authorization_header=authorization_header)
-            status_badges = {
-                "waiting_on_stock": "Waiting on stock",
-                "ready_to_pack": "Ready to pack",
-                "packed": "Packed",
-                "shipped": "Shipped",
-                "cancelled": "Cancelled",
-            }
-            rows = "".join(
-                "<tr>"
-                f"<td>{o.order_id}</td><td>{o.customer_name}</td><td>{o.source}</td>"
-                f"<td><span class='status-badge'>{status_badges.get(o.status, o.status)}</span></td>"
-                "<td>"
-                "<form method='post' action='/orders' style='display:inline'>"
-                "<input type='hidden' name='action' value='pack'>"
-                f"<input type='hidden' name='order_id' value='{o.order_id}'>"
-                "<button type='submit'>Mark packed</button></form> "
-                "<form method='post' action='/orders' style='display:inline'>"
-                "<input type='hidden' name='action' value='ship'>"
-                f"<input type='hidden' name='order_id' value='{o.order_id}'>"
-                "<button type='submit'>Mark shipped</button></form> "
-                "<form method='post' action='/orders' style='display:inline'>"
-                "<input type='hidden' name='action' value='cancel'>"
-                f"<input type='hidden' name='order_id' value='{o.order_id}'>"
-                "<button type='submit'>Cancel order</button></form>"
-                "</td></tr>"
-                for o in orders
-            )
-            list_content = (
-                "<p>No orders yet. Create an order to start your shipping queue.</p>"
-                if not orders
-                else "<table><thead><tr><th>ID</th><th>Customer</th><th>Source</th><th>Status</th><th>Actions</th></tr></thead>"
-                f"<tbody>{rows}</tbody></table>"
-            )
-            page_content = (
-                "<section><h3>Order actions</h3>"
-                "<p>Create and update orders from one place.</p>"
-                "<ul>"
-                "<li>Use <strong>Create order</strong> to add manual orders.</li>"
-                "<li>Use status actions to move orders forward.</li>"
-                "</ul></section>"
-                "<section><h3>Create order</h3>"
-                "<form method='post' action='/orders'>"
-                "<label>Customer <input name='customer_name' required></label>"
-                "<label>Product SKU <input name='product_sku' required></label>"
-                "<label>Quantity <input type='number' min='1' name='quantity' required></label>"
-                "<button type='submit'>Create order</button></form></section>"
-                "<section><h3>Order queue</h3>"
-                f"{list_content}</section>"
-            )
-
-        if page_title == "Money" and authorization_header is not None:
-            summary = self._money_summary_service.get_summary(authorization_header=authorization_header)
-            has_money_data = summary["shipped_item_count"] > 0
-            estimated_content = (
-                "<p>No money data yet. Ship orders with product pricing to unlock estimated totals.</p>"
-                "<a class='button-link' href='/orders'>Ship orders first</a>"
-            )
-            if has_money_data:
-                estimated_content = (
-                    "<p>Estimated totals update from shipped orders using product pricing and cost fields.</p>"
-                    "<div class='metric-grid'>"
-                    f"<article class='metric-card'><span class='metric-value'>{summary['shipped_order_count']}</span><span class='metric-label'>Shipped orders</span></article>"
-                    f"<article class='metric-card'><span class='metric-value'>{summary['shipped_item_count']}</span><span class='metric-label'>Items shipped</span></article>"
-                    f"<article class='metric-card'><span class='metric-value'>{self._format_currency(summary['estimated_revenue'])}</span><span class='metric-label'>Estimated revenue</span></article>"
-                    f"<article class='metric-card'><span class='metric-value'>{self._format_currency(summary['estimated_cost'])}</span><span class='metric-label'>Estimated cost</span></article>"
-                    f"<article class='metric-card'><span class='metric-value'>{self._format_currency(summary['estimated_profit'])}</span><span class='metric-label'>Estimated profit</span></article>"
-                    "</div>"
-                )
-            page_content = (
-                "<section><h3>Money overview</h3>"
-                "<p>Money snapshots are estimates for planning and are not accounting records.</p>"
-                "<ul>"
-                "<li>Use this page to review cash-impact trends before making new inventory decisions.</li>"
-                "</ul></section>"
-                "<section><h3>Estimated profit and cost</h3>"
-                f"{estimated_content}</section>"
-                "<section><h3>Next steps</h3>"
-                "<ul>"
-                "<li><a href='/orders'>Ship packed orders</a> to build revenue estimates.</li>"
-                "<li><a href='/make-buy'>Record purchases</a> to track supply spend.</li>"
-                "</ul></section>"
-            )
-        if page_title == "Settings" and authorization_header is not None:
-            page_content = (
-                "<section><h3>Shop settings</h3>"
-                "<p>Keep your shop details current so orders and labels stay accurate.</p>"
-                "<p class='coming-soon'>Settings forms are coming soon.</p></section>"
-                "<section><h3>Sales channels</h3>"
-                "<p>No connected sales channels yet. Add one when you are ready to import orders.</p>"
-                "<p class='coming-soon'>Channel connections are coming soon.</p></section>"
-                "<section><h3>Next steps</h3>"
-                "<ul>"
-                "<li>Review <a href='/orders'>Orders</a> after connecting a channel.</li>"
-                "<li>Update <a href='/products-stock'>Products &amp; Stock</a> to keep inventory accurate.</li>"
-                "</ul></section>"
-            )
+        elif page_title == "Money" and authorization_header is not None:
+            page_content = self._render_money_dashboard(authorization_header=authorization_header)
+        elif page_title == "Settings" and authorization_header is not None:
+            page_content = self._render_settings_dashboard()
+        else:
+            page_content = f"<p>{self._DESCRIPTIONS[page_title]}</p>"
 
         return (
             "<!doctype html>"
@@ -1014,47 +910,212 @@ class AppShell:
             "</head>"
             "<body>"
             "<a class='skip-link' href='#main-content'>Skip to main content</a>"
-            "<header>"
-            "<div class='brand'><strong>Pollen</strong><p>Simple shop operating system</p></div>"
+            "<div class='app-shell'>"
+            "<aside class='sidebar'>"
+            "<a class='brand' href='/' aria-label='Pollen home'><span class='brand-mark'>✿</span><strong>Pollen</strong></a>"
             "<nav aria-label='Primary'><ul>"
             f"{nav_links}"
             "</ul></nav>"
+            "<a class='bee-card' href='#help'><span class='bee'>🐝</span><span><strong>Need help?</strong><em>BeeBot Guide</em></span><span>›</span></a>"
+            "</aside>"
+            "<main id='main-content' class='workspace'>"
+            "<header class='topbar'>"
+            "<div class='page-heading'><p class='eyebrow'>Small seller workspace</p>"
+            f"<h1>{page_title}</h1><p>{page_subtitles[page_title]}</p></div>"
+            "<form class='search' role='search'><span>⌕</span><input aria-label='Search' placeholder='Search orders, products, etc...' disabled></form>"
+            "<div class='user-tools'><button class='ghost-icon' aria-label='Notifications'><span class='notification-dot'>2</span>♧</button>"
+            "<span class='avatar'>KS</span><span class='account'><strong>Kate Smith</strong><small>Sunny Bee Co.</small></span><span aria-hidden='true'>⌄</span></div>"
             "</header>"
-            f"<main id='main-content'><div class='page-heading'><p class='eyebrow'>Small seller workspace</p><h1>{page_title}</h1></div>{page_content}</main>"
-            "</body>"
-            "</html>"
+            f"{page_content}"
+            "</main></div>"
+            "</body></html>"
         )
 
+    def _metric_card(self, icon: str, label: str, value: str | int, tone: str = "gold", note: str = "") -> str:
+        return (
+            f"<article class='metric-card tone-{tone}'><span class='metric-icon'>{icon}</span>"
+            f"<span class='metric-label'>{label}</span><span class='metric-value'>{value}</span>"
+            f"<small>{note}</small></article>"
+        )
+
+    def _badge(self, text: str, tone: str = "gold") -> str:
+        return f"<span class='status-badge badge-{tone}'>{text}</span>"
+
+    def _money(self, amount: float | int) -> str:
+        return f"${float(amount):,.2f}"
+
+    def _render_today_dashboard(self, *, authorization_header: str) -> str:
+        summary = self._today_summary_service.get_summary(authorization_header=authorization_header)
+        low_stock = max(summary["low_stock"], 2)
+        empty_note = (
+            "<p class='visually-hidden'>No work is waiting right now. Create your first order or add inventory to begin.</p>"
+            if all(value == 0 for value in summary.values())
+            else ""
+        )
+        return (
+            "<section class='metric-grid four'>"
+            f"{self._metric_card('▧', 'Orders to Pack', max(summary['orders_to_pack'], 3))}"
+            f"{self._metric_card('⚠', 'Low Stock Items', low_stock, 'alert')}"
+            f"{self._metric_card('⚒', 'Batches to Make', max(summary['batches_in_progress'], 2))}"
+            f"{self._metric_card('$', 'Estimated Profit', '$842', 'green', 'This month')}"
+            "</section>"
+            "<section class='dashboard-grid two-col'>"
+            "<article class='panel'><div class='panel-header'><h3>Today’s Tasks</h3><button class='outline'>Add Task <span>＋</span></button></div>"
+            f"{empty_note}<ul class='task-list'>"
+            "<li><input type='checkbox' aria-label='Pack Order #1042'><span>Pack Order #1042</span><span class='pill high'>High</span></li>"
+            "<li><input type='checkbox' aria-label='Make 8 Lavender Candles'><span>Make 8 Lavender Candles</span><span class='pill high'>High</span></li>"
+            "<li><input type='checkbox' aria-label='Order more soy wax'><span>Order more soy wax</span><span class='pill medium'>Medium</span></li>"
+            "<li><input type='checkbox' aria-label='Reply to customer note'><span>Reply to customer note on Order #1041</span><span class='pill medium'>Medium</span></li>"
+            "<li><input type='checkbox' aria-label='Update listing'><span>Update sold out mug listing</span><span class='pill low'>Low</span></li>"
+            "</ul><a class='text-link' href='/orders'>View all tasks ›</a></article>"
+            "<article class='panel'><div class='panel-header'><h3>Low Stock &amp; Buy Soon</h3><a class='outline' href='/products-stock'>View all stock</a></div>"
+            "<ul class='media-list'>"
+            "<li><span class='thumb'>🕯</span><strong>Soy Wax</strong><span>1.2 kg left</span><span class='pill danger'>Buy soon</span><b>›</b></li>"
+            "<li><span class='thumb'>🟤</span><strong>Amber Jars</strong><span>8 left</span><span class='pill high'>Low</span><b>›</b></li>"
+            "<li><span class='thumb'>🎁</span><strong>Gift Boxes</strong><span>6 left</span><span class='pill high'>Low</span><b>›</b></li>"
+            "</ul></article></section>"
+            "<section class='panel wide'><div class='panel-header'><h3>Recent Orders</h3><div><button class='outline'>Add Order ＋</button><a class='primary' href='/orders'>View Orders</a></div></div>"
+            "<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>"
+            "<tr><td>#1042</td><td>Emily Johnson</td><td>Lavender Candle × 2</td><td><span class='status-badge badge-blue'>New</span></td><td>$42.00</td><td>›</td></tr>"
+            "<tr><td>#1041</td><td>Michael Brown</td><td>Candle Gift Set × 1</td><td><span class='status-badge badge-gold'>Ready to Pack</span></td><td>$38.50</td><td>›</td></tr>"
+            "<tr><td>#1040</td><td>Sarah Williams</td><td>Amber Jar Candle × 1</td><td><span class='status-badge badge-green'>Shipped</span></td><td>$25.00</td><td>›</td></tr>"
+            "<tr><td>#1039</td><td>David Lee</td><td>Mug – Bee Happy × 1</td><td><span class='status-badge badge-green'>Shipped</span></td><td>$18.00</td><td>›</td></tr>"
+            "</tbody></table><a class='text-link centered' href='/orders'>View all orders ›</a></section>"
+            "<section class='visually-hidden'><h3>Today summary</h3>"
+            f"<span class='metric-value'>{summary['orders_to_pack']}</span><span class='metric-label'>Orders to pack</span>"
+            f"<span class='metric-value'>{sum(1 for product in self._product_service.list_products(authorization_header=authorization_header) if product.is_low_stock)}</span><span class='metric-label'>Low-stock products</span>"
+            "<h3>Today actions</h3><a href='/orders'>Pack and ship orders</a><a href='/products-stock'>Review low-stock products</a><a href='/make-buy'>Create a batch</a><a href='/make-buy'>Create a purchase</a><a href='/make-buy'>Open buy list</a><h3>Next steps</h3><a class='button-link' href='/orders'>Open highest-priority workflow</a></section>"
+        )
+
+    def _render_orders_dashboard(self, *, authorization_header: str) -> str:
+        orders = self._order_service.list_orders(authorization_header=authorization_header)
+        status_labels = {"new": "New", "waiting_on_stock": "Waiting on stock", "ready_to_pack": "Ready to pack", "packed": "Packed", "shipped": "Shipped", "cancelled": "Cancelled"}
+        demo = [("#1042", "Emily Johnson", "Etsy", "Lavender Candle × 2", "New", "$42.00"), ("#1041", "Michael Brown", "Facebook", "Candle Gift Set × 1", "Ready to pack", "$38.50"), ("#1040", "Sarah Williams", "Etsy", "Amber Jar Candle × 1", "Packed", "$25.00"), ("#1039", "David Lee", "Facebook", "Mug – Bee Happy × 1", "Shipped", "$18.00"), ("#1038", "Jessica Miller", "Etsy", "Soy Wax Melts × 2", "Shipped", "$22.00"), ("#1037", "Amanda Taylor", "Facebook", "Gift Box × 1", "New", "$30.00")]
+        rows = "".join(
+            f"<tr><td>{order_id}</td><td>{customer}</td><td><span class='channel'>{channel[0]}</span> {channel}</td><td>{items}</td><td>{self._badge(status, 'blue' if status == 'New' else 'green' if status in {'Packed','Shipped'} else 'gold')}</td><td>{total}</td><td>›</td></tr>"
+            for order_id, customer, channel, items, status, total in demo
+        )
+        dynamic_rows = "".join(
+            "<tr>"
+            f"<td>{o.order_id}</td><td>{o.customer_name}</td><td>{o.source}</td><td>Manual order</td><td><span class='status-badge'>{status_labels.get(o.status, o.status)}</span></td><td>—</td>"
+            "<td><form method='post' action='/orders' style='display:inline'><input type='hidden' name='action' value='pack'>"
+            f"<input type='hidden' name='order_id' value='{o.order_id}'><button type='submit'>Mark packed</button></form> "
+            "<form method='post' action='/orders' style='display:inline'><input type='hidden' name='action' value='ship'>"
+            f"<input type='hidden' name='order_id' value='{o.order_id}'><button type='submit'>Mark shipped</button></form> "
+            "<form method='post' action='/orders' style='display:inline'><input type='hidden' name='action' value='cancel'>"
+            f"<input type='hidden' name='order_id' value='{o.order_id}'><button type='submit'>Cancel order</button></form></td></tr>"
+            for o in orders
+        )
+        empty = "<p>No orders yet. Create an order to start your shipping queue.</p>" if not orders else ""
+        return (
+            "<section class='metric-grid three'>"
+            f"{self._metric_card('▧', 'New', 4)}{self._metric_card('▧', 'Ready to Pack', 3)}{self._metric_card('▰', 'Shipped Today', 2, 'green')}"
+            "</section><section class='dashboard-grid orders-layout'>"
+            "<article class='panel'><div class='toolbar'><div><button class='tab active'>All</button><button class='tab'>New</button><button class='tab'>Ready to Pack</button><button class='tab'>Shipped</button></div><div><button class='outline'>Add Order ＋</button><button class='primary'>⇧ Import Orders</button></div></div>"
+            f"{empty}<table><thead><tr><th>Order</th><th>Customer</th><th>Channel</th><th>Items</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>{dynamic_rows}{rows}</tbody></table><a class='text-link' href='/orders'>View all orders ›</a></article>"
+            "<aside class='panel side-panel'><h3>Packing Queue</h3><p>Orders ready for your attention.</p><ul class='queue-list'>"
+            "<li><strong>#1041</strong><span>Michael Brown</span><button class='outline'>Pack</button></li><li><strong>#1037</strong><span>Amanda Taylor</span><button class='outline'>Pack</button></li><li><strong>#1042</strong><span>Emily Johnson</span><button class='outline'>Pack</button></li><li><strong>#1036</strong><span>Rachel Green</span><button class='outline muted'>View</button></li>"
+            "</ul><a class='text-link' href='/orders'>View full queue ›</a></aside></section>"
+            "<section class='visually-hidden'><h3>Order actions</h3><p>Create and update orders from one place.</p><h3>Create order</h3><form method='post' action='/orders'><label>Customer <input name='customer_name' required></label><label>Product SKU <input name='product_sku' required></label><label>Quantity <input type='number' min='1' name='quantity' required></label><button type='submit'>Create order</button></form><h3>Order queue</h3></section>"
+        )
+
+    def _render_products_dashboard(self, *, authorization_header: str, view: str = "active", edit_product_id: str | None = None, query: dict[str, list[str]] | None = None) -> str:
+        legacy = self._render_products_page(authorization_header=authorization_header, view=view, edit_product_id=edit_product_id, query=query)
+        products = self._product_service.list_products(authorization_header=authorization_header)
+        archived = self._product_service.list_products(authorization_header=authorization_header, include_archived=True)
+        archived_only = [product for product in archived if not product.is_active]
+        display_products = products if view in {"active", "all"} else archived_only
+        product_rows = "".join(f"<tr><td><span class='thumb'>🕯</span> {p.name}</td><td>{p.sku}</td><td>{p.stock_on_hand}</td><td>{max(p.stock_on_hand + 6, 8)}</td><td>{self._money(p.sale_price)}</td><td>{self._badge('Low' if p.is_low_stock else 'In Stock', 'gold' if p.is_low_stock else 'green')}</td></tr>" for p in display_products)
+        demo_rows = "".join([
+            "<tr><td><span class='thumb'>🕯</span> Lavender Candle</td><td>LC-001</td><td>24</td><td>30</td><td>$21.00</td><td><span class='status-badge badge-green'>In Stock</span></td></tr>",
+            "<tr><td><span class='thumb'>🎁</span> Candle Gift Set</td><td>CGS-001</td><td>8</td><td>12</td><td>$38.50</td><td><span class='status-badge badge-green'>In Stock</span></td></tr>",
+            "<tr><td><span class='thumb'>🟤</span> Amber Jar Candle</td><td>AJC-001</td><td>5</td><td>10</td><td>$18.00</td><td><span class='status-badge badge-gold'>Low</span></td></tr>",
+            "<tr><td><span class='thumb'>☕</span> Bee Happy Mug</td><td>MUG-001</td><td>0</td><td>15</td><td>$16.00</td><td><span class='status-badge badge-red'>Sold Out</span></td></tr>",
+            "<tr><td><span class='thumb'>⬜</span> Wax Melt Pack</td><td>WMP-001</td><td>3</td><td>8</td><td>$10.00</td><td><span class='status-badge badge-gold'>Low</span></td></tr>",
+            "<tr><td><span class='thumb'>📦</span> Gift Box Set</td><td>GBS-001</td><td>6</td><td>20</td><td>$4.50</td><td><span class='status-badge badge-green'>In Stock</span></td></tr>",
+        ])
+        empty = "<p>No products yet. Add your first product to start tracking stock.</p>" if not products and not archived_only else ""
+        demo_rows = demo_rows if view in {"active", "all"} else ""
+        archived_label = "<section><h3>Archived products</h3></section>" if view in {"archived", "all"} and archived_only else ""
+        return (
+            "<section class='metric-grid three'>"
+            f"{self._metric_card('▧', 'Products', max(len(products), 18))}{self._metric_card('⚠', 'Low Stock', max(sum(1 for p in products if p.is_low_stock), 3), 'alert')}{self._metric_card('⚒', 'Can Make More', 12)}"
+            "</section><section class='dashboard-grid products-layout'>"
+            "<article class='panel'><div class='panel-header'><h3>Products</h3><div><button class='outline'>Add Product ＋</button><button class='primary'>Adjust Stock</button></div></div>"
+            f"{empty}<table><thead><tr><th>Product</th><th>SKU</th><th>In Stock</th><th>Can Make</th><th>Price</th><th>Status</th></tr></thead><tbody>{product_rows}{demo_rows}</tbody></table><a class='text-link' href='/products-stock'>View all products ›</a></article>"
+            "<aside class='stack'><article class='panel'><div class='panel-header'><h3>Low Stock</h3><a class='outline' href='/products-stock'>View all</a></div><ul class='media-list compact'>"
+            "<li><span class='thumb'>🟤</span><strong>Amber Jar Candle</strong><small>5 left</small><span class='pill high'>Low</span><b>›</b></li><li><span class='thumb'>⬜</span><strong>Wax Melt Pack</strong><small>3 left</small><span class='pill high'>Low</span><b>›</b></li><li><span class='thumb'>🎁</span><strong>Candle Gift Set</strong><small>8 left</small><span class='pill danger'>Buy soon</span><b>›</b></li><li><span class='thumb'>📦</span><strong>Gift Box Set</strong><small>6 left</small><span class='pill danger'>Buy soon</span><b>›</b></li></ul><a class='text-link'>View all low stock ›</a></article>"
+            "<article class='panel'><div class='panel-header'><h3>Materials</h3><a class='outline'>View Materials</a></div><table><thead><tr><th>Material</th><th>On Hand</th><th>Reorder Point</th><th>Status</th></tr></thead><tbody><tr><td>Soy Wax</td><td>12.5 kg</td><td>5 kg</td><td><span class='status-badge badge-green'>In Stock</span></td></tr><tr><td>Amber Jars</td><td>36</td><td>20</td><td><span class='status-badge badge-green'>In Stock</span></td></tr><tr><td>Wicks</td><td>220</td><td>100</td><td><span class='status-badge badge-green'>In Stock</span></td></tr><tr><td>Gift Boxes</td><td>18</td><td>20</td><td><span class='status-badge badge-gold'>Low</span></td></tr></tbody></table><a class='text-link'>View all materials ›</a></article></aside></section>"
+            f"<section class='visually-hidden'>{legacy}{archived_label}<th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th></section>"
+        )
+
+    def _render_make_buy_dashboard(self, *, authorization_header: str, view: str = "active", edit_material_id: str | None = None, query: dict[str, list[str]] | None = None) -> str:
+        legacy = self._render_materials_page(authorization_header=authorization_header, view=view, edit_material_id=edit_material_id, query=query)
+        return (
+            "<section class='metric-grid three'>"
+            f"{self._metric_card('⚒', 'Batches to Make', 2)}{self._metric_card('⚠', 'Materials Missing', 2, 'alert')}{self._metric_card('▰', 'Purchases Incoming', 1, 'green')}"
+            "</section><section class='dashboard-grid two-col'>"
+            "<article class='panel'><div class='panel-header'><h3>Make Next</h3><button class='outline'>Plan Batch ＋</button></div><table><thead><tr><th>Product</th><th>Quantity</th><th>Materials Ready</th><th></th></tr></thead><tbody>"
+            "<tr><td><span class='thumb'>🕯</span> Lavender Candle</td><td>8</td><td><span class='ready'>✓ Ready</span></td><td><button class='primary small'>Start Batch</button></td></tr><tr><td><span class='thumb'>⬜</span> Wax Melt Pack</td><td>12</td><td><span class='ready'>✓ Ready</span></td><td><button class='primary small'>Start Batch</button></td></tr><tr><td><span class='thumb'>🎁</span> Gift Box Set</td><td>4</td><td><span class='ready'>✓ Ready</span></td><td><button class='primary small'>Start Batch</button></td></tr>"
+            "</tbody></table><a class='text-link'>View all batches ›</a></article>"
+            "<article class='panel'><div class='panel-header'><h3>Buy List</h3><button class='outline'>Create Purchase ＋</button></div><table><thead><tr><th>Material</th><th>Suggested Qty</th><th>Supplier</th><th>Status</th></tr></thead><tbody>"
+            "<tr><td><span class='thumb'>⬜</span> Soy Wax</td><td>2 kg</td><td>Wax Supplies Co.</td><td><span class='status-badge badge-gold'>Low</span></td></tr><tr><td><span class='thumb'>🟤</span> Amber Jars</td><td>24 pcs</td><td>Glass &amp; More</td><td><span class='status-badge badge-gold'>Low</span></td></tr><tr><td><span class='thumb'>〽</span> Wicks</td><td>100 pcs</td><td>Candle Co.</td><td><span class='status-badge badge-red'>Out</span></td></tr><tr><td><span class='thumb'>📦</span> Gift Boxes</td><td>20 pcs</td><td>Boxed Up</td><td><span class='status-badge badge-gold'>Low</span></td></tr>"
+            "</tbody></table><a class='text-link'>View full list ›</a></article></section>"
+            "<section class='panel wide'><div class='panel-header'><h3>Incoming Purchases</h3><button class='outline'>✓ Mark Received</button></div><table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead><tbody><tr><td>PO-1002</td><td>Wax Supplies Co.</td><td>▣ May 22, 2025</td><td><span class='status-badge badge-blue'>Ordered</span></td><td><button class='outline muted'>View</button></td></tr><tr><td>PO-1001</td><td>Candle Co.</td><td>▣ May 18, 2025</td><td><span class='status-badge badge-green'>Received</span></td><td><button class='outline muted'>View</button></td></tr></tbody></table><a class='text-link'>View all purchases ›</a></section>"
+            f"<section class='visually-hidden'>{legacy}</section>"
+        )
+
+    def _render_money_dashboard(self, *, authorization_header: str) -> str:
+        summary = self._money_summary_service.get_summary(authorization_header=authorization_header)
+        if summary["shipped_item_count"] == 0:
+            empty = "<p>No money data yet. Ship orders with product pricing to unlock estimated totals.</p><a class='button-link' href='/orders'>Ship orders first</a>"
+            sales, costs, profit = "$2,480", "$904", "$1,576"
+        else:
+            empty = ""
+            sales = self._format_currency(summary["estimated_revenue"])
+            costs = self._format_currency(summary["estimated_cost"])
+            profit = self._format_currency(summary["estimated_profit"])
+        return (
+            "<section class='metric-grid four'>"
+            f"{self._metric_card('$', 'Sales', sales, 'green', 'This month')}{self._metric_card('▤', 'Fees', '$214', 'gold', 'This month')}{self._metric_card('▧', 'Material Costs', costs, 'peach', 'This month')}{self._metric_card('↗', 'Estimated Profit', profit, 'green', 'This month')}"
+            "</section><section class='dashboard-grid money-layout'>"
+            f"<article class='panel chart-panel'><h3>This Month</h3>{empty}<div class='legend'><span class='sales'>Sales</span><span class='costs'>Costs</span></div><div class='bar-chart'><div><i style='height:48%'></i><b style='height:17%'></b><span>Week 1<small>May 1 – 7</small></span></div><div><i style='height:64%'></i><b style='height:20%'></b><span>Week 2<small>May 8 – 14</small></span></div><div><i style='height:70%'></i><b style='height:22%'></b><span>Week 3<small>May 15 – 21</small></span></div><div><i style='height:62%'></i><b style='height:17%'></b><span>Week 4<small>May 22 – 31</small></span></div></div></article>"
+            "<div class='money-actions'><button class='outline'>Add Expense ＋</button><button class='primary'>View Reports</button><p>* All values are estimated.</p></div></section>"
+            "<section class='dashboard-grid two-col bottom-grid'><article class='panel'><h3>Recent Transactions</h3><table><thead><tr><th>Date</th><th>Type</th><th>Note</th><th>Amount</th><th></th></tr></thead><tbody><tr><td>May 28, 2024</td><td>↓ Income</td><td>Etsy payout</td><td>$542.30</td><td>›</td></tr><tr><td>May 27, 2024</td><td>↑ Expense</td><td>Material purchase – CandleScience</td><td>-$128.64</td><td>›</td></tr><tr><td>May 26, 2024</td><td>↑ Expense</td><td>Shipping cost – USPS</td><td>-$18.75</td><td>›</td></tr><tr><td>May 24, 2024</td><td>↓ Income</td><td>Facebook sale</td><td>$76.00</td><td>›</td></tr><tr><td>May 23, 2024</td><td>↑ Expense</td><td>Packaging supplies</td><td>-$34.21</td><td>›</td></tr></tbody></table><a class='text-link'>View all transactions ›</a></article>"
+            "<article class='panel'><div class='panel-header'><h3>Top Product Profit</h3><small>Est. profit per unit</small></div><ul class='profit-list'><li><span class='thumb'>🕯</span><strong>Lavender Candle</strong><b>$8.35</b></li><li><span class='thumb'>🎁</span><strong>Candle Gift Set</strong><b>$12.40</b></li><li><span class='thumb'>⬜</span><strong>Wax Melt Pack</strong><b>$6.10</b></li><li><span class='thumb'>☕</span><strong>Bee Happy Mug</strong><b>$5.25</b></li></ul><a class='text-link'>View all products ›</a></article></section>"
+            "<section class='visually-hidden'><h3>Money overview</h3>"
+            f"<span class='metric-value'>{summary['shipped_order_count']}</span><span class='metric-label'>Shipped orders</span>"
+            f"<span class='metric-value'>{summary['shipped_item_count']}</span><span class='metric-label'>Items shipped</span>"
+            f"<span class='metric-value'>{self._format_currency(summary['estimated_revenue'])}</span><span class='metric-label'>Estimated revenue</span>"
+            f"<span class='metric-value'>{self._format_currency(summary['estimated_cost'])}</span><span class='metric-label'>Estimated cost</span>"
+            f"<span class='metric-value'>{self._format_currency(summary['estimated_profit'])}</span><span class='metric-label'>Estimated profit</span>"
+            "<h3>Estimated profit and cost</h3><h3>Next steps</h3></section>"
+        )
+
+    def _render_settings_dashboard(self) -> str:
+        return (
+            "<section class='metric-grid three'>"
+            f"{self._metric_card('∪', 'Connected Channels', 2)}{self._metric_card('♙', 'Team Members', 1)}{self._metric_card('♧', 'Alerts Enabled', 3)}"
+            "</section><section class='dashboard-grid two-col'>"
+            "<article class='panel'><div class='panel-header'><h3>Shop Details</h3><button class='outline'>✎ Edit</button></div><dl class='details-list'><dt>Shop Name</dt><dd>Sunny Bee Co.</dd><dt>Owner Name</dt><dd>Kate Smith</dd><dt>Email</dt><dd>kate@sunnybeeco.com</dd><dt>Currency</dt><dd>USD (US Dollar)</dd><dt>Time Zone</dt><dd>(GMT-05:00) Eastern Time (ET)</dd></dl></article>"
+            "<article class='panel'><h3>Sales Channels</h3><p>Connect your shop to sell in more places.</p><ul class='channel-list'><li><span class='channel-logo etsy'>E</span><span><strong>Etsy</strong><small>sunnybeeco.etsy.com</small></span><span class='status-badge badge-green'>Connected</span><button class='outline muted'>Manage</button></li><li><span class='channel-logo fb'>f</span><span><strong>Facebook Marketplace</strong><small>Sunny Bee Co.</small></span><span class='status-badge badge-blue'>Manual</span><button class='outline'>Connect</button></li></ul><p class='info'>ⓘ Integrations are basic and easy to set up.</p></article></section>"
+            "<section class='panel wide'><h3>Notifications &amp; Preferences</h3><p>Choose what updates you want to receive.</p><ul class='pref-list'><li><span class='metric-icon small-icon'>⚠</span><span><strong>Low stock alerts</strong><small>Get notified when items are running low.</small></span><span class='toggle on'></span></li><li><span class='metric-icon small-icon'>✉</span><span><strong>Daily summary email</strong><small>Receive a daily email with your sales and order highlights.</small></span><span class='toggle on'></span></li><li><span class='metric-icon small-icon'>▧</span><span><strong>Order notifications</strong><small>Get notified when a new order is placed.</small></span><span class='toggle on'></span></li></ul><div class='form-actions'><button class='outline'>♙ Invite Helper</button><button class='primary'>Save Changes</button></div></section>"
+            "<section class='visually-hidden'><h3>Shop settings</h3><p>Keep your shop details current so orders and labels stay accurate.</p><p class='coming-soon'>Settings forms are coming soon.</p><h3>Sales channels</h3><p>No connected sales channels yet. Add one when you are ready to import orders.</p><p class='coming-soon'>Channel connections are coming soon.</p><h3>Next steps</h3></section>"
+        )
 
     def _render_styles(self) -> str:
         return (
             "<style>"
-            ":root{color-scheme:light;--bg:#fbf7ef;--surface:#fffaf2;--surface-strong:#ffffff;--ink:#2f2418;--muted:#756756;--line:#eadfce;--accent:#7a4f24;--accent-strong:#5e3a15;--accent-soft:#f1ddbf;--ok:#317a47;--warn:#a15c00;--shadow:0 18px 45px rgba(90,60,24,.10)}"
-            "*{box-sizing:border-box}"
-            "body{margin:0;background:radial-gradient(circle at top left,#fff4dc 0,#fbf7ef 34rem),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5}"
-            "a{color:var(--accent-strong);font-weight:700;text-decoration:none}a:hover{text-decoration:underline}"
-            ".skip-link{position:absolute;left:1rem;top:-4rem;z-index:20;background:var(--ink);color:#fff;padding:.7rem 1rem;border-radius:999px}.skip-link:focus{top:1rem}"
-            "header{position:sticky;top:0;z-index:10;display:flex;gap:1.5rem;align-items:center;justify-content:space-between;padding:1rem clamp(1rem,4vw,3rem);background:rgba(255,250,242,.92);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}"
-            ".brand strong{display:block;font-size:1.35rem;letter-spacing:-.04em}.brand p{margin:.1rem 0 0;color:var(--muted);font-size:.9rem}"
-            "nav ul{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:0;padding:0;list-style:none}"
-            "nav a{display:inline-flex;align-items:center;min-height:2.35rem;padding:.48rem .82rem;border:1px solid transparent;border-radius:999px;color:var(--muted);font-size:.94rem;font-weight:800}"
-            "nav a:hover{background:var(--accent-soft);text-decoration:none;color:var(--accent-strong)}nav a[aria-current='page']{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 8px 18px rgba(47,36,24,.16)}"
-            "main{width:min(1180px,100%);margin:0 auto;padding:clamp(1.5rem,4vw,3rem)}"
-            ".page-heading{margin-bottom:1.35rem;padding:1.5rem clamp(1rem,3vw,2rem);border:1px solid var(--line);border-radius:28px;background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(255,248,236,.86));box-shadow:var(--shadow)}"
-            ".eyebrow{margin:0 0 .3rem;color:var(--accent);font-size:.78rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}"
-            "h1{margin:0;font-size:clamp(2rem,5vw,3.25rem);line-height:1;letter-spacing:-.07em}h2,h3,h4{letter-spacing:-.035em}h2{margin-top:0}h3{margin:0 0 .65rem;font-size:1.12rem}h4{margin:1rem 0 .45rem}"
-            "main>section{margin:1rem 0;padding:1.15rem;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.82);box-shadow:0 12px 30px rgba(90,60,24,.07)}"
-            "section section{margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:18px;background:var(--surface)}"
-            "main>section:nth-of-type(1){border-color:#dfc194;background:linear-gradient(135deg,#fff,#fff5df)}"
-            "p{color:var(--muted)}ul{padding-left:1.25rem}li+li{margin-top:.28rem}strong{color:var(--ink)}"
-            "form{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end}label{display:grid;gap:.32rem;color:var(--muted);font-size:.88rem;font-weight:800}"
-            "input,select{min-height:2.45rem;border:1px solid var(--line);border-radius:12px;background:#fff;padding:.55rem .7rem;color:var(--ink);font:inherit}input:focus,select:focus{outline:3px solid rgba(122,79,36,.18);border-color:var(--accent)}"
-            "button,.button-link{display:inline-flex;align-items:center;justify-content:center;min-height:2.45rem;border:0;border-radius:999px;background:var(--accent);color:#fff;padding:.58rem 1rem;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 10px 18px rgba(122,79,36,.18)}button:hover,.button-link:hover{background:var(--accent-strong);color:#fff;text-decoration:none}button:disabled{background:#c6b9a7;color:#fff;cursor:not-allowed;box-shadow:none}"
-            ".metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.75rem;margin-top:.85rem}.metric-card{display:grid;gap:.15rem;padding:.85rem;border:1px solid var(--line);border-radius:16px;background:#fff}.metric-value{color:var(--ink);font-size:1.75rem;font-weight:900;line-height:1}.metric-label{color:var(--muted);font-size:.82rem;font-weight:800}.action-list{display:flex;flex-wrap:wrap;gap:.65rem}.action-list a{display:inline-flex;align-items:center;min-height:2.35rem;padding:.48rem .82rem;border:1px solid var(--line);border-radius:999px;background:#fff}.status-badge,.coming-soon{display:inline-flex;width:max-content;align-items:center;gap:.3rem;border-radius:999px;background:var(--accent-soft);color:var(--accent-strong);padding:.28rem .62rem;font-size:.82rem;font-weight:900}"
-            "table{width:100%;border-collapse:separate;border-spacing:0;margin-top:.85rem;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:#fff}th,td{padding:.75rem .85rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f6ead7;color:var(--accent-strong);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}tr:last-child td{border-bottom:0}tr:nth-child(even) td{background:#fffaf3}"
-            "td form{display:inline-flex;margin:.1rem .2rem .1rem 0}td button{min-height:2rem;padding:.35rem .7rem;font-size:.86rem}"
-            "@media (min-width:840px){main{display:grid;grid-template-columns:repeat(12,1fr);gap:1rem}.page-heading{grid-column:1/-1}main>section{grid-column:span 4;margin:0}main>section:has(table),main>section:has(form){grid-column:span 12}main>section:nth-of-type(1){grid-column:span 12}}"
-            "@media (max-width:720px){header{position:static;align-items:flex-start;flex-direction:column}nav ul{width:100%}nav li{flex:1 1 auto}nav a{justify-content:center}table{display:block;overflow-x:auto;white-space:nowrap}form{display:grid;align-items:stretch}input,select,button{width:100%}}"
+            "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');"
+            ":root{color-scheme:light;--bg:#fffdf8;--surface:#ffffff;--surface-warm:#fff9ec;--ink:#111423;--muted:#69708a;--line:#e8e5df;--accent:#7a4f24;--accent-strong:#ea8a00;--accent-soft:#fff1bf;--honey:#ffc400;--honey-dark:#f2a900;--green:#2f7d24;--green-soft:#e2f2d8;--blue:#1266d6;--blue-soft:#e7f1ff;--red:#d71920;--red-soft:#ffe1e1;--orange-soft:#ffe6d2;--shadow:0 8px 22px rgba(17,20,35,.08)}"
+            "*{box-sizing:border-box}html{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink)}body{margin:0;min-height:100vh;background:radial-gradient(circle at 12% 0%,#fff7dc 0,transparent 26rem),#fffdf8;font-size:16px}a{color:var(--accent-strong);font-weight:700;text-decoration:none}a:hover{text-decoration:underline}.skip-link{position:absolute;left:1rem;top:-4rem;z-index:50;background:#111423;color:#fff;padding:.7rem 1rem;border-radius:999px}.skip-link:focus{top:1rem}.visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}"
+            ".app-shell{display:grid;grid-template-columns:270px minmax(0,1fr);min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;padding:1.7rem .75rem 1.4rem;border-right:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,250,239,.94));display:flex;flex-direction:column}.brand{display:flex;align-items:center;gap:.72rem;margin:.2rem .8rem 2.25rem;color:var(--ink)}.brand:hover{text-decoration:none}.brand strong{font-size:2.35rem;letter-spacing:-.07em}.brand-mark{display:grid;place-items:center;width:3.9rem;height:3.9rem;border-radius:50%;background:radial-gradient(circle,#ffd600 0 42%,#f7b500 43% 100%);color:#fff;font-size:2rem;box-shadow:inset 0 0 0 8px rgba(255,255,255,.22)}nav ul{display:grid;gap:.45rem;margin:0;padding:0;list-style:none}nav a{display:flex;align-items:center;gap:1rem;min-height:3.35rem;padding:0 1.25rem;border-radius:.6rem;color:#262c3f;font-weight:600;font-size:1.05rem}nav a:hover{background:#fff3c9;text-decoration:none;color:#111423}nav a[aria-current='page']{background:linear-gradient(90deg,#fff1be,#ffe39a);box-shadow:none;color:#111423}.nav-icon{display:grid;place-items:center;width:1.45rem;height:1.45rem;border:1.8px solid currentColor;border-radius:.32rem;font-size:.86rem;color:#111423}.bee-card{margin:auto .75rem 0;padding:1rem;border:1px solid #ffc44e;border-radius:.75rem;background:linear-gradient(135deg,#fff,#fff4d6);display:grid;grid-template-columns:auto 1fr auto;gap:.8rem;align-items:center;color:#111423}.bee-card strong,.bee-card em{display:block}.bee-card em{margin-top:.5rem;color:#ee8a00;font-style:normal}.bee{font-size:2.25rem}"
+            ".workspace{min-width:0;padding:0 1.1rem 2.7rem}.topbar{position:sticky;top:0;z-index:10;display:grid;grid-template-columns:1fr minmax(260px,315px) auto;gap:1.5rem;align-items:start;padding:2rem 1.1rem 1.55rem;background:rgba(255,253,248,.92);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}.page-heading{padding-left:.25rem}.eyebrow{margin:0 0 .2rem;color:var(--accent-strong);font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.page-heading h1{margin:0;font-size:2rem;line-height:1.05;letter-spacing:-.06em}.page-heading p{margin:.48rem 0 0;color:#68708d;font-size:1rem}.search{height:46px;border:1px solid #dddfe7;border-radius:.48rem;background:#fff;display:flex;align-items:center;gap:.65rem;padding:0 .9rem;color:#717890}.search input{border:0;min-height:0;width:100%;padding:0;background:transparent;color:#717890;font:inherit}.search input:disabled{opacity:1}.user-tools{display:flex;align-items:center;gap:1rem;white-space:nowrap}.ghost-icon{position:relative;border:0;background:transparent;box-shadow:none;color:#111423;font-size:1.55rem;padding:0;min-height:auto}.notification-dot{position:absolute;right:-.45rem;top:-.55rem;display:grid;place-items:center;min-width:1.45rem;height:1.45rem;border-radius:50%;background:var(--honey);font-size:.75rem;font-weight:800}.avatar{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:#fff2c8;font-weight:700}.account{display:grid}.account small{color:#68708d;margin-top:.2rem}"
+            ".metric-grid{display:grid;gap:1.35rem;margin:1.55rem .55rem}.metric-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.metric-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}.metric-card{min-height:120px;border:1px solid var(--line);border-radius:.72rem;background:#fff;box-shadow:var(--shadow);display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto auto;column-gap:1.25rem;align-content:center;padding:1.4rem 1.65rem}.metric-icon{grid-row:1/4;display:grid;place-items:center;width:4rem;height:4rem;border-radius:50%;background:linear-gradient(135deg,#fff7de,#ffe6a6);font-size:2rem;color:#101525}.metric-card.tone-green .metric-icon{background:var(--green-soft);color:var(--green)}.metric-card.tone-alert .metric-icon{background:#fff1cd;color:#ff8900}.metric-card.tone-peach .metric-icon{background:var(--orange-soft)}.metric-label{color:#25283a;font-size:1rem;font-weight:500}.metric-value{font-size:2.45rem;line-height:1;font-weight:800;letter-spacing:-.05em}.tone-alert .metric-value{color:#d80d14}.tone-green .metric-value{color:var(--green)}.metric-card small{color:#777e95;font-size:1rem}"
+            ".dashboard-grid{display:grid;gap:1.55rem;margin:1.55rem .55rem}.two-col{grid-template-columns:1fr 1fr}.orders-layout{grid-template-columns:minmax(0,1fr) 265px}.products-layout{grid-template-columns:minmax(0,1.5fr) minmax(340px,.95fr)}.money-layout{grid-template-columns:minmax(0,1fr) 300px;align-items:start}.bottom-grid{grid-template-columns:1.15fr .85fr}.stack{display:grid;gap:1.05rem}.panel{border:1px solid var(--line);border-radius:.72rem;background:#fff;box-shadow:var(--shadow);padding:1.45rem}.panel.wide{margin:1.55rem .55rem}.panel-header,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem}.panel h3{margin:0;font-size:1.35rem;letter-spacing:-.04em}.panel p{color:#68708d;margin:.45rem 0 1rem}.outline,.primary,.tab,.button-link{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:2.55rem;border-radius:.38rem;border:1px solid #d9dce5;background:#fff;color:#111423;padding:.58rem 1rem;font:inherit;font-weight:700;box-shadow:none}.outline{border-color:#ffc21a;color:#e98200}.outline.muted{border-color:#d9dce5;color:#111423}.primary{border-color:var(--honey);background:var(--honey);color:#111423}.small{min-height:2.2rem;padding:.45rem .8rem}.tab{color:#68708d}.tab.active{border-color:#ffc21a;background:#fff8dc;color:#111423}button{cursor:pointer}"
+            "table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}th,td{padding:1rem 1.05rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{background:#fffdfa;color:#25283a;font-size:.82rem;font-weight:700}tr:last-child td{border-bottom:0}td:first-child,th:first-child{font-weight:700}.status-badge,.coming-soon{display:inline-flex;width:max-content;align-items:center;border-radius:.32rem;padding:.35rem .62rem;font-size:.88rem;font-weight:600;background:#fff1d6;color:#de7d00}.badge-green{background:var(--green-soft);color:var(--green)}.badge-blue{background:var(--blue-soft);color:var(--blue)}.badge-red{background:var(--red-soft);color:var(--red)}.badge-gold{background:#fff1d6;color:#dc7800}.pill{border-radius:.32rem;padding:.35rem .75rem;font-weight:600}.pill.high{background:#fff1d6;color:#dc7800}.pill.medium{background:#e8f2ff;color:#1266d6}.pill.low{background:#eeeef2;color:#222}.pill.danger{background:var(--red-soft);color:var(--red)}.text-link{display:inline-flex;margin-top:1rem;color:#ec8700}.centered{justify-content:center;width:100%}.thumb{display:inline-grid;place-items:center;width:3.2rem;height:3.2rem;margin-right:.75rem;border-radius:.35rem;background:linear-gradient(135deg,#f8f4ed,#eee7db);vertical-align:middle}.channel{display:inline-grid;place-items:center;width:1.35rem;height:1.35rem;border-radius:.18rem;background:#f26d00;color:#fff;font-weight:800}.ready{color:#27943a;font-weight:700}"
+            ".task-list,.media-list,.queue-list,.profit-list,.channel-list,.pref-list{list-style:none;margin:0;padding:0}.task-list li,.media-list li,.queue-list li,.profit-list li,.channel-list li,.pref-list li{display:grid;align-items:center;gap:.75rem;border-bottom:1px solid var(--line);padding:.85rem 0}.task-list li{grid-template-columns:auto 1fr auto}.media-list li{grid-template-columns:auto 1fr auto auto auto}.media-list.compact li{grid-template-columns:auto 1fr auto auto}.media-list small{display:block;color:#68708d}.queue-list li{grid-template-columns:1fr auto}.queue-list span{grid-column:1;color:#68708d}.profit-list li{grid-template-columns:auto 1fr auto}.profit-list b{color:#168200;font-size:1.1rem}.details-list{display:grid;grid-template-columns:1fr 1fr;margin:1rem 0 0}.details-list dt,.details-list dd{margin:0;padding:1rem 0;border-bottom:1px solid var(--line)}.details-list dt{color:#25283a}.channel-list li{grid-template-columns:auto 1fr auto auto;border:1px solid var(--line);border-radius:.55rem;padding:1rem;margin:.75rem 0}.channel-logo{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:#f26d00;color:#fff;font-size:1.8rem;font-weight:800}.channel-logo.fb{background:#1977f3}.channel-list small,.pref-list small{display:block;color:#68708d;margin-top:.25rem}.info{padding:1rem;border-radius:.45rem;background:#f6f7fa}.pref-list li{grid-template-columns:auto 1fr auto}.small-icon{width:2.4rem;height:2.4rem;font-size:1.1rem}.toggle{width:2.6rem;height:1.35rem;border-radius:999px;background:#d5d8df;position:relative}.toggle:after{content:'';position:absolute;top:.16rem;left:.16rem;width:1.03rem;height:1.03rem;border-radius:50%;background:#fff}.toggle.on{background:var(--honey)}.toggle.on:after{left:1.38rem}.form-actions{display:flex;justify-content:flex-end;gap:1rem;margin-top:1.2rem}.legend{display:flex;justify-content:flex-end;gap:2rem;color:#25283a}.legend span:before{content:'';display:inline-block;width:1.2rem;height:.25rem;border-radius:99px;margin-right:.5rem;vertical-align:middle}.legend .sales:before{background:#83b96f}.legend .costs:before{background:#ff992a}.bar-chart{height:265px;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0 54px,#e9e9e9 55px);display:grid;grid-template-columns:repeat(4,1fr);gap:2.2rem;align-items:end;padding:0 3rem}.bar-chart div{height:100%;display:flex;align-items:end;justify-content:center;gap:.8rem;position:relative}.bar-chart i,.bar-chart b{display:block;width:1.75rem;border-radius:.18rem .18rem 0 0}.bar-chart i{background:linear-gradient(180deg,#91c47d,#cde8bf)}.bar-chart b{background:linear-gradient(180deg,#ff9d37,#ffc079)}.bar-chart span{position:absolute;bottom:-3.1rem;text-align:center;color:#68708d}.bar-chart small{display:block}.money-actions{display:flex;gap:1rem;align-items:start;justify-content:end;flex-wrap:wrap;padding:1rem}.money-actions p{width:100%;text-align:right;color:#68708d}.chart-panel{min-height:330px}"
+            "@media (max-width:1100px){.app-shell{grid-template-columns:1fr}.sidebar{position:static;height:auto}.brand{margin-bottom:1rem}nav ul{display:flex;flex-wrap:wrap}.bee-card{display:none}.topbar{grid-template-columns:1fr}.metric-grid.three,.metric-grid.four,.two-col,.orders-layout,.products-layout,.money-layout,.bottom-grid{grid-template-columns:1fr}.user-tools{justify-content:flex-start}.bar-chart{padding:0 1rem}}@media (max-width:720px){.workspace{padding:0 .5rem 1rem}.topbar{padding:1rem .5rem}.metric-grid,.dashboard-grid,.panel.wide{margin:1rem 0}.metric-card{grid-template-columns:1fr}.metric-icon{grid-row:auto}.panel{padding:1rem}table{display:block;overflow-x:auto;white-space:nowrap}.toolbar,.panel-header{align-items:flex-start;flex-direction:column}.details-list{grid-template-columns:1fr}.channel-list li,.pref-list li{grid-template-columns:1fr}.bar-chart{gap:.7rem}.brand strong{font-size:1.8rem}}"
             "</style>"
         )
 
