@@ -32,6 +32,33 @@ Overall status: V1 is declared complete after Milestone 10.3 readiness validatio
 
 ## Recent Updates
 
+### 2026-06-01 — Post-V1 Products materials add popup
+
+Branch/PR/Issue:
+- direct UI request for the Products & Stock Materials panel
+
+Completed:
+- Replaced the Products & Stock Materials panel “View Materials” link with an “Add Material” popup trigger.
+- Added a focused add-material dialog to Products & Stock using the existing workflow dialog styling.
+- Wired a scoped `create_material` POST action so newly added materials appear in the Products & Stock materials panel.
+- Added regression coverage for the label, popup form, post behavior, and dialog button styling.
+- Added durable report evidence at `docs/ai/reports/post-v1-products-material-add-dialog-report-2026-06-01.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass; no runtime packages are required
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`118 passed`)
+- `PYTHONPATH=src python scripts/export_ui_review_pages.py` — pass
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — environment limitation because Playwright is not installed
+- `python -m pip install playwright` — environment limitation because the package-index proxy returned `403 Forbidden` / no matching distribution
+
+Notes:
+- No new dependencies were added.
+- Make / Buy material admin panels remain hidden per the prior simplification; this change only adds a focused Products & Stock material creation popup.
+
 ### 2026-06-01 — Post-V1 Make / Buy page simplification
 
 Branch/PR/Issue:

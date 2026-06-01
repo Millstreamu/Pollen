@@ -396,6 +396,35 @@ def test_products_ui_detail_edit_mode_shows_all_editable_fields() -> None:
     assert "name='reorder_point' type='number' min='0' value='6'" in response.body
 
 
+def test_products_stock_materials_panel_adds_material_from_popup_form() -> None:
+    header = _auth_header("materials-panel", "materials-panel@example.com")
+    app = create_app()
+
+    initial_response = app.get("/products-stock", authorization_header=header)
+
+    assert initial_response.status_code == 200
+    assert "<h3>Materials</h3><a class='outline' href='#add-material-dialog'>Add Material</a>" in initial_response.body
+    assert "View Materials" not in initial_response.body
+    assert "id='add-material-dialog' role='dialog'" in initial_response.body
+    assert "<input type='hidden' name='action' value='create_material'>" in initial_response.body
+
+    create_response = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={
+            "action": "create_material",
+            "name": "Wick Tabs",
+            "unit": "pcs",
+            "stock_on_hand": "12",
+            "reorder_point": "20",
+        },
+    )
+
+    assert create_response.status_code == 200
+    assert "Wick Tabs" in create_response.body
+    assert "12 pcs" in create_response.body
+    assert "Low" in create_response.body
+
 def test_make_buy_page_shows_operational_empty_states() -> None:
     app = create_app()
 

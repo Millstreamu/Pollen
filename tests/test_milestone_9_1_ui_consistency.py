@@ -61,6 +61,11 @@ def test_products_stock_page_uses_beginner_friendly_sections_and_buttons() -> No
     assert "role='dialog'" in response.body
     assert "href='#add-product-dialog'" in response.body
     assert "<h2>Products list</h2>" in response.body
+    assert "<h3>Materials</h3><a class='outline' href='#add-material-dialog'>Add Material</a>" in response.body
+    assert "id='add-material-dialog-title'>Add material</h3>" in response.body
+    assert "<input type='hidden' name='action' value='create_material'>" in response.body
+    assert "<button class='primary' type='submit'>Save material</button>" in response.body
+    assert "View Materials" not in response.body
     assert "Active" in response.body
     assert "Archived" in response.body
     assert "All" in response.body
@@ -190,6 +195,7 @@ def test_workflow_dialog_forms_use_polished_controls_and_spaced_actions() -> Non
     assert "width:100%;box-sizing:border-box;min-height:2.45rem" in combined
     assert ".modal-card .dialog-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:1rem" in combined
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save product</button>" in products
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>" in products
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>" not in make_buy
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save batch plan</button>" in make_buy
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save purchase</button>" in make_buy
