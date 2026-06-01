@@ -24,8 +24,8 @@ from pollen.services import (
 NAV_ITEMS: tuple[tuple[str, str], ...] = (
     ("Today", "/"),
     ("Orders", "/orders"),
-    ("Products & Stock", "/products-stock"),
-    ("Make / Buy", "/make-buy"),
+    ("Inventory", "/products-stock"),
+    ("Workshop", "/make-buy"),
     ("Money", "/money"),
     ("Settings", "/settings"),
 )
@@ -46,8 +46,8 @@ class AppShell:
     _DESCRIPTIONS = {
         "Today": "Your daily overview will appear here.",
         "Orders": "Order workflow tools will appear here.",
-        "Products & Stock": "Product and stock tools will appear here.",
-        "Make / Buy": "Make and buy planning will appear here.",
+        "Inventory": "See stock, low stock, and restock workflows here.",
+        "Workshop": "Create products, define recipes, and make batches here.",
         "Money": "Estimated money snapshots will appear here.",
         "Settings": "Shop settings and preferences will appear here.",
     }
@@ -144,7 +144,7 @@ class AppShell:
             return AppResponse(status_code=401, body="Unauthorized")
 
         if path == "/make-buy":
-            return self._handle_material_post(authorization_header=authorization_header, form_data=form_data)
+            return self._handle_workshop_post(authorization_header=authorization_header, form_data=form_data)
         if path == "/orders":
             return self._handle_order_post(authorization_header=authorization_header, form_data=form_data)
 
@@ -260,10 +260,27 @@ class AppShell:
                     authorization_header=authorization_header,
                     recipe_item_id=recipe_item_id,
                 )
+        elif action == "add_to_purchase":
+            self._material_service.add_to_purchase_draft(
+                authorization_header=authorization_header,
+                material_id=payload.get("material_id", ""),
+            )
+        elif action == "create_purchase":
+            self._material_service.create_purchase_from_draft(
+                authorization_header=authorization_header,
+                supplier=payload.get("supplier"),
+                expected_date=payload.get("expected_date"),
+                status=payload.get("status", "draft"),
+            )
+        elif action == "receive_purchase":
+            self._material_service.receive_purchase(
+                authorization_header=authorization_header,
+                purchase_id=payload.get("purchase_id", ""),
+            )
 
         return self.get(path, authorization_header=authorization_header)
 
-    def _handle_material_post(
+    def _handle_workshop_post(
         self,
         *,
         authorization_header: str,
@@ -271,7 +288,35 @@ class AppShell:
     ) -> AppResponse:
         payload = form_data or {}
         action = payload.get("action")
-        if action == "create":
+        if action == "create_product":
+            self._product_service.create_product(
+                authorization_header=authorization_header,
+                name=payload.get("name", ""),
+                sku=payload.get("sku", ""),
+                stock_on_hand=int(payload.get("stock_on_hand", "0")),
+                reorder_point=int(payload.get("reorder_point", "0")),
+                sale_price=float(payload.get("sale_price", "0") or 0),
+                estimated_material_cost=float(payload.get("estimated_material_cost", "0") or 0),
+                estimated_packaging_shipping_cost=float(
+                    payload.get("estimated_packaging_shipping_cost", "0") or 0
+                ),
+                platform_fee_percent=float(payload.get("platform_fee_percent", "0") or 0),
+            )
+        elif action == "create_recipe_item":
+            self._recipe_service.create_recipe_item(
+                authorization_header=authorization_header,
+                product_id=payload.get("product_id", ""),
+                material_id=payload.get("material_id", ""),
+                quantity_per_unit=int(payload.get("quantity_per_unit", "0")),
+            )
+        elif action == "archive_recipe_item":
+            recipe_item_id = payload.get("recipe_item_id")
+            if recipe_item_id:
+                self._recipe_service.archive_recipe_item(
+                    authorization_header=authorization_header,
+                    recipe_item_id=recipe_item_id,
+                )
+        elif action == "create":
             self._material_service.create_material(
                 authorization_header=authorization_header,
                 name=payload.get("name", ""),
@@ -897,8 +942,8 @@ class AppShell:
         icon_map = {
             "Today": "⌂",
             "Orders": "▢",
-            "Products & Stock": "⬡",
-            "Make / Buy": "⚒",
+            "Inventory": "⬡",
+            "Workshop": "⚒",
             "Money": "$",
             "Settings": "⚙",
         }
@@ -910,8 +955,8 @@ class AppShell:
         page_subtitles = {
             "Today": "See what needs attention in your shop.",
             "Orders": "Track new, packed, and shipped orders.",
-            "Products & Stock": "See what you have, what is low, and what can be made.",
-            "Make / Buy": "See what to make next and what materials to buy.",
+            "Inventory": "See stock, low stock, buy list, and incoming purchases.",
+            "Workshop": "Create products, define recipes, and make batches.",
             "Money": "See sales, costs, and estimated profit.",
             "Settings": "Manage your shop details and basic connections.",
         }
@@ -920,7 +965,7 @@ class AppShell:
             page_content = self._render_today_dashboard(authorization_header=authorization_header)
         elif page_title == "Orders" and authorization_header is not None:
             page_content = self._render_orders_dashboard(authorization_header=authorization_header)
-        elif page_title == "Products & Stock" and authorization_header is not None:
+        elif page_title == "Inventory" and authorization_header is not None:
             view = "active"
             if query is not None:
                 requested_view = query.get("view", ["active"])[0]
@@ -933,7 +978,7 @@ class AppShell:
                 edit_product_id=edit_product_id,
                 query=query,
             )
-        elif page_title == "Make / Buy" and authorization_header is not None:
+        elif page_title == "Workshop" and authorization_header is not None:
             view = "active"
             if query is not None:
                 requested_view = query.get("view", ["active"])[0]
@@ -1171,65 +1216,114 @@ class AppShell:
         edit_product_id: str | None = None,
         query: dict[str, list[str]] | None = None,
     ) -> str:
-        legacy = self._render_products_page(
-            authorization_header=authorization_header,
-            view=view,
-            edit_product_id=edit_product_id,
-            query=query,
-        )
+        _ = edit_product_id, query
         products = self._product_service.list_products(authorization_header=authorization_header)
-        archived = self._product_service.list_products(authorization_header=authorization_header, include_archived=True)
-        archived_only = [product for product in archived if not product.is_active]
-        display_products = products if view in {"active", "all"} else archived_only
-        low_products = [product for product in products if product.is_low_stock]
         materials = self._material_service.list_materials(authorization_header=authorization_header)
+        low_materials = self._material_service.list_low_stock_suggestions(authorization_header=authorization_header)
+        purchases = self._material_service.list_purchases(authorization_header=authorization_header)
+        incoming_purchases = [purchase for purchase in purchases if purchase.status != "Received"]
+        draft_items = self._material_service.list_purchase_draft(authorization_header=authorization_header)
+
         product_rows = "".join(
-            f"<tr><td><span class='thumb'>▧</span> {self._h(product.name)}</td><td>{self._h(product.sku)}</td>"
-            f"<td>{product.stock_on_hand}</td><td>{product.reorder_point}</td><td>{self._money(product.sale_price)}</td>"
-            f"<td>{self._badge('Low' if product.is_low_stock else 'In Stock', 'gold' if product.is_low_stock else 'green')}</td></tr>"
-            for product in display_products
-        ) or "<tr><td colspan='6'>No products yet. Add your first product to start tracking stock.</td></tr>"
-        low_list = "".join(
-            f"<li><span class='thumb'>▧</span><strong>{self._h(product.name)}</strong><small>{product.stock_on_hand} left</small><span class='pill high'>Low</span><b>›</b></li>"
-            for product in low_products[:4]
-        ) or "<li><strong>No low stock products</strong><small>Products below reorder point appear here.</small></li>"
+            "<tr>"
+            f"<td><span class='thumb'>▧</span> {self._h(product.name)}</td>"
+            f"<td>{self._h(product.sku)}</td>"
+            f"<td>{product.stock_on_hand}</td>"
+            f"<td>{product.reserved_stock}</td>"
+            f"<td>{product.reorder_point}</td>"
+            f"<td>{self._badge('Low' if product.is_low_stock else 'Good', 'gold' if product.is_low_stock else 'green')}</td>"
+            "<td><form class='inline-form compact-adjust' method='post' action='/products-stock'>"
+            "<input type='hidden' name='action' value='adjust_stock'>"
+            f"<input type='hidden' name='product_id' value='{self._h(product.product_id)}'>"
+            "<label>Adjust <input name='delta' type='number' value='0'></label>"
+            "<label>Reason <input name='reason' placeholder='count correction'></label>"
+            "<button type='submit'>Save</button></form></td>"
+            "</tr>"
+            for product in products
+        ) or "<tr><td colspan='6'>No finished products yet. Create products in Workshop, then track stock here.</td></tr>"
         material_rows = "".join(
-            f"<tr><td>{self._h(material.name)}</td><td>{material.stock_on_hand} {self._h(material.unit)}</td><td>{material.reorder_point}</td>"
-            f"<td>{self._badge('Low' if material.is_low_stock else 'In Stock', 'gold' if material.is_low_stock else 'green')}</td></tr>"
-            for material in materials[:5]
-        ) or "<tr><td colspan='4'>No materials yet. Add your first material to track supplies.</td></tr>"
-        add_material_form = (
-            "<form class='form-grid compact-form' method='post' action='/products-stock'>"
-            "<input type='hidden' name='action' value='create_material'>"
-            "<label>Name <input name='name' required></label>"
-            "<label>Unit <input name='unit' required></label>"
-            "<label>Stock <input name='stock_on_hand' type='number' min='0' required></label>"
-            "<label>Reorder <input name='reorder_point' type='number' min='0' required></label>"
-            "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>"
-            "<a class='outline' href='#'>Cancel</a></div>"
-            "</form>"
+            "<tr>"
+            f"<td><span class='thumb'>◫</span> {self._h(material.name)}</td>"
+            f"<td>{material.stock_on_hand} {self._h(material.unit)}</td>"
+            f"<td>{material.reorder_point} {self._h(material.unit)}</td>"
+            f"<td>{self._badge('Low' if material.is_low_stock else 'Good', 'gold' if material.is_low_stock else 'green')}</td>"
+            "<td><form class='inline-form compact-adjust' method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='adjust_stock'>"
+            f"<input type='hidden' name='material_id' value='{self._h(material.material_id)}'>"
+            "<label>Adjust <input name='delta' type='number' value='0'></label>"
+            "<label>Reason <input name='reason' placeholder='stock count'></label>"
+            "<button type='submit'>Save</button></form></td>"
+            "</tr>"
+            for material in materials
+        ) or "<tr><td colspan='5'>No materials yet. Add materials while defining recipes in Workshop.</td></tr>"
+        buy_rows = "".join(
+            "<tr>"
+            f"<td><span class='thumb'>◫</span> {self._h(row['name'])}</td>"
+            f"<td>{row['stock_on_hand']} {self._h(row['unit'])}</td>"
+            f"<td>{row['suggested_quantity']} {self._h(row['unit'])}</td>"
+            "<td><form method='post' action='/products-stock' style='display:inline'>"
+            "<input type='hidden' name='action' value='add_to_purchase'>"
+            f"<input type='hidden' name='material_id' value='{self._h(str(row['material_id']))}'>"
+            "<button class='outline muted' type='submit'>Add to Purchase</button></form></td>"
+            "</tr>"
+            for row in low_materials[:8]
+        ) or "<tr><td colspan='4'>No low materials right now. Reorder suggestions will appear here.</td></tr>"
+        purchase_rows = "".join(
+            "<tr>"
+            f"<td>{self._h(purchase.purchase_id)}</td>"
+            f"<td>{self._h(purchase.supplier or '-')}</td>"
+            f"<td>{self._h(purchase.expected_date or '-')}</td>"
+            f"<td>{self._badge(purchase.status, 'green' if purchase.status == 'Received' else 'blue')}</td>"
+            "<td>"
+            + (
+                "<form method='post' action='/products-stock' style='display:inline'><input type='hidden' name='action' value='receive_purchase'>"
+                f"<input type='hidden' name='purchase_id' value='{self._h(purchase.purchase_id)}'><button class='outline muted' type='submit'>Receive Materials</button></form>"
+                if purchase.status != "Received"
+                else "—"
+            )
+            + "</td></tr>"
+            for purchase in purchases[:8]
+        ) or "<tr><td colspan='5'>No incoming purchases yet. Build a purchase from the Buy List when materials run low.</td></tr>"
+        draft_note = (
+            f"<p class='empty-state'>{len(draft_items)} material(s) staged for the next purchase.</p>"
+            if draft_items
+            else "<p class='empty-state'>Add low materials to purchase before creating an incoming purchase.</p>"
         )
-        add_material_dialog = self._render_workflow_dialog(
-            dialog_id="add-material-dialog",
-            title="Add material",
-            description="Add a supply item so product stock planning has accurate material counts.",
-            body=add_material_form,
+        create_purchase_dialog = self._render_workflow_dialog(
+            dialog_id="create-purchase-dialog",
+            title="Create purchase",
+            description="Save an incoming restock purchase from the materials staged in your buy list.",
+            body=(
+                "<form class='form-grid compact-form' method='post' action='/products-stock'>"
+                "<input type='hidden' name='action' value='create_purchase'>"
+                "<label>Supplier <input name='supplier' placeholder='Optional supplier'></label>"
+                "<label>Expected date <input name='expected_date' placeholder='YYYY-MM-DD (optional)'></label>"
+                "<label>Status <select name='status'><option value='draft'>Draft</option><option value='ordered'>Ordered</option></select></label>"
+                "<div class='dialog-actions'><button class='primary' type='submit'>Save purchase</button>"
+                "<a class='outline' href='#'>Cancel</a></div></form>"
+            ),
         )
-        archived_label = "<section class='workflow-card'><h3>Archived products</h3></section>" if view in {"archived", "all"} and archived_only else ""
         return (
             "<section class='metric-grid three'>"
-            f"{self._metric_card('▧', 'Products', len(products))}"
-            f"{self._metric_card('⚠', 'Low Stock', len(low_products), 'alert')}"
-            f"{self._metric_card('⚒', 'Archived', len(archived_only))}"
-            "</section><section class='dashboard-grid products-layout'>"
-            "<article class='panel'><div class='panel-header'><h3>Products</h3><div><a class='outline' href='#add-product-dialog'>Add Product ＋</a><a class='primary' href='#products-workflow'>Adjust Stock</a></div></div>"
-            f"<table><thead><tr><th>Product</th><th>SKU</th><th>In Stock</th><th>Reorder Point</th><th>Price</th><th>Status</th></tr></thead><tbody>{product_rows}</tbody></table><a class='text-link' href='#products-workflow'>Manage product records ›</a></article>"
-            "<aside class='stack'><article class='panel'><div class='panel-header'><h3>Low Stock</h3><a class='outline' href='/products-stock'>View all</a></div>"
-            f"<ul class='media-list compact'>{low_list}</ul></article>"
-            "<article class='panel'><div class='panel-header'><h3>Materials</h3><a class='outline' href='#add-material-dialog'>Add Material</a></div>"
-            f"<table><thead><tr><th>Material</th><th>On Hand</th><th>Reorder Point</th><th>Status</th></tr></thead><tbody>{material_rows}</tbody></table></article></aside></section>"
-            f"{add_material_dialog}"
-            f"<section class='panel wide workflow-panel' id='products-workflow'>{legacy}{archived_label}</section>"
+            f"{self._metric_card('▧', 'Finished Products in Stock', sum(product.stock_on_hand for product in products), 'green', 'Total units')}"
+            f"{self._metric_card('⚠', 'Materials Low', len(low_materials), 'alert', 'Need reordering')}"
+            f"{self._metric_card('▰', 'Incoming Purchases', len(incoming_purchases), 'gold', 'Receiving queue')}"
+            "</section>"
+            "<section class='dashboard-grid two-col'>"
+            "<article class='panel'><div class='panel-header'><h3>Finished Products</h3><p>Current stock counts for products you sell.</p></div>"
+            f"<table><thead><tr><th>Product</th><th>SKU</th><th>On Hand</th><th>Reserved</th><th>Reorder Point</th><th>Status</th><th>Stock Control</th></tr></thead><tbody>{product_rows}</tbody></table></article>"
+            "<article class='panel'><div class='panel-header'><h3>Materials</h3><p>Current material stock and low-stock status.</p></div>"
+            f"<table><thead><tr><th>Material</th><th>On Hand</th><th>Reorder Point</th><th>Status</th><th>Stock Control</th></tr></thead><tbody>{material_rows}</tbody></table></article>"
+            "</section>"
+            "<section class='dashboard-grid two-col bottom-grid'>"
+            "<article class='panel' id='buy-list'><div class='panel-header'><h3>Buy List</h3><a class='outline' href='#create-purchase-dialog'>Create Purchase</a></div>"
+            "<p>Suggested items to reorder based on material stock and reorder points.</p>"
+            f"{draft_note}<table><thead><tr><th>Material</th><th>On Hand</th><th>Suggested Qty</th><th></th></tr></thead><tbody>{buy_rows}</tbody></table></article>"
+            "<article class='panel' id='incoming-purchases'><div class='panel-header'><h3>Incoming Purchases</h3><a class='outline' href='#create-purchase-dialog'>Create Purchase</a></div>"
+            "<p>Track and receive purchases when materials arrive.</p>"
+            f"<table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead><tbody>{purchase_rows}</tbody></table></article>"
+            "</section>"
+            f"{create_purchase_dialog}"
         )
 
     def _render_make_buy_dashboard(
@@ -1240,81 +1334,176 @@ class AppShell:
         edit_material_id: str | None = None,
         query: dict[str, list[str]] | None = None,
     ) -> str:
+        _ = view, edit_material_id
         products = self._product_service.list_products(authorization_header=authorization_header)
+        materials = self._material_service.list_materials(authorization_header=authorization_header)
         batches = self._batch_service.list_batches(authorization_header=authorization_header)
-        purchases = self._material_service.list_purchases(authorization_header=authorization_header)
-        low_materials = self._material_service.list_low_stock_suggestions(authorization_header=authorization_header)
         planned_batches = [batch for batch in batches if batch.status == "planned"]
+        in_progress_batches = [batch for batch in batches if batch.status == "in-progress"]
         product_by_id = {product.product_id: product for product in products}
+        selected_product_id = query.get("product_id", [products[0].product_id if products else ""])[0] if query is not None else (products[0].product_id if products else "")
+        selected_product = self._product_service.get_product(authorization_header=authorization_header, product_id=selected_product_id) if selected_product_id else None
+        if selected_product is None and products:
+            selected_product = products[0]
+        selected_quantity = 1
+        if selected_product is not None:
+            for batch in planned_batches + in_progress_batches:
+                if batch.product_id == selected_product.product_id:
+                    selected_quantity = batch.quantity
+                    break
+        selected_recipe = (
+            self._recipe_service.materials_needed(
+                authorization_header=authorization_header,
+                product_id=selected_product.product_id,
+                quantity=1,
+            )
+            if selected_product is not None
+            else []
+        )
+        selected_batch_materials = (
+            self._recipe_service.materials_needed(
+                authorization_header=authorization_header,
+                product_id=selected_product.product_id,
+                quantity=selected_quantity,
+            )
+            if selected_product is not None
+            else []
+        )
+
+        def batch_shortages(batch) -> list[dict[str, int | str]]:
+            needed = self._recipe_service.materials_needed(
+                authorization_header=authorization_header,
+                product_id=batch.product_id,
+                quantity=batch.quantity,
+            )
+            return [row for row in needed if int(row["shortage"]) > 0]
+
+        blocked_batches = [batch for batch in planned_batches + in_progress_batches if batch_shortages(batch)]
+        product_rows = "".join(
+            "<li>"
+            "<span class='thumb'>▧</span>"
+            f"<strong>{self._h(product.name)}</strong>"
+            f"<small>{self._h(product.sku)} · makes {self._recipe_service.can_make_quantity(authorization_header=authorization_header, product_id=product.product_id)} now</small>"
+            f"{self._badge('Recipe ready' if self._recipe_service.can_make_quantity(authorization_header=authorization_header, product_id=product.product_id) else 'Needs recipe/materials', 'green' if self._recipe_service.can_make_quantity(authorization_header=authorization_header, product_id=product.product_id) else 'gold')}"
+            f"<a class='text-link' href='/make-buy?product_id={self._h(product.product_id)}'>Open ›</a>"
+            "</li>"
+            for product in products[:6]
+        ) or "<li><strong>No products defined yet</strong><small>Create your first product and recipe in Workshop.</small></li>"
         batch_rows = "".join(
             "<tr>"
             f"<td><span class='thumb'>▧</span> {self._h(product_by_id.get(batch.product_id).name if product_by_id.get(batch.product_id) else batch.product_id)}</td>"
-            f"<td>{batch.quantity}</td><td>{self._badge('Planned', 'gold')}</td><td><a class='outline small' href='#plan-batch-dialog'>Plan Batch</a></td></tr>"
-            for batch in planned_batches[:6]
-        ) or "<tr><td colspan='4'>No batches planned yet. Plan a batch when you’re ready to make more stock.</td></tr>"
-        buy_rows = "".join(
-            f"<tr><td><span class='thumb'>▧</span> {self._h(row['name'])}</td><td>{row['suggested_quantity']} {self._h(row['unit'])}</td>"
-            f"<td>—</td><td>{self._badge('Low', 'gold')}</td></tr>"
-            for row in low_materials[:6]
-        ) or "<tr><td colspan='4'>No materials missing right now. Low materials will appear here when it is time to restock.</td></tr>"
-        purchase_rows = "".join(
-            "<tr>"
-            f"<td>{self._h(purchase.purchase_id)}</td><td>{self._h(purchase.supplier or '-')}</td>"
-            f"<td>{self._h(purchase.expected_date or '-')}</td><td>{self._badge(purchase.status, 'green' if purchase.status == 'Received' else 'blue')}</td><td>"
+            f"<td>{batch.quantity}</td>"
+            f"<td>{self._badge('Blocked by missing materials' if batch_shortages(batch) else batch.status.replace('-', ' ').title(), 'gold' if batch_shortages(batch) else 'blue')}</td>"
+            "<td>"
             + (
-                "<form method='post' action='/make-buy' style='display:inline'><input type='hidden' name='action' value='receive_purchase'>"
-                f"<input type='hidden' name='purchase_id' value='{self._h(purchase.purchase_id)}'><button class='outline muted' type='submit'>Mark Received</button></form>"
-                if purchase.status != "Received"
-                else "—"
+                "<form method='post' action='/make-buy' style='display:inline'><input type='hidden' name='action' value='start_batch'>"
+                f"<input type='hidden' name='batch_id' value='{self._h(batch.batch_id)}'><button class='outline muted' type='submit'>Start Batch</button></form>"
+                if batch.status == "planned"
+                else "<form method='post' action='/make-buy' style='display:inline'><input type='hidden' name='action' value='complete_batch'>"
+                f"<input type='hidden' name='batch_id' value='{self._h(batch.batch_id)}'><button class='outline muted' type='submit'>Complete Batch</button></form>"
             )
             + "</td></tr>"
-            for purchase in purchases[:6]
-        ) or "<tr><td colspan='5'>No purchases yet. Create a purchase when you need to restock materials.</td></tr>"
+            for batch in planned_batches[:6] + in_progress_batches[:6]
+        ) or "<tr><td colspan='4'>No planned batches yet. Plan a batch when you are ready to make more stock.</td></tr>"
+        recipe_rows = "".join(
+            "<tr>"
+            f"<td>{self._h(str(row['material_name']))}</td>"
+            f"<td>{row['needed']} {self._h(str(row['unit']))}</td>"
+            f"<td>{row['on_hand']} {self._h(str(row['unit']))}</td>"
+            "<td><form method='post' action='/make-buy' style='display:inline'>"
+            "<input type='hidden' name='action' value='archive_recipe_item'>"
+            f"<input type='hidden' name='recipe_item_id' value='{self._h(str(row['recipe_item_id']))}'>"
+            "<button class='outline muted' type='submit'>Remove</button></form></td>"
+            "</tr>"
+            for row in selected_recipe
+        ) or "<tr><td colspan='4'>No recipe rows yet. Add materials and quantities to formalise this product.</td></tr>"
+        batch_material_rows = "".join(
+            "<tr>"
+            f"<td>{self._h(str(row['material_name']))}</td>"
+            f"<td>{row['needed']} {self._h(str(row['unit']))}</td>"
+            f"<td>{row['on_hand']} {self._h(str(row['unit']))}</td>"
+            f"<td>{self._badge('Missing ' + str(row['shortage']) if int(row['shortage']) else 'Ready', 'gold' if int(row['shortage']) else 'green')}</td>"
+            "</tr>"
+            for row in selected_batch_materials
+        ) or "<tr><td colspan='4'>Add recipe rows to see materials needed for a batch.</td></tr>"
+        material_options = "".join(
+            f"<option value='{self._h(material.material_id)}'>{self._h(material.name)}</option>" for material in materials
+        )
+        product_options = "".join(
+            f"<option value='{self._h(product.product_id)}'>{self._h(product.name)}</option>" for product in products
+        )
+        selected_product_hidden = selected_product.product_id if selected_product is not None else ""
+        recipe_form = (
+            "<form class='inline-form recipe-form' method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='create_recipe_item'>"
+            f"<input type='hidden' name='product_id' value='{self._h(selected_product_hidden)}'>"
+            f"<label>Material/part <select name='material_id'>{material_options}</select></label>"
+            "<label>Quantity per unit <input name='quantity_per_unit' type='number' min='1' required></label>"
+            "<button type='submit'>Add recipe row</button></form>"
+        ) if selected_product is not None and materials else "<p class='empty-state'>Create a product and at least one material before adding recipe rows.</p>"
         return (
             "<section class='metric-grid three'>"
-            f"{self._metric_card('⚒', 'Batches to Make', len(planned_batches))}"
-            f"{self._metric_card('⚠', 'Materials Missing', len(low_materials), 'alert')}"
-            f"{self._metric_card('▰', 'Purchases Incoming', sum(1 for purchase in purchases if purchase.status != 'Received'), 'green')}"
-            "</section><section class='dashboard-grid two-col'>"
-            "<article class='panel' id='make-next'><div class='panel-header'><h3>Make Next</h3><a class='outline' href='#plan-batch-dialog'>Plan Batch</a></div><table><thead><tr><th>Product</th><th>Quantity</th><th>Status</th><th></th></tr></thead>"
-            f"<tbody>{batch_rows}</tbody></table><a class='text-link' href='#make-next'>View all batches ›</a></article>"
-            "<article class='panel' id='buy-list'><div class='panel-header'><h3>Buy List</h3><a class='outline' href='#create-purchase-dialog'>Create Purchase</a></div><table><thead><tr><th>Material</th><th>Suggested Qty</th><th>Supplier</th><th>Status</th></tr></thead>"
-            f"<tbody>{buy_rows}</tbody></table><a class='text-link' href='#buy-list'>View full list ›</a></article></section>"
-            "<section class='panel wide' id='incoming-purchases'><div class='panel-header'><h3>Incoming Purchases</h3><a class='outline' href='#create-purchase-dialog'>Create Purchase</a></div><table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead>"
-            f"<tbody>{purchase_rows}</tbody></table><a class='text-link' href='#incoming-purchases'>View all purchases ›</a></section>"
-            f"{self._render_make_buy_dialogs(authorization_header=authorization_header)}"
+            f"{self._metric_card('▧', 'Products Defined', len(products), 'green', 'Active products')}"
+            f"{self._metric_card('⚒', 'Batches Planned', len(planned_batches), 'blue', 'Ready to make')}"
+            f"{self._metric_card('⚠', 'Blocked by Materials', len(blocked_batches), 'alert', 'Need attention')}"
+            "</section>"
+            "<section class='dashboard-grid two-col'>"
+            "<article class='panel' id='product-builder'><div class='panel-header'><h3>Products You Make / Product Builder</h3><a class='outline' href='#create-product-dialog'>Create Product</a></div>"
+            "<p>Define what you make, then attach the materials and quantities used per unit.</p>"
+            f"<ul class='media-list compact'>{product_rows}</ul><div class='workflow-actions'><a class='primary' href='#create-product-dialog'>Create Product ＋</a><a class='outline' href='#add-material-dialog'>Add Material/Part</a></div></article>"
+            "<article class='panel' id='make-next'><div class='panel-header'><h3>Make Next / Batch Queue</h3><a class='outline' href='#plan-batch-dialog'>Plan Batch</a></div>"
+            "<p>Planned and in-progress batches stay in Workshop until they are completed into Inventory stock.</p>"
+            f"<table><thead><tr><th>Product</th><th>Batch Size/Yield</th><th>Status</th><th>Action</th></tr></thead><tbody>{batch_rows}</tbody></table></article>"
+            "</section>"
+            "<section class='panel wide' id='selected-product-recipe'><div class='panel-header'><h3>Selected Product Recipe / Materials Needed</h3><a class='outline' href='#selected-product-recipe'>Edit Recipe</a></div>"
+            f"<p><strong>{self._h(selected_product.name) if selected_product is not None else 'No product selected'}</strong> — Recipe/BOM, quantity per unit, and batch material needs live here.</p>"
+            f"{recipe_form}"
+            f"<table><thead><tr><th>Material/Part</th><th>Qty Per Unit</th><th>On Hand</th><th></th></tr></thead><tbody>{recipe_rows}</tbody></table>"
+            f"<h4>Materials needed for batch size/yield: {selected_quantity}</h4>"
+            f"<table><thead><tr><th>Material/Part</th><th>Needed</th><th>On Hand</th><th>Status</th></tr></thead><tbody>{batch_material_rows}</tbody></table>"
+            "<div class='details-list'><div><h4>Production steps / notes</h4><ol><li>Review recipe/BOM and batch size.</li><li>Confirm materials are ready.</li><li>Start the batch, make the product, then complete the batch to increase Inventory stock.</li></ol></div>"
+            "<div class='workflow-actions'><a class='primary' href='#plan-batch-dialog'>Start with a Batch Plan</a><a class='outline' href='#create-product-dialog'>Edit Product Definition</a></div></div>"
+            "</section>"
+            f"{self._render_workshop_dialogs(product_options=product_options)}"
         )
 
-    def _render_make_buy_dialogs(self, *, authorization_header: str) -> str:
-        products = self._product_service.list_products(authorization_header=authorization_header)
-        product_options = "".join(
-            f"<option value='{self._h(product.product_id)}'>{self._h(product.name)}</option>"
-            for product in products
+    def _render_workshop_dialogs(self, *, product_options: str) -> str:
+        create_product_form = (
+            "<form class='form-grid compact-form' method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='create_product'>"
+            "<label>Name <input name='name' required></label>"
+            "<label>SKU <input name='sku' required></label>"
+            "<label>Starting inventory <input name='stock_on_hand' type='number' min='0' value='0'></label>"
+            "<label>Reorder point <input name='reorder_point' type='number' min='0' value='0'></label>"
+            "<label>Selling price <input name='sale_price' type='number' min='0' step='0.01' value='0'></label>"
+            "<label>Material cost <input name='estimated_material_cost' type='number' min='0' step='0.01' value='0'></label>"
+            "<label>Packaging/shipping <input name='estimated_packaging_shipping_cost' type='number' min='0' step='0.01' value='0'></label>"
+            "<label>Platform fee % <input name='platform_fee_percent' type='number' min='0' step='0.01' value='0'></label>"
+            "<div class='dialog-actions'><button class='primary' type='submit'>Save product</button>"
+            "<a class='outline' href='#'>Cancel</a></div></form>"
+        )
+        add_material_form = (
+            "<form class='form-grid compact-form' method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='create'>"
+            "<label>Name <input name='name' required></label>"
+            "<label>Unit <input name='unit' required></label>"
+            "<label>Stock <input name='stock_on_hand' type='number' min='0' value='0' required></label>"
+            "<label>Reorder <input name='reorder_point' type='number' min='0' value='0' required></label>"
+            "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>"
+            "<a class='outline' href='#'>Cancel</a></div></form>"
         )
         batch_form = (
             "<form class='form-grid compact-form' method='post' action='/make-buy'>"
             "<input type='hidden' name='action' value='create_batch'>"
-            "<label>Product <select name='product_id'>"
-            f"{product_options}"
-            "</select></label>"
-            "<label>Quantity <input name='quantity' type='number' min='1' required></label>"
-            "<div class='dialog-actions'><button class='primary' type='submit'>Save batch plan</button>"
-            "<a class='outline' href='#'>Cancel</a></div>"
-            "</form>"
-        )
-        purchase_form = (
-            "<form class='form-grid compact-form' method='post' action='/make-buy'>"
-            "<input type='hidden' name='action' value='create_purchase'>"
-            "<label>Supplier <input name='supplier' placeholder='Optional supplier'></label>"
-            "<label>Expected date <input name='expected_date' placeholder='YYYY-MM-DD (optional)'></label>"
-            "<label>Status <select name='status'><option value='draft'>Draft</option><option value='ordered'>Ordered</option></select></label>"
-            "<div class='dialog-actions'><button class='primary' type='submit'>Save purchase</button>"
-            "<a class='outline' href='#'>Cancel</a></div>"
-            "</form>"
+            f"<label>Product <select name='product_id'>{product_options}</select></label>"
+            "<label>Batch size/yield <input name='quantity' type='number' min='1' required></label>"
+            "<div class='dialog-actions'><button class='primary' type='submit'>Plan Batch</button>"
+            "<a class='outline' href='#'>Cancel</a></div></form>"
         )
         return (
-            f"{self._render_workflow_dialog(dialog_id='plan-batch-dialog', title='Plan a batch', description='Choose what you want to make next.', body=batch_form)}"
-            f"{self._render_workflow_dialog(dialog_id='create-purchase-dialog', title='Create purchase', description='Save a restock purchase without adding extra page clutter.', body=purchase_form)}"
+            f"{self._render_workflow_dialog(dialog_id='create-product-dialog', title='Create product', description='Define a product you make before it appears in Inventory, Orders, Workshop, and Money.', body=create_product_form)}"
+            f"{self._render_workflow_dialog(dialog_id='add-material-dialog', title='Add material/part', description='Create materials while building a product recipe or BOM.', body=add_material_form)}"
+            f"{self._render_workflow_dialog(dialog_id='plan-batch-dialog', title='Plan a batch', description='Choose a product and batch size/yield to make in Workshop.', body=batch_form)}"
         )
 
     def _render_money_dashboard(self, *, authorization_header: str) -> str:
@@ -1341,7 +1530,7 @@ class AppShell:
             f"{self._metric_card('↗', 'Estimated Profit', self._format_currency(summary['estimated_profit']), 'green', 'Estimated')}"
             "</section><section class='dashboard-grid money-layout'>"
             f"<article class='panel chart-panel'><h3>This Month</h3>{empty}<div class='legend'><span class='sales'>Sales</span><span class='costs'>Costs</span></div><div class='bar-chart'><div><i style='height:0%'></i><b style='height:0%'></b><span>Week 1<small>No data</small></span></div><div><i style='height:0%'></i><b style='height:0%'></b><span>Week 2<small>No data</small></span></div><div><i style='height:0%'></i><b style='height:0%'></b><span>Week 3<small>No data</small></span></div><div><i style='height:0%'></i><b style='height:0%'></b><span>Week 4<small>No data</small></span></div></div></article>"
-            "<div class='money-actions'><a class='outline' href='/make-buy#create-purchase'>Add Expense ＋</a><a class='primary' href='/money'>View Reports</a><p>* All values are estimated from recorded products and shipped orders.</p></div></section>"
+            "<div class='money-actions'><a class='outline' href='/products-stock#create-purchase-dialog'>Add Expense ＋</a><a class='primary' href='/money'>View Reports</a><p>* All values are estimated from recorded products and shipped orders.</p></div></section>"
             f"<section class='dashboard-grid two-col bottom-grid'><article class='panel'><h3>Recent Transactions</h3><table><thead><tr><th>Record</th><th>Type</th><th>Note</th><th>Amount</th><th></th></tr></thead><tbody>{rows}</tbody></table></article>"
             f"<article class='panel'><div class='panel-header'><h3>Top Product Profit</h3><small>Est. profit per unit</small></div><ul class='profit-list'>{profit_rows}</ul><a class='text-link' href='/products-stock'>View all products ›</a></article></section>"
             "<section class='visually-hidden'><h3>Money overview</h3>"

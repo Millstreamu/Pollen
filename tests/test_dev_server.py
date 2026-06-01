@@ -36,8 +36,8 @@ def test_dev_server_adapter_get_navigation_routes() -> None:
 
     for path, expected_heading in [
         ("/orders", b"<h1>Orders</h1>"),
-        ("/products-stock", b"<h1>Products & Stock</h1>"),
-        ("/make-buy", b"<h1>Make / Buy</h1>"),
+        ("/products-stock", b"<h1>Inventory</h1>"),
+        ("/make-buy", b"<h1>Workshop</h1>"),
         ("/money", b"<h1>Money</h1>"),
         ("/settings", b"<h1>Settings</h1>"),
     ]:

@@ -48,29 +48,30 @@ def test_products_stock_page_uses_beginner_friendly_sections_and_buttons() -> No
     header = _auth_header("products-ui", "products-ui@example.com")
     app = AppShell()
     app.post(
-        "/products-stock",
+        "/make-buy",
         authorization_header=header,
-        form_data={"action": "create", "name": "Soap", "sku": "SOAP-1", "stock_on_hand": "3", "reorder_point": "1"},
+        form_data={
+            "action": "create_product",
+            "name": "Soap",
+            "sku": "SOAP-1",
+            "stock_on_hand": "3",
+            "reorder_point": "1",
+        },
     )
 
     response = app.get("/products-stock", authorization_header=header)
 
     assert response.status_code == 200
-    assert "<h3>Products workflow</h3>" in response.body
-    assert "id='add-product-dialog-title'>Add product</h3>" in response.body
-    assert "role='dialog'" in response.body
-    assert "href='#add-product-dialog'" in response.body
-    assert "<h2>Products list</h2>" in response.body
-    assert "<h3>Materials</h3><a class='outline' href='#add-material-dialog'>Add Material</a>" in response.body
-    assert "id='add-material-dialog-title'>Add material</h3>" in response.body
-    assert "<input type='hidden' name='action' value='create_material'>" in response.body
-    assert "<button class='primary' type='submit'>Save material</button>" in response.body
-    assert "View Materials" not in response.body
-    assert "Active" in response.body
-    assert "Archived" in response.body
-    assert "All" in response.body
-    assert "<button class='primary' type='submit'>Save product</button>" in response.body
-    assert "<button type='submit' name='action' value='bulk_archive'>Archive selected</button>" in response.body
+    assert "Finished Products" in response.body
+    assert "Materials" in response.body
+    assert "Buy List" in response.body
+    assert "Incoming Purchases" in response.body
+    assert "Stock Control" in response.body
+    assert "Create Product" not in response.body
+    assert "id='add-product-dialog-title'>Add product</h3>" not in response.body
+    assert "id='add-material-dialog-title'>Add material</h3>" not in response.body
+    assert "<input type='hidden' name='action' value='create_material'>" not in response.body
+    assert "<button type='submit' name='action' value='bulk_archive'>Archive selected</button>" not in response.body
 
 
 def test_make_buy_page_uses_beginner_friendly_sections_and_empty_state_guidance() -> None:
@@ -80,17 +81,19 @@ def test_make_buy_page_uses_beginner_friendly_sections_and_empty_state_guidance(
     response = app.get("/make-buy", authorization_header=header)
 
     assert response.status_code == 200
-    assert "Batches to Make" in response.body
-    assert "Materials Missing" in response.body
-    assert "Purchases Incoming" in response.body
+    assert "Products Defined" in response.body
+    assert "Batches Planned" in response.body
+    assert "Blocked by Materials" in response.body
+    assert "Products You Make / Product Builder" in response.body
+    assert "Make Next / Batch Queue" in response.body
     assert "id='plan-batch-dialog-title'>Plan a batch</h3>" in response.body
     assert "href='#plan-batch-dialog'" in response.body
-    assert "href='#create-purchase-dialog'" in response.body
-    assert "<button class='primary' type='submit'>Save batch plan</button>" in response.body
-    assert "No materials missing right now. Low materials will appear here when it is time to restock." in response.body
-    assert "<button class='primary' type='submit'>Save purchase</button>" in response.body
-    assert "Buy list suggestions" not in response.body
-    assert "Product recipes" not in response.body
+    assert "href='#create-purchase-dialog'" not in response.body
+    assert "<button class='primary' type='submit'>Plan Batch</button>" in response.body
+    assert "No planned batches yet. Plan a batch when you are ready to make more stock." in response.body
+    assert "<button class='primary' type='submit'>Save purchase</button>" not in response.body
+    assert "Buy List" not in response.body
+    assert "Incoming Purchases" not in response.body
     assert "Inventory movements" not in response.body
     assert "Activity log" not in response.body
 
@@ -194,11 +197,12 @@ def test_workflow_dialog_forms_use_polished_controls_and_spaced_actions() -> Non
 
     assert "width:100%;box-sizing:border-box;min-height:2.45rem" in combined
     assert ".modal-card .dialog-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:1rem" in combined
-    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save product</button>" in products
-    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>" in products
-    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>" not in make_buy
-    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save batch plan</button>" in make_buy
-    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save purchase</button>" in make_buy
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save product</button>" not in products
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>" not in products
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save product</button>" in make_buy
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>" in make_buy
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Plan Batch</button>" in make_buy
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save purchase</button>" in products
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Create order</button>" in orders
 
 def test_dashboard_primary_controls_are_links_or_real_post_forms() -> None:
@@ -213,12 +217,13 @@ def test_dashboard_primary_controls_are_links_or_real_post_forms() -> None:
     assert "href='#create-order-dialog'" in orders
     assert "<section class='panel wide' id='create-order'>" in orders
     assert "id='create-order-dialog' role='dialog'" in orders
-    assert "href='#add-product-dialog'" in products
-    assert "<section class='panel wide workflow-panel' id='products-workflow'>" in products
-    assert "id='add-product-dialog' role='dialog'" in products
+    assert "href='#create-purchase-dialog'" in products
+    assert "id='incoming-purchases'" in products
+    assert "id='create-purchase-dialog' role='dialog'" in products
     assert "href='#plan-batch-dialog'" in make_buy
-    assert "href='#create-purchase-dialog'" in make_buy
+    assert "href='#create-product-dialog'" in make_buy
+    assert "href='#create-purchase-dialog'" not in make_buy
     assert "<section class='panel wide workflow-panel' id='make-buy-workflow'>" not in make_buy
-    assert "id='incoming-purchases'" in make_buy
+    assert "id='incoming-purchases'" not in make_buy
     assert "href='#shop-settings'" in settings
     assert "<section class='panel wide' id='shop-settings'>" in settings
