@@ -32,6 +32,35 @@ Overall status: V1 is declared complete after Milestone 10.3 readiness validatio
 
 ## Recent Updates
 
+### 2026-06-01 — Post-V1 Workshop vs Inventory IA split
+
+Branch/PR/Issue:
+- direct product/UI workflow restructuring request for Workshop vs Inventory
+
+Completed:
+- Reworked the legacy Make / Buy route into the Workshop page focused on product definition, materials/parts used by products, recipes/BOM, batch size/yield, planned and in-progress batch queue, blocked-material status, and Start Batch / Complete Batch actions.
+- Removed visible buying/restock concepts from Workshop, including Buy List, Create Purchase, Incoming Purchases, purchase receiving, and reorder-suggestion panels.
+- Reworked the legacy Products & Stock route into Inventory-focused stock visibility/control with finished-product counts, material counts, low-stock status, Buy List, reorder suggestions, incoming purchases, and Receive Materials actions.
+- Moved visible product creation, material/part creation, and recipe/BOM editing affordances to Workshop while preserving existing backend/service behavior.
+- Updated regression and journey tests to reflect the Workshop vs Inventory ownership split.
+- Recorded the durable IA rule in `docs/ai/project-rules.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass; no runtime packages are required
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`118 passed`)
+- `PYTHONPATH=src python scripts/export_ui_review_pages.py` — pass
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — environment limitation because Playwright is not installed
+- `python -m pip install playwright` — environment limitation because the package-index proxy returned `403 Forbidden` / no matching distribution
+
+Notes:
+- Legacy URLs are intentionally retained for now: `/make-buy` renders Workshop and `/products-stock` renders Inventory.
+- Purchase/backend actions remain preserved; visible purchase/reorder workflows now live on Inventory.
+- Screenshot capture could not be completed in this environment because Playwright could not be installed from the configured package index.
+
 ### 2026-06-01 — Post-V1 Products materials add popup
 
 Branch/PR/Issue:

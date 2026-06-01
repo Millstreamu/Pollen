@@ -139,20 +139,20 @@ def test_order_fulfillment_to_make_and_buy_replenishment_journey() -> None:
     assert depleted_material.stock_on_hand == 10
     assert depleted_material.is_low_stock
 
-    buy_page = app.get("/make-buy", authorization_header=header)
+    buy_page = app.get("/products-stock", authorization_header=header)
     assert buy_page.status_code == 200
     assert "Soy Wax" in buy_page.body
     assert "10 g" in buy_page.body
-    assert "Add to Purchase" not in buy_page.body
+    assert "Add to Purchase" in buy_page.body
 
     add_to_purchase_response = app.post(
-        "/make-buy",
+        "/products-stock",
         authorization_header=header,
         form_data={"action": "add_to_purchase", "material_id": material.material_id},
     )
     assert add_to_purchase_response.status_code == 200
     purchase_response = app.post(
-        "/make-buy",
+        "/products-stock",
         authorization_header=header,
         form_data={
             "action": "create_purchase",
@@ -166,7 +166,7 @@ def test_order_fulfillment_to_make_and_buy_replenishment_journey() -> None:
     assert "Acme Wax" in purchase_response.body
 
     receive_response = app.post(
-        "/make-buy",
+        "/products-stock",
         authorization_header=header,
         form_data={"action": "receive_purchase", "purchase_id": "pur-1"},
     )

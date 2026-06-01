@@ -71,7 +71,7 @@ def test_products_page_shows_empty_state_when_no_products() -> None:
     response = app.get("/products-stock", authorization_header=_auth_header())
 
     assert response.status_code == 200
-    assert "No products yet. Add your first product to start tracking stock." in response.body
+    assert "No finished products yet. Create products in Workshop, then track stock here." in response.body
 
 
 def test_products_page_renders_product_table_and_low_stock_status() -> None:
@@ -97,11 +97,11 @@ def test_products_page_renders_product_table_and_low_stock_status() -> None:
     response = app.get("/products-stock", authorization_header=header)
 
     assert response.status_code == 200
-    assert "<th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Reorder</th><th>Status</th>" in response.body
+    assert "<th>Product</th><th>SKU</th><th>On Hand</th><th>Reserved</th><th>Reorder Point</th><th>Status</th><th>Stock Control</th>" in response.body
     assert "Healthy Candle" in response.body
     assert "Low Candle" in response.body
-    assert "Healthy" in response.body
-    assert "Low stock" in response.body
+    assert "Good" in response.body
+    assert "Low" in response.body
 
 
 def test_products_ui_create_edit_archive_interactions() -> None:
@@ -138,7 +138,7 @@ def test_products_ui_create_edit_archive_interactions() -> None:
     )
     assert edit_response.status_code == 200
     assert "Wax Melt Deluxe" in edit_response.body
-    assert "Low stock" in edit_response.body
+    assert "Low" in edit_response.body
 
     archive_response = app.post(
         "/products-stock",
@@ -147,7 +147,7 @@ def test_products_ui_create_edit_archive_interactions() -> None:
     )
     assert archive_response.status_code == 200
     assert "Archived products" not in archive_response.body
-    assert "view=archived" in archive_response.body
+    assert "Wax Melt Deluxe" not in archive_response.body
 
 
 def test_products_page_renders_forms_for_create_and_archive_actions() -> None:
@@ -165,12 +165,12 @@ def test_products_page_renders_forms_for_create_and_archive_actions() -> None:
     response = app.get("/products-stock", authorization_header=header)
 
     assert response.status_code == 200
-    assert "<input type='hidden' name='action' value='create'>" in response.body
-    assert "Edit</a>" in response.body
+    assert "<input type='hidden' name='action' value='adjust_stock'>" in response.body
+    assert "Stock Control" in response.body
     assert "<td>10</td>" in response.body
     assert "<td>2</td>" in response.body
-    assert "type='number' min='0'" in response.body
-    assert "<button type='submit'>Archive</button>" in response.body
+    assert "name='delta' type='number' value='0'" in response.body
+    assert "Create Product" not in response.body
 
 
 def test_products_ui_row_edit_form_updates_only_submitted_field() -> None:
@@ -226,8 +226,8 @@ def test_products_ui_restore_interaction_shows_archived_section_and_restores_pro
 
     archived_view = app.get("/products-stock?view=archived", authorization_header=header)
     assert archived_view.status_code == 200
-    assert "Archived products" in archived_view.body
-    assert "<button type='submit'>Restore</button>" in archived_view.body
+    assert "Archived products" not in archived_view.body
+    assert "Archived Candle" not in archived_view.body
 
     restored_view = app.post(
         "/products-stock",
@@ -273,12 +273,12 @@ def test_products_ui_filter_views_active_archived_all() -> None:
     assert "Archived products" not in active_view.body
 
     archived_view = app.get("/products-stock?view=archived", authorization_header=header)
-    assert "Archived products" in archived_view.body
-    assert "Active Candle" not in archived_view.body
+    assert "Archived products" not in archived_view.body
+    assert "Archived Candle" not in archived_view.body
 
     all_view = app.get("/products-stock?view=all", authorization_header=header)
     assert "Active Candle" in all_view.body
-    assert "Archived products" in all_view.body
+    assert "Archived products" not in all_view.body
 
 
 def test_products_ui_status_chips_render_with_icons() -> None:
@@ -302,8 +302,8 @@ def test_products_ui_status_chips_render_with_icons() -> None:
     )
 
     response = app.get("/products-stock", authorization_header=header)
-    assert "⚠️ Low stock" in response.body
-    assert "✅ Healthy" in response.body
+    assert "Low" in response.body
+    assert "Good" in response.body
 
 
 def test_products_ui_bulk_archive_and_restore_actions() -> None:
@@ -366,11 +366,11 @@ def test_products_ui_renders_bulk_action_controls() -> None:
 
     response = app.get("/products-stock", authorization_header=header)
     assert response.status_code == 200
-    assert "Archive or restore several products at once" in response.body
-    assert "name='product_ids'" in response.body
-    assert "value='bulk_archive'" in response.body
-    assert "value='bulk_restore'" in response.body
-    assert "<th>Select</th><th>ID</th>" in response.body
+    assert "Stock Control" in response.body
+    assert "name='delta'" in response.body
+    assert "value='bulk_archive'" not in response.body
+    assert "value='bulk_restore'" not in response.body
+    assert "<th>Product</th><th>SKU</th><th>On Hand</th>" in response.body
 
 
 def test_products_ui_detail_edit_mode_shows_all_editable_fields() -> None:
@@ -389,11 +389,10 @@ def test_products_ui_detail_edit_mode_shows_all_editable_fields() -> None:
     response = app.get(f"/products-stock?view=active&edit={created.product_id}", authorization_header=header)
 
     assert response.status_code == 200
-    assert "Save all fields" in response.body
-    assert "name='name' value='Detail Candle'" in response.body
-    assert "name='sku' value='DTL-001'" in response.body
-    assert "name='stock_on_hand' type='number' min='0' value='11'" in response.body
-    assert "name='reorder_point' type='number' min='0' value='6'" in response.body
+    assert "Save all fields" not in response.body
+    assert "Detail Candle" in response.body
+    assert "name='delta' type='number' value='0'" in response.body
+    assert "Stock Control" in response.body
 
 
 def test_products_stock_materials_panel_adds_material_from_popup_form() -> None:
@@ -403,10 +402,10 @@ def test_products_stock_materials_panel_adds_material_from_popup_form() -> None:
     initial_response = app.get("/products-stock", authorization_header=header)
 
     assert initial_response.status_code == 200
-    assert "<h3>Materials</h3><a class='outline' href='#add-material-dialog'>Add Material</a>" in initial_response.body
+    assert "<h3>Materials</h3>" in initial_response.body
     assert "View Materials" not in initial_response.body
-    assert "id='add-material-dialog' role='dialog'" in initial_response.body
-    assert "<input type='hidden' name='action' value='create_material'>" in initial_response.body
+    assert "id='add-material-dialog' role='dialog'" not in initial_response.body
+    assert "<input type='hidden' name='action' value='create_material'>" not in initial_response.body
 
     create_response = app.post(
         "/products-stock",
@@ -431,9 +430,11 @@ def test_make_buy_page_shows_operational_empty_states() -> None:
     response = app.get("/make-buy", authorization_header=_auth_header("mat1", "mat1@example.com"))
 
     assert response.status_code == 200
-    assert "No batches planned yet. Plan a batch when you’re ready to make more stock." in response.body
-    assert "No materials missing right now. Low materials will appear here when it is time to restock." in response.body
-    assert "No purchases yet. Create a purchase when you need to restock materials." in response.body
+    assert "No planned batches yet. Plan a batch when you are ready to make more stock." in response.body
+    assert "No recipe rows yet. Add materials and quantities to formalise this product." in response.body
+    assert "Create Product" in response.body
+    assert "Buy List" not in response.body
+    assert "Incoming Purchases" not in response.body
 
 
 def test_make_buy_ui_create_and_edit_material_interactions() -> None:
@@ -452,8 +453,9 @@ def test_make_buy_ui_create_and_edit_material_interactions() -> None:
         },
     )
     assert create_response.status_code == 200
-    assert "Soy Wax" in create_response.body
-    assert "Low" in create_response.body
+    inventory_response = app.get("/products-stock", authorization_header=header)
+    assert "Soy Wax" in inventory_response.body
+    assert "Low" in inventory_response.body
 
     edit_response = app.get("/make-buy?edit=mat-1", authorization_header=header)
     assert "Save all fields" not in edit_response.body
@@ -563,14 +565,17 @@ def test_make_buy_ui_buy_list_suggestions_and_add_to_purchase() -> None:
 
     response = app.get("/make-buy", authorization_header=header)
     assert response.status_code == 200
-    assert "Buy List" in response.body
-    assert "Buy list suggestions" not in response.body
-    assert "Suggested reorder quantity rule" not in response.body
-    assert "7 roll" in response.body
-    assert "Add to Purchase" not in response.body
+    assert "Buy List" not in response.body
+    assert "Incoming Purchases" not in response.body
+
+    inventory = app.get("/products-stock", authorization_header=header)
+    assert inventory.status_code == 200
+    assert "Buy List" in inventory.body
+    assert "7 roll" in inventory.body
+    assert "Add to Purchase" in inventory.body
 
     added = app.post(
-        "/make-buy",
+        "/products-stock",
         authorization_header=header,
         form_data={"action": "add_to_purchase", "material_id": "mat-1"},
     )

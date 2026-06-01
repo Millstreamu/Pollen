@@ -36,7 +36,7 @@ def test_create_purchase_persists_and_does_not_mutate_stock() -> None:
     assert after_material.stock_on_hand == before_stock
 
 
-def test_make_buy_ui_shows_incoming_purchases_list() -> None:
+def test_inventory_ui_shows_incoming_purchases_list() -> None:
     app = create_app()
     header = _auth_header("p52-ui", "p52-ui@example.com")
     app.post(
@@ -50,7 +50,7 @@ def test_make_buy_ui_shows_incoming_purchases_list() -> None:
         form_data={"action": "add_to_purchase", "material_id": "mat-1"},
     )
     response = app.post(
-        "/make-buy",
+        "/products-stock",
         authorization_header=header,
         form_data={
             "action": "create_purchase",
