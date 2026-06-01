@@ -141,3 +141,47 @@ def test_app_shell_includes_screenshot_friendly_visual_system() -> None:
     assert "nav a[aria-current='page']" in response.body
     assert ".metric-grid" in response.body
     assert ".status-badge" in response.body
+
+
+def test_dashboard_visuals_do_not_render_screenshot_demo_records() -> None:
+    header = _auth_header("no-demo", "no-demo@example.com")
+    app = AppShell()
+
+    bodies = [
+        app.get(path, authorization_header=header).body
+        for path in ["/", "/orders", "/products-stock", "/make-buy", "/money", "/settings"]
+    ]
+    combined = "\n".join(bodies)
+
+    forbidden_demo_values = [
+        "Emily Johnson",
+        "Michael Brown",
+        "Sunny Bee Co.",
+        "Kate Smith",
+        "Lavender Candle",
+        "PO-1002",
+        "Etsy payout",
+        "CandleScience",
+        "May 28, 2024",
+    ]
+    for value in forbidden_demo_values:
+        assert value not in combined
+
+
+def test_dashboard_primary_controls_are_links_or_real_post_forms() -> None:
+    header = _auth_header("controls", "controls@example.com")
+    app = AppShell()
+
+    orders = app.get("/orders", authorization_header=header).body
+    products = app.get("/products-stock", authorization_header=header).body
+    make_buy = app.get("/make-buy", authorization_header=header).body
+    settings = app.get("/settings", authorization_header=header).body
+
+    assert "href='#create-order'" in orders
+    assert "<section class='panel wide' id='create-order'>" in orders
+    assert "href='#products-workflow'" in products
+    assert "<section class='panel wide workflow-panel' id='products-workflow'>" in products
+    assert "href='#make-buy-workflow'" in make_buy
+    assert "<section class='panel wide workflow-panel' id='make-buy-workflow'>" in make_buy
+    assert "href='#shop-settings'" in settings
+    assert "<section class='panel wide' id='shop-settings'>" in settings
