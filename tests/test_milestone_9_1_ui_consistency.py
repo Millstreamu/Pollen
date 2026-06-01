@@ -64,7 +64,7 @@ def test_products_stock_page_uses_beginner_friendly_sections_and_buttons() -> No
     assert "Active" in response.body
     assert "Archived" in response.body
     assert "All" in response.body
-    assert "<button type='submit'>Save product</button>" in response.body
+    assert "<button class='primary' type='submit'>Save product</button>" in response.body
     assert "<button type='submit' name='action' value='bulk_archive'>Archive selected</button>" in response.body
 
 
@@ -79,10 +79,10 @@ def test_make_buy_page_uses_beginner_friendly_sections_and_empty_state_guidance(
     assert "id='plan-batch-dialog-title'>Plan a batch</h3>" in response.body
     assert "href='#add-material-dialog'" in response.body
     assert "href='#plan-batch-dialog'" in response.body
-    assert "<button type='submit'>Save material</button>" in response.body
-    assert "<button type='submit'>Save batch plan</button>" in response.body
+    assert "<button class='primary' type='submit'>Save material</button>" in response.body
+    assert "<button class='primary' type='submit'>Save batch plan</button>" in response.body
     assert "No low materials right now. Add materials and reorder points to unlock suggestions." in response.body
-    assert "<button type='submit'>Save purchase</button>" in response.body
+    assert "<button class='primary' type='submit'>Save purchase</button>" in response.body
 
 
 def test_money_page_uses_beginner_friendly_consistency_sections_and_empty_state() -> None:
@@ -171,6 +171,24 @@ def test_dashboard_visuals_do_not_render_screenshot_demo_records() -> None:
     for value in forbidden_demo_values:
         assert value not in combined
 
+
+
+def test_workflow_dialog_forms_use_polished_controls_and_spaced_actions() -> None:
+    header = _auth_header("dialog-polish", "dialog-polish@example.com")
+    app = AppShell()
+
+    products = app.get("/products-stock", authorization_header=header).body
+    make_buy = app.get("/make-buy", authorization_header=header).body
+    orders = app.get("/orders", authorization_header=header).body
+    combined = "\n".join([products, make_buy, orders])
+
+    assert "width:100%;box-sizing:border-box;min-height:2.45rem" in combined
+    assert ".modal-card .dialog-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:1rem" in combined
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save product</button>" in products
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>" in make_buy
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save batch plan</button>" in make_buy
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save purchase</button>" in make_buy
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Create order</button>" in orders
 
 def test_dashboard_primary_controls_are_links_or_real_post_forms() -> None:
     header = _auth_header("controls", "controls@example.com")
