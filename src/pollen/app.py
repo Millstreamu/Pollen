@@ -394,6 +394,20 @@ class AppShell:
         return self.get("/orders", authorization_header=authorization_header)
 
 
+    def _render_workflow_dialog(self, *, dialog_id: str, title: str, description: str, body: str) -> str:
+        return (
+            f"<section class='modal-popover' id='{dialog_id}' role='dialog' aria-modal='true' aria-labelledby='{dialog_id}-title'>"
+            "<a class='modal-backdrop' aria-label='Close popup' href='#'></a>"
+            "<div class='modal-card'>"
+            "<div class='modal-header'>"
+            f"<div><h3 id='{dialog_id}-title'>{title}</h3><p>{description}</p></div>"
+            "<a class='modal-close' aria-label='Close popup' href='#'>×</a>"
+            "</div>"
+            f"{body}"
+            "</div></section>"
+        )
+
+
     def _render_products_page(
         self,
         *,
@@ -420,14 +434,21 @@ class AppShell:
             "<label>Packaging/shipping cost <input name='estimated_packaging_shipping_cost' type='number' min='0' step='0.01' value='0'></label>"
             "<label>Platform fee % <input name='platform_fee_percent' type='number' min='0' step='0.01' value='0'></label>"
             "<button type='submit'>Save product</button>"
+            "<a class='outline' href='#'>Cancel</a>"
             "</form>"
+        )
+        create_dialog = self._render_workflow_dialog(
+            dialog_id="add-product-dialog",
+            title="Add product",
+            description="Create a product without moving the workflow to the bottom of the page.",
+            body=create_form,
         )
         if not products and not archived_only:
             return (
             "<section class='workflow-card'><h2>Products list</h2>"
             "<p>No products yet. Add your first product to start tracking stock.</p>"
-            f"<section class='workflow-card'><h3>Add product</h3>{create_form}</section>"
-            "</section>"
+            "<a class='primary' href='#add-product-dialog'>Add product ＋</a>"
+            f"{create_dialog}</section>"
         )
 
         rows = "".join(
@@ -502,7 +523,12 @@ class AppShell:
             "<p>Add products, monitor stock health, and keep archived products easy to recover.</p>"
             "</section>"
         )
-        add_section = f"<section class='workflow-card'><h3>Add product</h3>{create_form}</section>"
+        add_section = (
+            "<section class='workflow-card workflow-actions'><h3>Add product</h3>"
+            "<p>Open product creation only when you need it.</p>"
+            "<a class='primary' href='#add-product-dialog'>Add product ＋</a></section>"
+            f"{create_dialog}"
+        )
 
         return (
             f"{page_intro}"
@@ -574,8 +600,7 @@ class AppShell:
         )
         archived_only = [material for material in archived_materials if not material.is_active]
         products = self._product_service.list_products(authorization_header=authorization_header)
-        create_batch_form = (
-            "<section class='workflow-card'><h3>Plan a batch</h3><p>Choose a product and quantity to start make planning.</p>"
+        batch_form = (
             "<form class='form-grid compact-form' method='post' action='/make-buy'>"
             "<input type='hidden' name='action' value='create_batch'>"
             "<label>Product <select name='product_id'>"
@@ -583,10 +608,16 @@ class AppShell:
             + "</select></label>"
             "<label>Quantity <input name='quantity' type='number' min='1' required></label>"
             "<button type='submit'>Save batch plan</button>"
-            "</form></section>"
+            "<a class='outline' href='#'>Cancel</a>"
+            "</form>"
         )
-        create_form = (
-            "<section class='workflow-card'><h3>Add material</h3><p>Add a supply item so stock and buy suggestions stay accurate.</p>"
+        create_batch_dialog = self._render_workflow_dialog(
+            dialog_id="plan-batch-dialog",
+            title="Plan a batch",
+            description="Choose a product and quantity in a focused popup.",
+            body=batch_form,
+        )
+        material_form = (
             "<form class='form-grid compact-form' method='post' action='/make-buy'>"
             "<input type='hidden' name='action' value='create'>"
             "<label>Name <input name='name' required></label>"
@@ -594,14 +625,28 @@ class AppShell:
             "<label>Stock <input name='stock_on_hand' type='number' min='0' required></label>"
             "<label>Reorder <input name='reorder_point' type='number' min='0' required></label>"
             "<button type='submit'>Save material</button>"
-            "</form></section>"
+            "<a class='outline' href='#'>Cancel</a>"
+            "</form>"
+        )
+        create_form = self._render_workflow_dialog(
+            dialog_id="add-material-dialog",
+            title="Add material",
+            description="Add a supply item so stock and buy suggestions stay accurate.",
+            body=material_form,
+        )
+        create_batch_form = create_batch_dialog
+        quick_actions = (
+            "<section class='workflow-card workflow-actions'><h3>Material actions</h3>"
+            "<p>Open add and make-planning forms as popups instead of inline bottom-page panels.</p>"
+            "<a class='primary' href='#add-material-dialog'>Add material ＋</a>"
+            "<a class='outline' href='#plan-batch-dialog'>Plan batch ＋</a></section>"
         )
         if not materials and not archived_only:
             return (
                 "<section><h2>Make / Buy workspace</h2>"
                 "<p>No materials yet. Add your first material to track supplies.</p>"
                 f"{self._render_buy_list(authorization_header=authorization_header)}"
-                f"{create_form}{create_batch_form}</section>"
+                f"{quick_actions}{create_form}{create_batch_form}</section>"
             )
 
         rows = "".join(self._render_material_row(material=material, edit_material_id=edit_material_id) for material in materials)
@@ -636,7 +681,7 @@ class AppShell:
         active_section = (
             "<section class='workflow-card'><h2>Materials</h2>"
             "<p>Manage materials with simple create, per-row edit, archive, and restore controls.</p>"
-            f"{create_form}{create_batch_form}"
+            f"{quick_actions}{create_form}{create_batch_form}"
             "<table><thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Stock</th><th>Reorder</th><th>Status</th><th>Actions</th></tr></thead><tbody>"
             f"{rows}"
             "</tbody></table>"
@@ -693,19 +738,27 @@ class AppShell:
             if purchases
             else "<h4>Created purchases</h4><p>No purchases yet.</p>"
         )
-        create_form = (
+        purchase_form = (
             "<form class='form-grid compact-form' method='post' action='/make-buy'>"
             "<input type='hidden' name='action' value='create_purchase'>"
             "<label>Supplier <input name='supplier' placeholder='Optional supplier'></label>"
             "<label>Expected date <input name='expected_date' placeholder='YYYY-MM-DD (optional)'></label>"
             "<label>Status <select name='status'><option value='draft'>Draft</option><option value='ordered'>Ordered</option></select></label>"
             "<button type='submit'>Save purchase</button>"
+            "<a class='outline' href='#'>Cancel</a>"
             "</form>"
         )
+        create_form = self._render_workflow_dialog(
+            dialog_id="create-purchase-dialog",
+            title="Create purchase",
+            description="Save supplier and expected-date details without keeping the form open on the page.",
+            body=purchase_form,
+        )
+        purchase_action = "<a class='primary' href='#create-purchase-dialog'>Create purchase ＋</a>"
         if not low_materials:
             return (
                 "<section class='workflow-card' id='create-purchase'><h3>Buy list suggestions</h3><p class='empty-state'>No low materials right now. Add materials and reorder points to unlock suggestions.</p>"
-                f"<p>{draft_summary}</p>{create_form}{purchase_history}</section>"
+                f"<p>{draft_summary}</p>{purchase_action}{create_form}{purchase_history}</section>"
             )
 
         rows = "".join(
@@ -728,7 +781,7 @@ class AppShell:
             "<table><thead><tr><th>Material</th><th>On hand</th><th>Reorder point</th><th>Suggested qty</th><th>Action</th></tr></thead><tbody>"
             f"{rows}</tbody></table>"
             f"<p>{draft_summary}</p>"
-            f"{create_form}"
+            f"{purchase_action}{create_form}"
             f"{purchase_history}"
             "</section>"
         )
@@ -1064,16 +1117,29 @@ class AppShell:
             "<form method='post' action='/orders'><input type='hidden' name='action' value='pack'>"
             f"<input type='hidden' name='order_id' value='{self._h(order.order_id)}'><button class='outline' type='submit'>Pack</button></form></li>"
             for order in ready_orders[:4]
-        ) or "<li><strong>No packing queue yet</strong><span>Ready orders appear here.</span><a class='outline small' href='#create-order'>Add order</a></li>"
-        legacy_create = (
-            "<section class='panel wide' id='create-order'><div class='workflow-intro'>"
-            "<h3>Order actions</h3><p>Create and update orders from one place.</p></div>"
-            "<section class='workflow-card'><h3>Create order</h3>"
+        ) or "<li><strong>No packing queue yet</strong><span>Ready orders appear here.</span><a class='outline small' href='#create-order-dialog'>Add order</a></li>"
+        order_form = (
             "<form class='form-grid compact-form' method='post' action='/orders'>"
             "<label>Customer <input name='customer_name' required></label>"
             "<label>Product SKU <input name='product_sku' required></label>"
             "<label>Quantity <input type='number' min='1' name='quantity' required></label>"
-            "<button type='submit'>Create order</button></form></section>"
+            "<button type='submit'>Create order</button>"
+            "<a class='outline' href='#'>Cancel</a>"
+            "</form>"
+        )
+        create_order_dialog = self._render_workflow_dialog(
+            dialog_id="create-order-dialog",
+            title="Create order",
+            description="Add a customer order in a focused popup instead of a bottom-page form.",
+            body=order_form,
+        )
+        legacy_create = (
+            "<section class='panel wide' id='create-order'><div class='workflow-intro'>"
+            "<h3>Order actions</h3><p>Create and update orders from one place.</p></div>"
+            "<section class='workflow-card workflow-actions'><h3>Create order</h3>"
+            "<p>Open the order form when you need it; the queue stays visible.</p>"
+            "<a class='primary' href='#create-order-dialog'>Create order ＋</a></section>"
+            f"{create_order_dialog}"
             "<section class='workflow-card'><h3>Order queue</h3>"
             "<p class='empty-state'>Orders ready for packing appear in the queue above.</p></section></section>"
         )
@@ -1083,7 +1149,7 @@ class AppShell:
             f"{self._metric_card('▧', 'Ready to Pack', len(ready_orders))}"
             f"{self._metric_card('▰', 'Shipped', len(shipped_orders), 'green')}"
             "</section><section class='dashboard-grid orders-layout'>"
-            "<article class='panel'><div class='toolbar'><div><a class='tab active' href='/orders'>All</a><a class='tab' href='/orders?status=new'>New</a><a class='tab' href='/orders?filter=ready-to-pack'>Ready to Pack</a><a class='tab' href='/orders?status=shipped'>Shipped</a></div><div><a class='outline' href='#create-order'>Add Order ＋</a><a class='primary' href='/settings#sales-channels'>⇧ Import Orders</a></div></div>"
+            "<article class='panel'><div class='toolbar'><div><a class='tab active' href='/orders'>All</a><a class='tab' href='/orders?status=new'>New</a><a class='tab' href='/orders?filter=ready-to-pack'>Ready to Pack</a><a class='tab' href='/orders?status=shipped'>Shipped</a></div><div><a class='outline' href='#create-order-dialog'>Add Order ＋</a><a class='primary' href='/settings#sales-channels'>⇧ Import Orders</a></div></div>"
             f"<table><thead><tr><th>Order</th><th>Customer</th><th>Channel</th><th>Items</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>{rows}</tbody></table></article>"
             f"<aside class='panel side-panel'><h3>Packing Queue</h3><p>{len(active_orders)} active orders need attention.</p><ul class='queue-list'>{queue}</ul><a class='text-link' href='/orders'>View full queue ›</a></aside></section>"
             f"{legacy_create}"
@@ -1131,7 +1197,7 @@ class AppShell:
             f"{self._metric_card('⚠', 'Low Stock', len(low_products), 'alert')}"
             f"{self._metric_card('⚒', 'Archived', len(archived_only))}"
             "</section><section class='dashboard-grid products-layout'>"
-            "<article class='panel'><div class='panel-header'><h3>Products</h3><div><a class='outline' href='#products-workflow'>Add Product ＋</a><a class='primary' href='#products-workflow'>Adjust Stock</a></div></div>"
+            "<article class='panel'><div class='panel-header'><h3>Products</h3><div><a class='outline' href='#add-product-dialog'>Add Product ＋</a><a class='primary' href='#products-workflow'>Adjust Stock</a></div></div>"
             f"<table><thead><tr><th>Product</th><th>SKU</th><th>In Stock</th><th>Reorder Point</th><th>Price</th><th>Status</th></tr></thead><tbody>{product_rows}</tbody></table><a class='text-link' href='#products-workflow'>Manage product records ›</a></article>"
             "<aside class='stack'><article class='panel'><div class='panel-header'><h3>Low Stock</h3><a class='outline' href='/products-stock'>View all</a></div>"
             f"<ul class='media-list compact'>{low_list}</ul></article>"
@@ -1188,11 +1254,11 @@ class AppShell:
             f"{self._metric_card('⚠', 'Materials Missing', len(low_materials), 'alert')}"
             f"{self._metric_card('▰', 'Purchases Incoming', sum(1 for purchase in purchases if purchase.status != 'Received'), 'green')}"
             "</section><section class='dashboard-grid two-col'>"
-            "<article class='panel'><div class='panel-header'><h3>Make Next</h3><a class='outline' href='#make-buy-workflow'>Plan Batch ＋</a></div><table><thead><tr><th>Product</th><th>Quantity</th><th>Status</th><th></th></tr></thead>"
+            "<article class='panel'><div class='panel-header'><h3>Make Next</h3><a class='outline' href='#plan-batch-dialog'>Plan Batch ＋</a></div><table><thead><tr><th>Product</th><th>Quantity</th><th>Status</th><th></th></tr></thead>"
             f"<tbody>{batch_rows}</tbody></table><a class='text-link' href='#make-buy-workflow'>View all batches ›</a></article>"
-            "<article class='panel' id='buy-list'><div class='panel-header'><h3>Buy List</h3><a class='outline' href='#make-buy-workflow'>Create Purchase ＋</a></div><table><thead><tr><th>Material</th><th>Suggested Qty</th><th>Supplier</th><th>Status</th></tr></thead>"
+            "<article class='panel' id='buy-list'><div class='panel-header'><h3>Buy List</h3><a class='outline' href='#create-purchase-dialog'>Create Purchase ＋</a></div><table><thead><tr><th>Material</th><th>Suggested Qty</th><th>Supplier</th><th>Status</th></tr></thead>"
             f"<tbody>{buy_rows}</tbody></table><a class='text-link' href='#make-buy-workflow'>View full list ›</a></article></section>"
-            "<section class='panel wide'><div class='panel-header'><h3>Incoming Purchases</h3><a class='outline' href='#make-buy-workflow'>Create or Receive</a></div><table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead>"
+            "<section class='panel wide'><div class='panel-header'><h3>Incoming Purchases</h3><a class='outline' href='#create-purchase-dialog'>Create or Receive</a></div><table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead>"
             f"<tbody>{purchase_rows}</tbody></table></section>"
             f"<section class='panel wide workflow-panel' id='make-buy-workflow'>{legacy}</section>"
         )
@@ -1260,7 +1326,7 @@ class AppShell:
             ".metric-grid{display:grid;gap:1.35rem;margin:1.55rem .55rem}.metric-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.metric-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}.metric-card{min-height:120px;border:1px solid var(--line);border-radius:.72rem;background:#fff;box-shadow:var(--shadow);display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto auto;column-gap:1.25rem;align-content:center;padding:1.4rem 1.65rem}.metric-icon{grid-row:1/4;display:grid;place-items:center;width:4rem;height:4rem;border-radius:50%;background:linear-gradient(135deg,#fff7de,#ffe6a6);font-size:2rem;color:#101525}.metric-card.tone-green .metric-icon{background:var(--green-soft);color:var(--green)}.metric-card.tone-alert .metric-icon{background:#fff1cd;color:#ff8900}.metric-card.tone-peach .metric-icon{background:var(--orange-soft)}.metric-label{color:#25283a;font-size:1rem;font-weight:500}.metric-value{font-size:2.45rem;line-height:1;font-weight:800;letter-spacing:-.05em}.tone-alert .metric-value{color:#d80d14}.tone-green .metric-value{color:var(--green)}.metric-card small{color:#777e95;font-size:1rem}"
             ".dashboard-grid{display:grid;gap:1.55rem;margin:1.55rem .55rem}.two-col{grid-template-columns:1fr 1fr}.orders-layout{grid-template-columns:minmax(0,1fr) 265px}.products-layout{grid-template-columns:minmax(0,1.5fr) minmax(340px,.95fr)}.money-layout{grid-template-columns:minmax(0,1fr) 300px;align-items:start}.bottom-grid{grid-template-columns:1.15fr .85fr}.stack{display:grid;gap:1.05rem}.panel{border:1px solid var(--line);border-radius:.72rem;background:#fff;box-shadow:var(--shadow);padding:1.45rem}.panel.wide{margin:1.55rem .55rem}.panel-header,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem}.panel h3{margin:0;font-size:1.35rem;letter-spacing:-.04em}.panel p{color:#68708d;margin:.45rem 0 1rem}.outline,.primary,.tab,.button-link{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:2.55rem;border-radius:.38rem;border:1px solid #d9dce5;background:#fff;color:#111423;padding:.58rem 1rem;font:inherit;font-weight:700;box-shadow:none}.outline{border-color:#ffc21a;color:#e98200}.outline.muted{border-color:#d9dce5;color:#111423}.primary{border-color:var(--honey);background:var(--honey);color:#111423}.small{min-height:2.2rem;padding:.45rem .8rem}.tab{color:#68708d}.tab.active{border-color:#ffc21a;background:#fff8dc;color:#111423}button{cursor:pointer}"
             "table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}th,td{padding:1rem 1.05rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{background:#fffdfa;color:#25283a;font-size:.82rem;font-weight:700}tr:last-child td{border-bottom:0}td:first-child,th:first-child{font-weight:700}.status-badge,.coming-soon{display:inline-flex;width:max-content;align-items:center;border-radius:.32rem;padding:.35rem .62rem;font-size:.88rem;font-weight:600;background:#fff1d6;color:#de7d00}.badge-green{background:var(--green-soft);color:var(--green)}.badge-blue{background:var(--blue-soft);color:var(--blue)}.badge-red{background:var(--red-soft);color:var(--red)}.badge-gold{background:#fff1d6;color:#dc7800}.pill{border-radius:.32rem;padding:.35rem .75rem;font-weight:600}.pill.high{background:#fff1d6;color:#dc7800}.pill.medium{background:#e8f2ff;color:#1266d6}.pill.low{background:#eeeef2;color:#222}.pill.danger{background:var(--red-soft);color:var(--red)}.text-link{display:inline-flex;margin-top:1rem;color:#ec8700}.centered{justify-content:center;width:100%}.thumb{display:inline-grid;place-items:center;width:3.2rem;height:3.2rem;margin-right:.75rem;border-radius:.35rem;background:linear-gradient(135deg,#f8f4ed,#eee7db);vertical-align:middle}.channel{display:inline-grid;place-items:center;width:1.35rem;height:1.35rem;border-radius:.18rem;background:#f26d00;color:#fff;font-weight:800}.ready{color:#27943a;font-weight:700}"
-            ".task-list,.media-list,.queue-list,.profit-list,.channel-list,.pref-list{list-style:none;margin:0;padding:0}.task-list li,.media-list li,.queue-list li,.profit-list li,.channel-list li,.pref-list li{display:grid;align-items:center;gap:.75rem;border-bottom:1px solid var(--line);padding:.85rem 0}.task-list li{grid-template-columns:auto 1fr auto}.media-list li{grid-template-columns:auto 1fr auto auto auto}.media-list.compact li{grid-template-columns:auto 1fr auto auto}.media-list small{display:block;color:#68708d}.queue-list li{grid-template-columns:1fr auto}.queue-list span{grid-column:1;color:#68708d}.profit-list li{grid-template-columns:auto 1fr auto}.profit-list b{color:#168200;font-size:1.1rem}.details-list{display:grid;grid-template-columns:1fr 1fr;margin:1rem 0 0}.details-list dt,.details-list dd{margin:0;padding:1rem 0;border-bottom:1px solid var(--line)}.details-list dt{color:#25283a}.channel-list li{grid-template-columns:auto 1fr auto auto;border:1px solid var(--line);border-radius:.55rem;padding:1rem;margin:.75rem 0}.channel-logo{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:#f26d00;color:#fff;font-size:1.8rem;font-weight:800}.channel-logo.fb{background:#1977f3}.channel-list small,.pref-list small{display:block;color:#68708d;margin-top:.25rem}.info{padding:1rem;border-radius:.45rem;background:#f6f7fa}.pref-list li{grid-template-columns:auto 1fr auto}.small-icon{width:2.4rem;height:2.4rem;font-size:1.1rem}.toggle{width:2.6rem;height:1.35rem;border-radius:999px;background:#d5d8df;position:relative}.toggle:after{content:'';position:absolute;top:.16rem;left:.16rem;width:1.03rem;height:1.03rem;border-radius:50%;background:#fff}.toggle.on{background:var(--honey)}.toggle.on:after{left:1.38rem}.form-actions{display:flex;justify-content:flex-end;gap:1rem;margin-top:1.2rem}.legend{display:flex;justify-content:flex-end;gap:2rem;color:#25283a}.legend span:before{content:'';display:inline-block;width:1.2rem;height:.25rem;border-radius:99px;margin-right:.5rem;vertical-align:middle}.legend .sales:before{background:#83b96f}.legend .costs:before{background:#ff992a}.bar-chart{height:265px;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0 54px,#e9e9e9 55px);display:grid;grid-template-columns:repeat(4,1fr);gap:2.2rem;align-items:end;padding:0 3rem}.bar-chart div{height:100%;display:flex;align-items:end;justify-content:center;gap:.8rem;position:relative}.bar-chart i,.bar-chart b{display:block;width:1.75rem;border-radius:.18rem .18rem 0 0}.bar-chart i{background:linear-gradient(180deg,#91c47d,#cde8bf)}.bar-chart b{background:linear-gradient(180deg,#ff9d37,#ffc079)}.bar-chart span{position:absolute;bottom:-3.1rem;text-align:center;color:#68708d}.bar-chart small{display:block}.money-actions{display:flex;gap:1rem;align-items:start;justify-content:end;flex-wrap:wrap;padding:1rem}.money-actions p{width:100%;text-align:right;color:#68708d}.chart-panel{min-height:330px}.workflow-panel>section,#create-order .workflow-card,.workflow-card{margin:1rem 0;padding:1.25rem;border:1px solid var(--line);border-radius:.72rem;background:#fffdfa}.workflow-intro{margin-bottom:1rem;padding:.25rem 0}.workflow-intro h3,.workflow-card h2,.workflow-card h3,.workflow-card h4{margin-top:0}.workflow-card p{color:#68708d}.form-grid{display:grid;grid-template-columns:repeat(4,minmax(10rem,1fr));gap:1rem;align-items:end;margin:1rem 0}.compact-form{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}.form-grid label,.inline-form label{display:grid;gap:.35rem;color:#25283a;font-weight:700}.form-grid input,.form-grid select,.inline-form input,.inline-form select{min-height:2.45rem;border:1px solid #d9dce5;border-radius:.42rem;background:#fff;padding:.45rem .6rem;font:inherit}.search input{border:0;min-height:0;padding:0}.inline-form{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin:.85rem 0}.record-tools{padding:1rem;border:1px dashed var(--line);border-radius:.6rem;background:#fff}.segmented-list{display:flex;flex-wrap:wrap;gap:.55rem;list-style:none;margin:.85rem 0 0;padding:0}.segmented-label a{display:inline-flex;margin:.2rem .25rem;padding:.35rem .7rem;border:1px solid #ffc21a;border-radius:.35rem}.empty-state{padding:1rem;border-radius:.6rem;background:#f8f9fc;color:#68708d}.chart-empty{display:inline-block;margin:.8rem 0 1rem}.recipe-card{margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:.6rem;background:#fff}.recipe-card ul{margin:.8rem 0;padding-left:1.2rem}.workflow-card table,.panel table{border:1px solid var(--line);border-radius:.6rem;overflow:hidden}.workflow-card td:first-child,.panel td:first-child{white-space:nowrap}.workflow-card td:last-child,.panel td:last-child{white-space:nowrap}.workflow-card form[style*='display:inline'],.panel form[style*='display:inline']{display:inline-flex!important;margin:.15rem .2rem .15rem 0}.workflow-card button,.panel button{border-color:#d9dce5}.workflow-card button:hover,.panel button:hover{border-color:#ffc21a}.status-badge{white-space:nowrap}"
+            ".task-list,.media-list,.queue-list,.profit-list,.channel-list,.pref-list{list-style:none;margin:0;padding:0}.task-list li,.media-list li,.queue-list li,.profit-list li,.channel-list li,.pref-list li{display:grid;align-items:center;gap:.75rem;border-bottom:1px solid var(--line);padding:.85rem 0}.task-list li{grid-template-columns:auto 1fr auto}.media-list li{grid-template-columns:auto 1fr auto auto auto}.media-list.compact li{grid-template-columns:auto 1fr auto auto}.media-list small{display:block;color:#68708d}.queue-list li{grid-template-columns:1fr auto}.queue-list span{grid-column:1;color:#68708d}.profit-list li{grid-template-columns:auto 1fr auto}.profit-list b{color:#168200;font-size:1.1rem}.details-list{display:grid;grid-template-columns:1fr 1fr;margin:1rem 0 0}.details-list dt,.details-list dd{margin:0;padding:1rem 0;border-bottom:1px solid var(--line)}.details-list dt{color:#25283a}.channel-list li{grid-template-columns:auto 1fr auto auto;border:1px solid var(--line);border-radius:.55rem;padding:1rem;margin:.75rem 0}.channel-logo{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:#f26d00;color:#fff;font-size:1.8rem;font-weight:800}.channel-logo.fb{background:#1977f3}.channel-list small,.pref-list small{display:block;color:#68708d;margin-top:.25rem}.info{padding:1rem;border-radius:.45rem;background:#f6f7fa}.pref-list li{grid-template-columns:auto 1fr auto}.small-icon{width:2.4rem;height:2.4rem;font-size:1.1rem}.toggle{width:2.6rem;height:1.35rem;border-radius:999px;background:#d5d8df;position:relative}.toggle:after{content:'';position:absolute;top:.16rem;left:.16rem;width:1.03rem;height:1.03rem;border-radius:50%;background:#fff}.toggle.on{background:var(--honey)}.toggle.on:after{left:1.38rem}.form-actions{display:flex;justify-content:flex-end;gap:1rem;margin-top:1.2rem}.legend{display:flex;justify-content:flex-end;gap:2rem;color:#25283a}.legend span:before{content:'';display:inline-block;width:1.2rem;height:.25rem;border-radius:99px;margin-right:.5rem;vertical-align:middle}.legend .sales:before{background:#83b96f}.legend .costs:before{background:#ff992a}.bar-chart{height:265px;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0 54px,#e9e9e9 55px);display:grid;grid-template-columns:repeat(4,1fr);gap:2.2rem;align-items:end;padding:0 3rem}.bar-chart div{height:100%;display:flex;align-items:end;justify-content:center;gap:.8rem;position:relative}.bar-chart i,.bar-chart b{display:block;width:1.75rem;border-radius:.18rem .18rem 0 0}.bar-chart i{background:linear-gradient(180deg,#91c47d,#cde8bf)}.bar-chart b{background:linear-gradient(180deg,#ff9d37,#ffc079)}.bar-chart span{position:absolute;bottom:-3.1rem;text-align:center;color:#68708d}.bar-chart small{display:block}.money-actions{display:flex;gap:1rem;align-items:start;justify-content:end;flex-wrap:wrap;padding:1rem}.money-actions p{width:100%;text-align:right;color:#68708d}.chart-panel{min-height:330px}.workflow-panel>section,#create-order .workflow-card,.workflow-card{margin:1rem 0;padding:1.25rem;border:1px solid var(--line);border-radius:.72rem;background:#fffdfa}.workflow-intro{margin-bottom:1rem;padding:.25rem 0}.workflow-intro h3,.workflow-card h2,.workflow-card h3,.workflow-card h4{margin-top:0}.workflow-card p{color:#68708d}.form-grid{display:grid;grid-template-columns:repeat(4,minmax(10rem,1fr));gap:1rem;align-items:end;margin:1rem 0}.compact-form{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}.form-grid label,.inline-form label{display:grid;gap:.35rem;color:#25283a;font-weight:700}.form-grid input,.form-grid select,.inline-form input,.inline-form select{min-height:2.45rem;border:1px solid #d9dce5;border-radius:.42rem;background:#fff;padding:.45rem .6rem;font:inherit}.search input{border:0;min-height:0;padding:0}.inline-form{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin:.85rem 0}.record-tools{padding:1rem;border:1px dashed var(--line);border-radius:.6rem;background:#fff}.segmented-list{display:flex;flex-wrap:wrap;gap:.55rem;list-style:none;margin:.85rem 0 0;padding:0}.segmented-label a{display:inline-flex;margin:.2rem .25rem;padding:.35rem .7rem;border:1px solid #ffc21a;border-radius:.35rem}.empty-state{padding:1rem;border-radius:.6rem;background:#f8f9fc;color:#68708d}.chart-empty{display:inline-block;margin:.8rem 0 1rem}.recipe-card{margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:.6rem;background:#fff}.recipe-card ul{margin:.8rem 0;padding-left:1.2rem}.workflow-card table,.panel table{border:1px solid var(--line);border-radius:.6rem;overflow:hidden}.workflow-card td:first-child,.panel td:first-child{white-space:nowrap}.workflow-card td:last-child,.panel td:last-child{white-space:nowrap}.workflow-card form[style*='display:inline'],.panel form[style*='display:inline']{display:inline-flex!important;margin:.15rem .2rem .15rem 0}.workflow-card button,.panel button{border-color:#d9dce5}.workflow-card button:hover,.panel button:hover{border-color:#ffc21a}.workflow-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem}.workflow-actions h3,.workflow-actions p{width:100%;margin-bottom:0}.modal-popover{display:none;position:fixed;inset:0;z-index:50;padding:clamp(1rem,4vw,3rem);place-items:center}.modal-popover:target{display:grid}.modal-backdrop{position:absolute;inset:0;background:rgba(17,20,35,.58);backdrop-filter:blur(2px)}.modal-card{position:relative;z-index:1;width:min(58rem,100%);max-height:min(84vh,52rem);overflow:auto;padding:1.35rem;border:1px solid #ffd262;border-radius:.9rem;background:#fff;box-shadow:0 1.2rem 3.2rem rgba(17,20,35,.24)}.modal-header{display:flex;justify-content:space-between;gap:1rem;align-items:start;margin-bottom:1rem}.modal-header h3{margin:.1rem 0}.modal-header p{margin:.35rem 0 0;color:#68708d}.modal-close{display:grid;place-items:center;flex:0 0 2.35rem;width:2.35rem;height:2.35rem;border:1px solid var(--line);border-radius:50%;background:#fff8df;color:#111423;font-size:1.7rem;line-height:1}.modal-card .form-grid{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}.status-badge{white-space:nowrap}"
             "@media (max-width:1100px){.app-shell{grid-template-columns:1fr}.sidebar{position:static;height:auto}.brand{margin-bottom:1rem}nav ul{display:flex;flex-wrap:wrap}.bee-card{display:none}.topbar{grid-template-columns:1fr}.metric-grid.three,.metric-grid.four,.two-col,.orders-layout,.products-layout,.money-layout,.bottom-grid{grid-template-columns:1fr}.user-tools{justify-content:flex-start}.bar-chart{padding:0 1rem}}@media (max-width:720px){.workspace{padding:0 .5rem 1rem}.topbar{padding:1rem .5rem}.metric-grid,.dashboard-grid,.panel.wide{margin:1rem 0}.metric-card{grid-template-columns:1fr}.metric-icon{grid-row:auto}.panel{padding:1rem}table{display:block;overflow-x:auto;white-space:nowrap}.toolbar,.panel-header{align-items:flex-start;flex-direction:column}.details-list{grid-template-columns:1fr}.channel-list li,.pref-list li{grid-template-columns:1fr}.bar-chart{gap:.7rem}.brand strong{font-size:1.8rem}}"
             "</style>"
         )

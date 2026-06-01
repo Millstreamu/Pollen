@@ -57,7 +57,9 @@ def test_products_stock_page_uses_beginner_friendly_sections_and_buttons() -> No
 
     assert response.status_code == 200
     assert "<h3>Products workflow</h3>" in response.body
-    assert "<h3>Add product</h3>" in response.body
+    assert "id='add-product-dialog-title'>Add product</h3>" in response.body
+    assert "role='dialog'" in response.body
+    assert "href='#add-product-dialog'" in response.body
     assert "<h2>Products list</h2>" in response.body
     assert "Active" in response.body
     assert "Archived" in response.body
@@ -73,8 +75,10 @@ def test_make_buy_page_uses_beginner_friendly_sections_and_empty_state_guidance(
     response = app.get("/make-buy", authorization_header=header)
 
     assert response.status_code == 200
-    assert "<h3>Add material</h3>" in response.body
-    assert "<h3>Plan a batch</h3>" in response.body
+    assert "id='add-material-dialog-title'>Add material</h3>" in response.body
+    assert "id='plan-batch-dialog-title'>Plan a batch</h3>" in response.body
+    assert "href='#add-material-dialog'" in response.body
+    assert "href='#plan-batch-dialog'" in response.body
     assert "<button type='submit'>Save material</button>" in response.body
     assert "<button type='submit'>Save batch plan</button>" in response.body
     assert "No low materials right now. Add materials and reorder points to unlock suggestions." in response.body
@@ -177,11 +181,14 @@ def test_dashboard_primary_controls_are_links_or_real_post_forms() -> None:
     make_buy = app.get("/make-buy", authorization_header=header).body
     settings = app.get("/settings", authorization_header=header).body
 
-    assert "href='#create-order'" in orders
+    assert "href='#create-order-dialog'" in orders
     assert "<section class='panel wide' id='create-order'>" in orders
-    assert "href='#products-workflow'" in products
+    assert "id='create-order-dialog' role='dialog'" in orders
+    assert "href='#add-product-dialog'" in products
     assert "<section class='panel wide workflow-panel' id='products-workflow'>" in products
-    assert "href='#make-buy-workflow'" in make_buy
+    assert "id='add-product-dialog' role='dialog'" in products
+    assert "href='#plan-batch-dialog'" in make_buy
+    assert "href='#create-purchase-dialog'" in make_buy
     assert "<section class='panel wide workflow-panel' id='make-buy-workflow'>" in make_buy
     assert "href='#shop-settings'" in settings
     assert "<section class='panel wide' id='shop-settings'>" in settings
