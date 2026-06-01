@@ -32,6 +32,33 @@ Overall status: V1 is declared complete after Milestone 10.3 readiness validatio
 
 ## Recent Updates
 
+### 2026-06-01 — Post-V1 dialog control layout repair
+
+Branch/PR/Issue:
+- direct UI bug report with screenshots showing workflow dialog text boxes/buttons formatted incorrectly
+
+Completed:
+- Repaired popup workflow dialog controls by giving submit/cancel actions a dedicated full-width action row.
+- Applied existing Pollen primary/outline button styling to dialog submit and cancel controls.
+- Hardened form-grid inputs/selects with full-width border-box sizing so text boxes render consistently inside dialogs.
+- Added UI consistency regression coverage for dialog control spacing and polished button/input styling.
+- Added a durable report at `docs/ai/reports/post-v1-dialog-control-layout-repair-report-2026-06-01.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass; no runtime packages are required
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`117 passed`)
+- `PYTHONPATH=src python scripts/export_ui_review_pages.py` — pass
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — environment limitation because Playwright is not installed
+- `python -m pip install playwright` — environment limitation because the package-index proxy returned `403 Forbidden`
+
+Notes:
+- No new dependencies were added.
+- Playwright screenshots should be captured later in a browser-capable environment.
+
 ### 2026-06-01 — Post-V1 popup workflow forms
 
 Branch/PR/Issue:
