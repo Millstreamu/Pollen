@@ -32,6 +32,32 @@ Overall status: V1 is declared complete after Milestone 10.3 readiness validatio
 
 ## Recent Updates
 
+### 2026-06-01 — Post-V1 popup workflow forms
+
+Branch/PR/Issue:
+- direct UI request to make order, product, material, batch, and purchase creation forms open as popups instead of sitting at the bottom of pages
+
+Completed:
+- Added reusable app-shell dialog markup and CSS for no-build, target-activated workflow popups.
+- Moved order creation, product creation, material creation, batch planning, and purchase creation into focused popup surfaces while preserving existing form posts and service behavior.
+- Updated UI consistency coverage to assert popup links and dialog semantics.
+- Added a durable report at `docs/ai/reports/post-v1-popup-workflow-forms-report-2026-06-01.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass using installed dependencies
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`116 passed`)
+- `PYTHONPATH=src python scripts/export_ui_review_pages.py` — pass
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — environment limitation because Playwright is not installed
+- `python -m pip install playwright` — environment limitation because the package-index proxy returned `403 Forbidden`
+
+Notes:
+- No new dependencies were added.
+- Playwright screenshots should be captured later in a browser-capable environment.
+
 ### 2026-06-01 — Post-V1 cosmetic layout UI improvements
 
 Branch/PR/Issue:
