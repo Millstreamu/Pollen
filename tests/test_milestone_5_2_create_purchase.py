@@ -36,7 +36,7 @@ def test_create_purchase_persists_and_does_not_mutate_stock() -> None:
     assert after_material.stock_on_hand == before_stock
 
 
-def test_make_buy_ui_shows_created_purchases_list() -> None:
+def test_make_buy_ui_shows_incoming_purchases_list() -> None:
     app = create_app()
     header = _auth_header("p52-ui", "p52-ui@example.com")
     app.post(
@@ -60,7 +60,8 @@ def test_make_buy_ui_shows_created_purchases_list() -> None:
         },
     )
     assert response.status_code == 200
-    assert "Created purchases" in response.body
+    assert "Incoming Purchases" in response.body
+    assert "Created purchases" not in response.body
     assert "pur-1" in response.body
     assert "Draft" in response.body
     assert "Northwind" in response.body

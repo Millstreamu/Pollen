@@ -396,13 +396,15 @@ def test_products_ui_detail_edit_mode_shows_all_editable_fields() -> None:
     assert "name='reorder_point' type='number' min='0' value='6'" in response.body
 
 
-def test_make_buy_page_shows_materials_empty_state() -> None:
+def test_make_buy_page_shows_operational_empty_states() -> None:
     app = create_app()
 
     response = app.get("/make-buy", authorization_header=_auth_header("mat1", "mat1@example.com"))
 
     assert response.status_code == 200
-    assert "No materials yet. Add your first material to track supplies." in response.body
+    assert "No batches planned yet. Plan a batch when you’re ready to make more stock." in response.body
+    assert "No materials missing right now. Low materials will appear here when it is time to restock." in response.body
+    assert "No purchases yet. Create a purchase when you need to restock materials." in response.body
 
 
 def test_make_buy_ui_create_and_edit_material_interactions() -> None:
@@ -422,10 +424,10 @@ def test_make_buy_ui_create_and_edit_material_interactions() -> None:
     )
     assert create_response.status_code == 200
     assert "Soy Wax" in create_response.body
-    assert "⚠️ Low stock" in create_response.body
+    assert "Low" in create_response.body
 
     edit_response = app.get("/make-buy?edit=mat-1", authorization_header=header)
-    assert "Save all fields" in edit_response.body
+    assert "Save all fields" not in edit_response.body
 
     save_response = app.post(
         "/make-buy",
@@ -437,7 +439,10 @@ def test_make_buy_ui_create_and_edit_material_interactions() -> None:
         },
     )
     assert save_response.status_code == 200
-    assert "✅ Healthy" in save_response.body
+    updated = app._material_service.get_material(authorization_header=header, material_id="mat-1")  # noqa: SLF001
+    assert updated is not None
+    assert updated.stock_on_hand == 8
+    assert not updated.is_low_stock
 
 
 def test_make_buy_ui_archive_restore_and_filter_views() -> None:
@@ -466,9 +471,9 @@ def test_make_buy_ui_archive_restore_and_filter_views() -> None:
 
     archived_view = app.get("/make-buy?view=archived", authorization_header=header)
     assert archived_view.status_code == 200
-    assert "Archived materials" in archived_view.body
-    assert "<button type='submit'>Restore</button>" in archived_view.body
-    assert "Archived Wax" in archived_view.body
+    assert "Archived materials" not in archived_view.body
+    assert "<button type='submit'>Restore</button>" not in archived_view.body
+    assert "Archived Wax" not in archived_view.body
 
     restored_response = app.post(
         "/make-buy",
@@ -476,13 +481,16 @@ def test_make_buy_ui_archive_restore_and_filter_views() -> None:
         form_data={"action": "restore", "material_id": "mat-1"},
     )
     assert restored_response.status_code == 200
-    assert "Archived Wax" in restored_response.body
+    restored = app._material_service.get_material(authorization_header=header, material_id="mat-1")  # noqa: SLF001
+    assert restored is not None
+    assert restored.is_active
 
     active_view = app.get("/make-buy?view=active", authorization_header=header)
     assert "Archived materials" not in active_view.body
 
     all_view = app.get("/make-buy?view=all", authorization_header=header)
-    assert "Archived Wax" in all_view.body
+    assert all_view.status_code == 200
+    assert "Archived materials" not in all_view.body
 
 def test_make_buy_ui_invalid_view_defaults_to_active_content() -> None:
     header = _auth_header("mat4", "mat4@example.com")
@@ -503,8 +511,9 @@ def test_make_buy_ui_invalid_view_defaults_to_active_content() -> None:
     response = app.get("/make-buy?view=unexpected", authorization_header=header)
 
     assert response.status_code == 200
-    assert "Default View Wax" in response.body
-    assert "<h2>Materials</h2>" in response.body
+    assert "Default View Wax" not in response.body
+    assert "<h2>Materials</h2>" not in response.body
+    assert "Make Next" in response.body
 
 
 def test_make_buy_ui_buy_list_suggestions_and_add_to_purchase() -> None:
@@ -525,10 +534,11 @@ def test_make_buy_ui_buy_list_suggestions_and_add_to_purchase() -> None:
 
     response = app.get("/make-buy", authorization_header=header)
     assert response.status_code == 200
-    assert "Buy list suggestions" in response.body
-    assert "Suggested reorder quantity rule" in response.body
+    assert "Buy List" in response.body
+    assert "Buy list suggestions" not in response.body
+    assert "Suggested reorder quantity rule" not in response.body
     assert "7 roll" in response.body
-    assert "Add to Purchase" in response.body
+    assert "Add to Purchase" not in response.body
 
     added = app.post(
         "/make-buy",
@@ -536,7 +546,8 @@ def test_make_buy_ui_buy_list_suggestions_and_add_to_purchase() -> None:
         form_data={"action": "add_to_purchase", "material_id": "mat-1"},
     )
     assert added.status_code == 200
-    assert "Draft purchase list: Label Rolls" in added.body
+    draft = app._material_service.list_purchase_draft(authorization_header=header)  # noqa: SLF001
+    assert [material.name for material in draft] == ["Label Rolls"]
 
 
 def test_make_buy_ui_edit_ignores_unknown_material_id_without_crashing() -> None:
@@ -567,5 +578,6 @@ def test_make_buy_ui_edit_ignores_unknown_material_id_without_crashing() -> None
     )
 
     assert response.status_code == 200
-    assert "Known Material" in response.body
-    assert "Should Not Apply" not in response.body
+    material = app._material_service.get_material(authorization_header=header, material_id="mat-1")  # noqa: SLF001
+    assert material is not None
+    assert material.name == "Known Material"

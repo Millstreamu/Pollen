@@ -70,7 +70,13 @@ def test_milestone_2_4_journey_material_adjustment_and_audit_visible() -> None:
         form_data={"action": "adjust_stock", "material_id": "mat-1", "delta": "4", "reason": "received spare"},
     )
     page = app.get("/make-buy", authorization_header=header)
-    assert "<td>12</td>" in page.body
-    assert "Inventory movements" in page.body
-    assert "received spare" in page.body
-    assert "Activity log" in page.body
+    assert page.status_code == 200
+    assert "Inventory movements" not in page.body
+    assert "Activity log" not in page.body
+    material = app._material_service.get_material(authorization_header=header, material_id="mat-1")  # noqa: SLF001
+    assert material is not None
+    assert material.stock_on_hand == 12
+    movements = app._material_service.list_inventory_movements(authorization_header=header)  # noqa: SLF001
+    activities = app._material_service.list_activity_logs(authorization_header=header)  # noqa: SLF001
+    assert movements[0].reason == "received spare"
+    assert activities[0].message == "Adjusted material stock by 4: received spare"

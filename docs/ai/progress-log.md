@@ -32,6 +32,33 @@ Overall status: V1 is declared complete after Milestone 10.3 readiness validatio
 
 ## Recent Updates
 
+### 2026-06-01 — Post-V1 Make / Buy page simplification
+
+Branch/PR/Issue:
+- direct UI/workflow simplification request for the Make / Buy page
+
+Completed:
+- Simplified the visible Make / Buy page to the approved Pollen operational overview: KPI cards, Make Next / Buy List cards, and Incoming Purchases.
+- Hid inline admin/debug surfaces from the Make / Buy page, including material filters, material management, recipe management, inventory movements, activity log, formula text, and created-purchases debug copy.
+- Preserved existing Make / Buy post actions and services while moving visible creation flows into focused Plan Batch and Create Purchase dialogs.
+- Replaced old empty states with beginner-friendly guidance and renamed the app-shell help card to Pollen Guide / Open guide.
+- Updated regression coverage to assert the simplified layout and hidden admin surfaces.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass; no runtime packages are required
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`117 passed`)
+- `PYTHONPATH=src python scripts/export_ui_review_pages.py` — pass
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py` — environment limitation because Playwright is not installed
+- `python -m pip install playwright` — environment limitation because the package-index proxy returned `403 Forbidden` / no matching distribution
+
+Notes:
+- Lower-page management workflows remain available in service/post logic but are intentionally hidden from the main Make / Buy overview pending future information-architecture work.
+
+
 ### 2026-06-01 — Post-V1 dialog control layout repair
 
 Branch/PR/Issue:
