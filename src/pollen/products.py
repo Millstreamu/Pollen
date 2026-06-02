@@ -19,6 +19,10 @@ class ProductRecord:
     estimated_material_cost: float
     estimated_packaging_shipping_cost: float
     platform_fee_percent: float
+    category: str = ""
+    default_batch_size: int = 1
+    workflow_status: str = "Active"
+    notes: str = ""
 
     @property
     def is_low_stock(self) -> bool:
@@ -61,6 +65,10 @@ class ProductRepository:
         estimated_material_cost: float = 0.0,
         estimated_packaging_shipping_cost: float = 0.0,
         platform_fee_percent: float = 0.0,
+        category: str = "",
+        default_batch_size: int = 1,
+        workflow_status: str = "Active",
+        notes: str = "",
     ) -> ProductRecord:
         product_id = f"prd-{self._next_id}"
         self._next_id += 1
@@ -77,6 +85,10 @@ class ProductRepository:
             estimated_material_cost=estimated_material_cost,
             estimated_packaging_shipping_cost=estimated_packaging_shipping_cost,
             platform_fee_percent=platform_fee_percent,
+            category=category,
+            default_batch_size=default_batch_size,
+            workflow_status=workflow_status,
+            notes=notes,
         )
         self._records[product_id] = created
         return created
@@ -107,6 +119,10 @@ class ProductRepository:
         estimated_material_cost: float,
         estimated_packaging_shipping_cost: float,
         platform_fee_percent: float,
+        category: str | None = None,
+        default_batch_size: int | None = None,
+        workflow_status: str | None = None,
+        notes: str | None = None,
     ) -> ProductRecord | None:
         existing = self.get_for_shop(shop_id=shop_id, product_id=product_id)
         if existing is None:
@@ -123,6 +139,10 @@ class ProductRepository:
             estimated_material_cost=estimated_material_cost,
             estimated_packaging_shipping_cost=estimated_packaging_shipping_cost,
             platform_fee_percent=platform_fee_percent,
+            category=existing.category if category is None else category,
+            default_batch_size=existing.default_batch_size if default_batch_size is None else default_batch_size,
+            workflow_status=existing.workflow_status if workflow_status is None else workflow_status,
+            notes=existing.notes if notes is None else notes,
         )
         self._records[product_id] = updated
         return updated

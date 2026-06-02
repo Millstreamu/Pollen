@@ -252,10 +252,17 @@ class ProductService:
         estimated_material_cost: float = 0.0,
         estimated_packaging_shipping_cost: float = 0.0,
         platform_fee_percent: float = 0.0,
+        category: str = "",
+        default_batch_size: int = 1,
+        workflow_status: str = "Active",
+        notes: str = "",
     ) -> ProductRecord | None:
         _ = requested_shop_id
         context = self._auth_service.resolve_context(authorization_header)
         if context is None:
+            return None
+        normalized_status = workflow_status.strip().title()
+        if not name.strip() or default_batch_size <= 0 or normalized_status not in {"Draft", "Active"}:
             return None
 
         return self._product_repository.create(
@@ -268,6 +275,10 @@ class ProductService:
             estimated_material_cost=estimated_material_cost,
             estimated_packaging_shipping_cost=estimated_packaging_shipping_cost,
             platform_fee_percent=platform_fee_percent,
+            category=category.strip(),
+            default_batch_size=default_batch_size,
+            workflow_status=normalized_status,
+            notes=notes.strip(),
         )
 
     def list_products(self, *, authorization_header: str | None, include_archived: bool = False) -> list[ProductRecord]:
@@ -300,6 +311,10 @@ class ProductService:
         estimated_material_cost: float | None = None,
         estimated_packaging_shipping_cost: float | None = None,
         platform_fee_percent: float | None = None,
+        category: str | None = None,
+        default_batch_size: int | None = None,
+        workflow_status: str | None = None,
+        notes: str | None = None,
     ) -> ProductRecord | None:
         context = self._auth_service.resolve_context(authorization_header)
         if context is None:
@@ -326,6 +341,10 @@ class ProductService:
                 else estimated_packaging_shipping_cost
             ),
             platform_fee_percent=existing.platform_fee_percent if platform_fee_percent is None else platform_fee_percent,
+            category=category,
+            default_batch_size=default_batch_size,
+            workflow_status=workflow_status,
+            notes=notes,
         )
 
     def archive_product(self, *, authorization_header: str | None, product_id: str) -> ProductRecord | None:
