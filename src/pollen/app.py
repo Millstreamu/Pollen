@@ -47,7 +47,7 @@ class AppShell:
         "Today": "Your daily overview will appear here.",
         "Orders": "Order workflow tools will appear here.",
         "Inventory": "See stock, low stock, and restock workflows here.",
-        "Workshop": "Create products, define recipes, and make batches here.",
+        "Workshop": "Create products, materials, and recipes here.",
         "Money": "Estimated money snapshots will appear here.",
         "Settings": "Shop settings and preferences will appear here.",
     }
@@ -319,6 +319,34 @@ class AppShell:
             if created_product is None:
                 return AppResponse(status_code=400, body="Product name, default batch size, and status are required")
             return self.get("/make-buy?created=product", authorization_header=authorization_header)
+        elif action == "save_recipe":
+            product_id = payload.get("product_id", "")
+            recipe_rows, error = self._recipe_rows_from_payload(payload)
+            if error is not None:
+                return AppResponse(status_code=400, body=error)
+            if self._product_service.get_product(
+                authorization_header=authorization_header,
+                product_id=product_id,
+            ) is None:
+                return AppResponse(status_code=400, body="Choose a product before saving a recipe")
+            for existing in self._recipe_service.list_recipe_items(
+                authorization_header=authorization_header,
+                product_id=product_id,
+            ):
+                self._recipe_service.archive_recipe_item(
+                    authorization_header=authorization_header,
+                    recipe_item_id=existing.recipe_item_id,
+                )
+            for material_id, quantity_per_unit in recipe_rows:
+                created = self._recipe_service.create_recipe_item(
+                    authorization_header=authorization_header,
+                    product_id=product_id,
+                    material_id=material_id,
+                    quantity_per_unit=quantity_per_unit,
+                )
+                if created is None:
+                    return AppResponse(status_code=400, body="Choose an existing material and a positive quantity per unit")
+            return self.get(f"/make-buy?recipe_saved={product_id}", authorization_header=authorization_header)
         elif action == "create_recipe_item":
             self._recipe_service.create_recipe_item(
                 authorization_header=authorization_header,
@@ -429,6 +457,37 @@ class AppShell:
             )
 
         return self.get("/make-buy", authorization_header=authorization_header)
+
+    def _recipe_rows_from_payload(self, payload: dict[str, str]) -> tuple[list[tuple[str, int]], str | None]:
+        indexed_rows: list[tuple[int, str, str]] = []
+        for key, value in payload.items():
+            if not key.startswith("material_id_"):
+                continue
+            try:
+                row_number = int(key.removeprefix("material_id_"))
+            except ValueError:
+                continue
+            if payload.get(f"remove_{row_number}") == "1":
+                continue
+            indexed_rows.append((row_number, value.strip(), payload.get(f"quantity_per_unit_{row_number}", "").strip()))
+
+        if not indexed_rows and (payload.get("material_id") or payload.get("quantity_per_unit")):
+            indexed_rows.append((1, payload.get("material_id", "").strip(), payload.get("quantity_per_unit", "").strip()))
+
+        rows: list[tuple[str, int]] = []
+        for _, material_id, quantity_text in sorted(indexed_rows):
+            if not material_id and not quantity_text:
+                continue
+            if not material_id:
+                return [], "Material is required for each recipe row"
+            try:
+                quantity_per_unit = int(quantity_text)
+            except ValueError:
+                return [], "Quantity per unit must be positive"
+            if quantity_per_unit <= 0:
+                return [], "Quantity per unit must be positive"
+            rows.append((material_id, quantity_per_unit))
+        return rows, None
 
     def _handle_order_post(self, *, authorization_header: str, form_data: dict[str, str] | None) -> AppResponse:
         payload = form_data or {}
@@ -982,7 +1041,7 @@ class AppShell:
             "Today": "See what needs attention in your shop.",
             "Orders": "Track new, packed, and shipped orders.",
             "Inventory": "See stock, low stock, buy list, and incoming purchases.",
-            "Workshop": "Create products, define recipes, and make batches.",
+            "Workshop": "Create products, materials, and recipes.",
             "Money": "See sales, costs, and estimated profit.",
             "Settings": "Manage your shop details and basic connections.",
         }
@@ -1359,18 +1418,23 @@ class AppShell:
         edit_material_id: str | None = None,
         query: dict[str, list[str]] | None = None,
     ) -> str:
-        _ = view, edit_material_id, query
+        _ = view, edit_material_id
         products = self._product_service.list_products(authorization_header=authorization_header)
         materials = self._material_service.list_materials(authorization_header=authorization_header)
-        planned_batches = [
-            batch
-            for batch in self._batch_service.list_batches(authorization_header=authorization_header)
-            if batch.status == "planned"
-        ]
+        recipe_items_by_product = {
+            product.product_id: self._recipe_service.list_recipe_items(
+                authorization_header=authorization_header,
+                product_id=product.product_id,
+            )
+            for product in products
+        }
+        recipes_ready = sum(1 for rows in recipe_items_by_product.values() if rows)
+        recipe_saved_product_id = query.get("recipe_saved", [""])[0] if query is not None else ""
+        created_product = query is not None and query.get("created", [""])[0] == "product"
         material_rows = "".join(
             "<tr>"
             f"<td><span class='thumb'>◫</span> <strong>{self._h(material.name)}</strong>"
-            f"<small>{self._h(material.notes) if material.notes else 'Ready for future recipes'}</small></td>"
+            f"<small>{self._h(material.notes) if material.notes else 'Ready for product recipes'}</small></td>"
             f"<td>{material.stock_on_hand} {self._h(material.unit)}</td>"
             f"<td>{material.reorder_point} {self._h(material.unit)}</td>"
             f"<td>{self._h(material.supplier) if material.supplier else '—'}</td>"
@@ -1384,20 +1448,14 @@ class AppShell:
             if materials
             else (
                 "<div class='empty-state chart-empty'><p>Create the materials and parts you use to make products. "
-                "You’ll use them later when building product recipes.</p></div>"
+                "You’ll choose from these when setting up recipes.</p></div>"
             )
         )
         product_rows = "".join(
-            "<tr>"
-            f"<td><span class='thumb'>▧</span> <strong>{self._h(product.name)}</strong>"
-            f"<small>{self._h(product.notes) if product.notes else 'Recipe not set up yet'}</small></td>"
-            f"<td>{self._h(product.sku) if product.sku else '—'}</td>"
-            f"<td>{self._h(product.category) if product.category else '—'}</td>"
-            f"<td>{self._format_currency(product.sale_price) if product.sale_price else '—'}</td>"
-            f"<td>{product.default_batch_size}</td>"
-            f"<td>{self._badge(product.workflow_status, 'green' if product.workflow_status == 'Active' else 'gold')}</td>"
-            "<td><span class='muted'>Recipe not set up yet</span> <a class='outline muted small' href='#'>Add recipe later</a></td>"
-            "</tr>"
+            self._render_workshop_product_row(
+                product=product,
+                recipe_items=recipe_items_by_product[product.product_id],
+            )
             for product in products
         )
         product_list = (
@@ -1406,19 +1464,27 @@ class AppShell:
             if products
             else (
                 "<div class='empty-state chart-empty'><p>Create the products you make in your workshop. "
-                "After saving a product, you can add its materials, recipe, and batch size.</p></div>"
+                "After saving a product, set up the materials used for one unit.</p></div>"
             )
         )
-        success_banner = (
-            "<div class='notice success' role='status'>Product saved. It is ready for recipe setup later.</div>"
-            if query is not None and query.get("created", [""])[0] == "product"
-            else ""
+        success_banner = ""
+        if created_product:
+            success_banner = "<div class='notice success' role='status'>Product saved. It is ready for recipe setup.</div>"
+        elif recipe_saved_product_id:
+            success_banner = "<div class='notice success' role='status'>Recipe saved. Product recipe status is updated.</div>"
+        recipe_dialogs = "".join(
+            self._render_recipe_dialog(
+                product=product,
+                materials=materials,
+                recipe_items=recipe_items_by_product[product.product_id],
+            )
+            for product in products
         )
         return (
             "<section class='metric-grid three'>"
             f"{self._metric_card('◫', 'Materials Defined', len(materials), 'green', 'Reusable workshop items')}"
-            f"{self._metric_card('▧', 'Products Defined', len(products), 'gold', 'Future recipe milestone')}"
-            f"{self._metric_card('⚒', 'Batches Planned', len(planned_batches), 'blue', 'Future planning milestone')}"
+            f"{self._metric_card('▧', 'Products Defined', len(products), 'gold', 'Products you make')}"
+            f"{self._metric_card('✓', 'Recipes Ready', recipes_ready, 'green', 'Products with materials assigned')}"
             "</section>"
             "<section class='panel wide' id='workshop-materials'>"
             "<div class='panel-header'><div><h3>Workshop Materials</h3>"
@@ -1429,14 +1495,99 @@ class AppShell:
             f"{success_banner}"
             "<section class='panel wide' id='products-you-make'>"
             "<div class='panel-header'><div><h3>Products You Make</h3>"
-            "<p>Define the finished products you make or sell. Recipes come next.</p></div>"
+            "<p>Define the finished products you make, then set up the materials used for one unit.</p></div>"
             "<a class='primary' href='#create-product-dialog'>Create Product</a></div>"
             f"{product_list}"
             "</section>"
-            "<section class='panel guidance-card'><h3>What happens next?</h3>"
-            "<p>Next, add the materials and steps for each product recipe.</p></section>"
             f"{self._render_create_material_dialog()}"
             f"{self._render_create_product_dialog()}"
+            f"{recipe_dialogs}"
+        )
+
+    def _render_workshop_product_row(self, *, product, recipe_items: list) -> str:
+        recipe_ready = bool(recipe_items)
+        recipe_badge = self._badge("Recipe ready" if recipe_ready else "Recipe needed", "green" if recipe_ready else "gold")
+        recipe_action = "Edit recipe" if recipe_ready else "Set up recipe"
+        recipe_summary = f"{len(recipe_items)} material{'s' if len(recipe_items) != 1 else ''} assigned" if recipe_ready else "No materials assigned yet"
+        return (
+            "<tr>"
+            f"<td><span class='thumb'>▧</span> <strong>{self._h(product.name)}</strong>"
+            f"<small>{self._h(product.notes) if product.notes else recipe_summary}</small></td>"
+            f"<td>{self._h(product.sku) if product.sku else '—'}</td>"
+            f"<td>{self._h(product.category) if product.category else '—'}</td>"
+            f"<td>{self._format_currency(product.sale_price) if product.sale_price else '—'}</td>"
+            f"<td>{product.default_batch_size}</td>"
+            f"<td>{self._badge(product.workflow_status, 'green' if product.workflow_status == 'Active' else 'gold')}</td>"
+            f"<td>{recipe_badge} <small>{recipe_summary}</small> "
+            f"<a class='outline small' href='#recipe-dialog-{self._h(product.product_id)}'>{recipe_action}</a></td>"
+            "</tr>"
+        )
+
+    def _render_recipe_dialog(self, *, product, materials: list, recipe_items: list) -> str:
+        material_lookup = {material.material_id: material for material in materials}
+        option_items = "".join(
+            f"<option value='{self._h(material.material_id)}'>{self._h(material.name)} ({self._h(material.unit)})</option>"
+            for material in materials
+        )
+        row_count = max(3, len(recipe_items) + 1)
+        recipe_rows = []
+        for index in range(1, row_count + 1):
+            existing = recipe_items[index - 1] if index <= len(recipe_items) else None
+            selected_material_id = existing.material_id if existing is not None else ""
+            quantity = existing.quantity_per_unit if existing is not None else ""
+            unit = material_lookup[selected_material_id].unit if selected_material_id in material_lookup else "Shown after save"
+            options = "<option value=''>Choose a material</option>" + option_items
+            if selected_material_id:
+                options = options.replace(
+                    f"<option value='{self._h(selected_material_id)}'>",
+                    f"<option value='{self._h(selected_material_id)}' selected>",
+                    1,
+                )
+            remove_control = (
+                f"<label class='remove-row'><input type='checkbox' name='remove_{index}' value='1'> Remove</label>"
+                if existing is not None
+                else "<span class='muted'>Add material to recipe</span>"
+            )
+            recipe_rows.append(
+                "<tr>"
+                f"<td><label class='visually-hidden' for='material-{self._h(product.product_id)}-{index}'>Material</label>"
+                f"<select id='material-{self._h(product.product_id)}-{index}' name='material_id_{index}'>{options}</select></td>"
+                f"<td><label class='visually-hidden' for='quantity-{self._h(product.product_id)}-{index}'>Quantity per unit</label>"
+                f"<input id='quantity-{self._h(product.product_id)}-{index}' name='quantity_per_unit_{index}' type='number' min='1' value='{quantity}'></td>"
+                f"<td><span class='unit-pill'>{self._h(unit)}</span></td>"
+                f"<td>{remove_control}</td>"
+                "</tr>"
+            )
+        material_table = (
+            "<table class='recipe-editor'><thead><tr><th>Material selector</th><th>Quantity per unit</th><th>Unit</th><th>Remove row action</th></tr></thead>"
+            f"<tbody>{''.join(recipe_rows)}</tbody></table>"
+        ) if materials else (
+            "<div class='empty-state chart-empty'><p>No materials added yet. Create a material first, then add it to this product recipe.</p>"
+            "<a class='outline' href='#create-material-dialog'>+ Create new material</a></div>"
+        )
+        empty_copy = (
+            "<div class='empty-state'><p>No materials added yet. Add the materials or parts used to make this product.</p><span class='outline muted'>Add Material to Recipe</span></div>"
+            if not recipe_items
+            else ""
+        )
+        form = (
+            "<form class='form-grid compact-form recipe-setup-form' method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='save_recipe'>"
+            f"<input type='hidden' name='product_id' value='{self._h(product.product_id)}'>"
+            f"<section class='full-span'><h4>Selected product name</h4><p><strong>{self._h(product.name)}</strong></p></section>"
+            f"<section class='full-span'><h4>Materials used per unit</h4>{empty_copy}{material_table}</section>"
+            "<p class='full-span'><a class='outline muted' href='#create-material-dialog'>+ Create new material</a> "
+            "<span class='muted'>Return to this recipe after saving the material.</span></p>"
+            "<label class='full-span'>Optional production notes <textarea name='production_notes' placeholder='Notes for making this product later.'></textarea></label>"
+            f"<p class='full-span muted'>Default batch size / yield: {product.default_batch_size}</p>"
+            "<div class='dialog-actions'><button class='primary' type='submit'>Save Recipe</button>"
+            "<a class='outline' href='#'>Cancel</a></div></form>"
+        )
+        return self._render_workflow_dialog(
+            dialog_id=f"recipe-dialog-{self._h(product.product_id)}",
+            title="Set Up Recipe",
+            description="Choose the materials and quantities needed to make one unit of this product.",
+            body=form,
         )
 
     def _render_create_material_dialog(self) -> str:

@@ -86,7 +86,7 @@ def test_make_buy_page_uses_beginner_friendly_material_sections_and_empty_state_
     assert response.status_code == 200
     assert "Materials Defined" in response.body
     assert "Products Defined" in response.body
-    assert "Batches Planned" in response.body
+    assert "Recipes Ready" in response.body
     assert "Workshop Materials" in response.body
     assert "Create Material" in response.body
     assert "id='create-material-dialog-title'>Create Material</h3>" in response.body
@@ -97,12 +97,11 @@ def test_make_buy_page_uses_beginner_friendly_material_sections_and_empty_state_
     assert "id='create-product-dialog-title'>Create Product</h3>" in response.body
     assert "Add something you make or sell. You’ll define its materials and recipe next." in response.body
     assert "<button class='primary' type='submit'>Save Product</button>" in response.body
-    assert "Create the materials and parts you use to make products. You’ll use them later when building product recipes." in response.body
-    assert "Create the products you make in your workshop. After saving a product, you can add its materials, recipe, and batch size." in response.body
-    assert "Next, add the materials and steps for each product recipe." in response.body
+    assert "Create the materials and parts you use to make products. You’ll choose from these when setting up recipes." in response.body
+    assert "Create the products you make in your workshop. After saving a product, set up the materials used for one unit." in response.body
+    assert "Define the finished products you make, then set up the materials used for one unit." in response.body
     assert "Products You Make / Product Builder" not in response.body
     assert "Make Next / Batch Queue" not in response.body
-    assert "+ Add material to recipe" not in response.body
     assert "+ Create new material" not in response.body
     assert "Making notes / steps" not in response.body
     assert "href='#plan-batch-dialog'" not in response.body

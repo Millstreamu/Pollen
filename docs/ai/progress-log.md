@@ -28,9 +28,34 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 ## Current Status
 Project phase: Post-V1
 Current milestone: Milestone 10.3 — V1 Release (complete)
-Overall status: V1 is declared complete after Milestone 10.3 readiness validation. The post-V1 Workshop material creation and product definition workflow milestones are complete. No critical blockers are recorded; recipe editing and batch planning remain future scoped milestones.
+Overall status: V1 is declared complete after Milestone 10.3 readiness validation. The post-V1 Workshop material creation, product definition, and recipe material assignment workflow milestones are complete. No critical blockers are recorded; batch planning and batch completion remain future scoped milestones.
 
 ## Recent Updates
+
+### 2026-06-02 — Post-V1 Workshop recipe material assignment milestone
+
+Branch/PR/Issue:
+- direct narrow UI/workflow request for assigning materials to product recipes in Workshop
+
+Completed:
+- Added a focused Set Up Recipe modal for each Workshop product, keeping product creation and recipe setup as separate workflows.
+- Products now show Recipe needed when no materials are assigned and Recipe ready when one or more recipe rows are saved.
+- Recipe setup supports selecting existing Workshop materials, entering positive quantity per unit, seeing the material unit, removing saved rows, and linking to the existing Create Material modal for missing materials.
+- Saved recipe rows remain available through the existing recipe service for future batch planning and material-needed calculations.
+- Kept batch-making logic, batch completion, material-needs calculations, buying/restocking, Orders, Money, inventory movements, activity logs, and debug/admin sections out of Workshop UI for this milestone.
+- Added regression coverage for zero-material recipe status, saving recipe materials, removing recipe materials, ready/needed status changes, and required-field validation.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`131 passed`)
+
+Notes:
+- Batch planning and batch completion remain future scoped milestones.
+- Inventory can later consume the saved product recipe rows for can-make and low-material calculations.
 
 ### 2026-06-02 — Post-V1 Workshop product creation milestone
 
