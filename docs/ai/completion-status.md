@@ -50,15 +50,20 @@ None for V1.
 - Future post-V1 improvements should be explicitly scoped before implementation.
 
 ## Current Post-V1 Task
-Name: Workshop vs Inventory Split UI/workflow restructuring
+Name: Workshop material creation workflow
 Status: complete
-Evidence: `docs/ai/progress-log.md` entry dated 2026-06-01
+Evidence: `docs/ai/progress-log.md` entry dated 2026-06-02
+
+Completed result:
+- Workshop now focuses on material creation through a Create Material modal and a simple Workshop Materials list.
+- Saved materials remain compatible with Inventory and the existing material service path for future product recipe selection.
+- Product creation, product recipe editing, and batch planning are not implemented in this milestone and remain future scoped work.
 
 ## Current Blockers
 None recorded.
 
 ## Next Required Milestone
-None. V1 is complete; the selected local readiness check post-V1 task is complete. Select a separate scoped post-V1 task before further implementation.
+None. V1 is complete; the Workshop material creation milestone is complete. Select a separate scoped post-V1 task before implementing product creation, recipe editing, or batch planning.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.

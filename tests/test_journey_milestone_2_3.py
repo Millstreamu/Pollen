@@ -28,8 +28,9 @@ def test_recipe_management_and_materials_needed_journey() -> None:
     assert product_response.status_code == 200
 
     page = app.get("/make-buy", authorization_header=header)
-    assert "Selected Product Recipe / Materials Needed" in page.body
-    assert "Add recipe row" in page.body
+    assert "Workshop Materials" in page.body
+    assert "Wax" in page.body
+    assert "Selected Product Recipe / Materials Needed" not in page.body
 
     app.post(
         "/make-buy",
@@ -41,14 +42,18 @@ def test_recipe_management_and_materials_needed_journey() -> None:
             "quantity_per_unit": "3",
         },
     )
+    needed = app._recipe_service.materials_needed(  # noqa: SLF001
+        authorization_header=header,
+        product_id="prd-1",
+        quantity=2,
+    )
+    assert needed[0]["material_name"] == "Wax"
+    assert needed[0]["needed"] == 6
+    assert app._recipe_service.can_make_quantity(authorization_header=header, product_id="prd-1") == 6  # noqa: SLF001
+
     updated = app.get("/make-buy", authorization_header=header)
     assert "Wax" in updated.body
-    assert "3 g" in updated.body
-    assert "Materials needed for batch size/yield" in updated.body
-    assert "makes 6 now" in updated.body
-
-    planned = app.get("/make-buy", authorization_header=header)
-    assert "Wax" in planned.body
+    assert "Materials needed for batch size/yield" not in updated.body
 
     products_page = app.get("/products-stock", authorization_header=header)
     assert "<td>4</td>" in products_page.body

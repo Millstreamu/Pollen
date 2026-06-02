@@ -618,6 +618,8 @@ class BatchService:
                 unit=material.unit,
                 stock_on_hand=material.stock_on_hand - needed,
                 reorder_point=material.reorder_point,
+                supplier=material.supplier,
+                notes=material.notes,
             )
             if updated is None:
                 return None, "Batch complete failed"
@@ -783,6 +785,8 @@ class MaterialService:
                 unit=material.unit,
                 stock_on_hand=material.stock_on_hand + item.quantity,
                 reorder_point=material.reorder_point,
+                supplier=material.supplier,
+                notes=material.notes,
             )
             if updated is None:
                 return None
@@ -820,18 +824,22 @@ class MaterialService:
         stock_on_hand: int,
         reorder_point: int,
         requested_shop_id: str | None = None,
+        supplier: str | None = None,
+        notes: str | None = None,
     ) -> MaterialRecord | None:
         _ = requested_shop_id
         context = self._auth_service.resolve_context(authorization_header)
-        if context is None:
+        if context is None or not name.strip() or not unit.strip() or stock_on_hand < 0 or reorder_point < 0:
             return None
 
         return self._material_repository.create(
             shop_id=context.shop.shop_id,
-            name=name,
-            unit=unit,
+            name=name.strip(),
+            unit=unit.strip(),
             stock_on_hand=stock_on_hand,
             reorder_point=reorder_point,
+            supplier=(supplier or "").strip() or None,
+            notes=(notes or "").strip() or None,
         )
 
     def list_materials(self, *, authorization_header: str | None, include_archived: bool = False) -> list[MaterialRecord]:
@@ -860,18 +868,22 @@ class MaterialService:
         unit: str,
         stock_on_hand: int,
         reorder_point: int,
+        supplier: str | None = None,
+        notes: str | None = None,
     ) -> MaterialRecord | None:
         context = self._auth_service.resolve_context(authorization_header)
-        if context is None:
+        if context is None or not name.strip() or not unit.strip() or stock_on_hand < 0 or reorder_point < 0:
             return None
 
         return self._material_repository.update_for_shop(
             shop_id=context.shop.shop_id,
             material_id=material_id,
-            name=name,
-            unit=unit,
+            name=name.strip(),
+            unit=unit.strip(),
             stock_on_hand=stock_on_hand,
             reorder_point=reorder_point,
+            supplier=(supplier or "").strip() or None,
+            notes=(notes or "").strip() or None,
         )
 
 
@@ -899,6 +911,8 @@ class MaterialService:
             unit=existing.unit,
             stock_on_hand=updated_stock,
             reorder_point=existing.reorder_point,
+            supplier=existing.supplier,
+            notes=existing.notes,
         )
         if updated is None:
             return None

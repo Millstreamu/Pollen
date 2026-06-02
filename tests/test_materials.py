@@ -50,6 +50,41 @@ def test_edit_material_updates_fields_for_owner() -> None:
     assert updated.reorder_point == 3
 
 
+def test_create_material_stores_optional_supplier_and_notes() -> None:
+    service = MaterialService()
+    header = _auth_header("supplier-owner", "supplier@example.com")
+
+    created = service.create_material(
+        authorization_header=header,
+        name="Lavender Oil",
+        unit="ml",
+        stock_on_hand=30,
+        reorder_point=10,
+        supplier="Botanical Supply",
+        notes="Keep away from sunlight",
+    )
+
+    assert created is not None
+    assert created.supplier == "Botanical Supply"
+    assert created.notes == "Keep away from sunlight"
+
+
+def test_create_material_rejects_missing_required_fields() -> None:
+    service = MaterialService()
+    header = _auth_header("required-owner", "required@example.com")
+
+    created = service.create_material(
+        authorization_header=header,
+        name="",
+        unit="g",
+        stock_on_hand=1,
+        reorder_point=0,
+    )
+
+    assert created is None
+    assert service.list_materials(authorization_header=header) == []
+
+
 def test_cross_shop_and_unauthenticated_material_access_denied() -> None:
     service = MaterialService()
     owner_header = _auth_header("owner", "owner@example.com")
