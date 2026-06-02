@@ -50,21 +50,22 @@ None for V1.
 - Future post-V1 improvements should be explicitly scoped before implementation.
 
 ## Current Post-V1 Task
-Name: Workshop product creation workflow
+Name: Workshop recipe material assignment workflow
 Status: complete
 Evidence: `docs/ai/progress-log.md` entry dated 2026-06-02
 
 Completed result:
-- Workshop now supports product definition through a Create Product modal and a simple Products You Make list.
-- Saved products can be created without recipes/materials and remain compatible with future recipe/BOM setup, batch planning, Inventory stock tracking, Orders, and Money paths.
-- Workshop still includes the completed Create Material modal and Workshop Materials list from the previous milestone.
-- Recipe/BOM setup and batch planning are not implemented in this milestone and remain future scoped work.
+- Workshop now supports assigning existing materials to a product recipe through a focused Set Up Recipe modal.
+- Saved products show Recipe needed when no materials are assigned and Recipe ready when at least one material requirement is saved.
+- Recipe rows capture material, quantity per unit, and material unit context, and saved rows can be removed through the same recipe workflow.
+- Workshop still includes the completed Create Material modal, Workshop Materials list, Create Product modal, and Products You Make list from prior post-V1 milestones.
+- Batch planning and batch completion are not implemented in this milestone and remain future scoped work.
 
 ## Current Blockers
 None recorded.
 
 ## Next Required Milestone
-None. V1 is complete; the Workshop material creation and product creation milestones are complete. Select a separate scoped post-V1 task before implementing recipe editing or batch planning.
+None. V1 is complete; the Workshop material creation, product creation, and recipe material assignment milestones are complete. Select a separate scoped post-V1 task before implementing batch planning or batch completion.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.

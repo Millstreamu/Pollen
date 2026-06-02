@@ -432,14 +432,14 @@ def test_make_buy_page_shows_material_workflow_empty_state() -> None:
     assert response.status_code == 200
     assert "Materials Defined" in response.body
     assert "Products Defined" in response.body
-    assert "Batches Planned" in response.body
+    assert "Recipes Ready" in response.body
     assert "Workshop Materials" in response.body
     assert "Create Material" in response.body
-    assert "Create the materials and parts you use to make products. You’ll use them later when building product recipes." in response.body
+    assert "Create the materials and parts you use to make products. You’ll choose from these when setting up recipes." in response.body
     assert "Products You Make" in response.body
     assert "Create Product" in response.body
-    assert "Create the products you make in your workshop. After saving a product, you can add its materials, recipe, and batch size." in response.body
-    assert "Next, add the materials and steps for each product recipe." in response.body
+    assert "Create the products you make in your workshop. After saving a product, set up the materials used for one unit." in response.body
+    assert "Define the finished products you make, then set up the materials used for one unit." in response.body
     assert "Make Next" not in response.body
     assert "Plan Batch" not in response.body
     assert "Buy List" not in response.body
@@ -663,7 +663,7 @@ def test_make_buy_ui_create_product_from_modal_without_recipe() -> None:
     )
 
     assert response.status_code == 200
-    assert "Product saved. It is ready for recipe setup later." in response.body
+    assert "Product saved. It is ready for recipe setup." in response.body
     assert "Products You Make" in response.body
     assert "Lavender Candle" in response.body
     assert "LC-8" in response.body
@@ -671,8 +671,8 @@ def test_make_buy_ui_create_product_from_modal_without_recipe() -> None:
     assert "$18.50" in response.body
     assert "Spring market bestseller" in response.body
     assert "Draft" in response.body
-    assert "Recipe not set up yet" in response.body
-    assert "Add recipe later" in response.body
+    assert "Recipe needed" in response.body
+    assert "Set up recipe" in response.body
 
     product = app._product_service.get_product(authorization_header=header, product_id="prd-1")  # noqa: SLF001
     assert product is not None
@@ -719,4 +719,135 @@ def test_make_buy_ui_create_product_can_be_marked_active() -> None:
     assert response.status_code == 200
     assert "Gift Box Set" in response.body
     assert "Active" in response.body
-    assert "Recipe not set up yet" in response.body
+    assert "Recipe needed" in response.body
+
+
+def test_make_buy_ui_recipe_needed_status_and_setup_dialog() -> None:
+    header = _auth_header("recipe-needed", "recipe-needed@example.com")
+    app = create_app()
+
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "create_product", "name": "Lavender Candle", "default_batch_size": "12", "workflow_status": "Draft"},
+    )
+
+    response = app.get("/make-buy", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "Recipes Ready" in response.body
+    assert "Recipe needed" in response.body
+    assert "Set up recipe" in response.body
+    assert "Set Up Recipe" in response.body
+    assert "Choose the materials and quantities needed to make one unit of this product." in response.body
+    assert "No materials added yet. Add the materials or parts used to make this product." in response.body
+    assert "Save Recipe" in response.body
+
+
+def test_make_buy_ui_assigns_materials_to_product_recipe_and_updates_status() -> None:
+    header = _auth_header("recipe-ready", "recipe-ready@example.com")
+    app = create_app()
+
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "create", "name": "Soy Wax", "unit": "g", "stock_on_hand": "500", "reorder_point": "100"},
+    )
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "create", "name": "Cotton Wick", "unit": "each", "stock_on_hand": "20", "reorder_point": "5"},
+    )
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "create_product", "name": "Lavender Candle", "default_batch_size": "12", "workflow_status": "Active"},
+    )
+
+    response = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "save_recipe",
+            "product_id": "prd-1",
+            "material_id_1": "mat-1",
+            "quantity_per_unit_1": "80",
+            "material_id_2": "mat-2",
+            "quantity_per_unit_2": "1",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Recipe saved. Product recipe status is updated." in response.body
+    assert "Recipe ready" in response.body
+    assert "Edit recipe" in response.body
+    assert "2 materials assigned" in response.body
+    assert "Soy Wax (g)" in response.body
+    assert "Cotton Wick (each)" in response.body
+    recipe_items = app._recipe_service.list_recipe_items(authorization_header=header, product_id="prd-1")  # noqa: SLF001
+    assert [(item.material_id, item.quantity_per_unit) for item in recipe_items] == [("mat-1", 80), ("mat-2", 1)]
+
+
+def test_make_buy_ui_removing_recipe_material_updates_status() -> None:
+    header = _auth_header("recipe-remove", "recipe-remove@example.com")
+    app = create_app()
+
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "create", "name": "Amber Jar", "unit": "each", "stock_on_hand": "10", "reorder_point": "2"},
+    )
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "create_product", "name": "Jar Candle", "default_batch_size": "6", "workflow_status": "Draft"},
+    )
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "save_recipe", "product_id": "prd-1", "material_id_1": "mat-1", "quantity_per_unit_1": "1"},
+    )
+
+    response = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "save_recipe", "product_id": "prd-1", "material_id_1": "mat-1", "quantity_per_unit_1": "1", "remove_1": "1"},
+    )
+
+    assert response.status_code == 200
+    assert "Recipe needed" in response.body
+    assert "Set up recipe" in response.body
+    assert app._recipe_service.list_recipe_items(authorization_header=header, product_id="prd-1") == []  # noqa: SLF001
+
+
+def test_make_buy_ui_recipe_validation_requires_material_and_positive_quantity() -> None:
+    header = _auth_header("recipe-validation", "recipe-validation@example.com")
+    app = create_app()
+
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "create", "name": "Label", "unit": "each", "stock_on_hand": "30", "reorder_point": "5"},
+    )
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "create_product", "name": "Labeled Candle", "default_batch_size": "8", "workflow_status": "Draft"},
+    )
+
+    missing_material = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "save_recipe", "product_id": "prd-1", "material_id_1": "", "quantity_per_unit_1": "1"},
+    )
+    bad_quantity = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "save_recipe", "product_id": "prd-1", "material_id_1": "mat-1", "quantity_per_unit_1": "0"},
+    )
+
+    assert missing_material.status_code == 400
+    assert "Material is required for each recipe row" in missing_material.body
+    assert bad_quantity.status_code == 400
+    assert "Quantity per unit must be positive" in bad_quantity.body
+    assert app._recipe_service.list_recipe_items(authorization_header=header, product_id="prd-1") == []  # noqa: SLF001
