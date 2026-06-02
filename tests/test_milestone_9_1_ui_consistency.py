@@ -92,13 +92,18 @@ def test_make_buy_page_uses_beginner_friendly_material_sections_and_empty_state_
     assert "id='create-material-dialog-title'>Create Material</h3>" in response.body
     assert "Add a material, part, ingredient, or supply you use in your workshop." in response.body
     assert "<button class='primary' type='submit'>Save Material</button>" in response.body
+    assert "Products You Make" in response.body
+    assert "Create Product" in response.body
+    assert "id='create-product-dialog-title'>Create Product</h3>" in response.body
+    assert "Add something you make or sell. You’ll define its materials and recipe next." in response.body
+    assert "<button class='primary' type='submit'>Save Product</button>" in response.body
     assert "Create the materials and parts you use to make products. You’ll use them later when building product recipes." in response.body
-    assert "Next, use these materials to create product recipes." in response.body
+    assert "Create the products you make in your workshop. After saving a product, you can add its materials, recipe, and batch size." in response.body
+    assert "Next, add the materials and steps for each product recipe." in response.body
     assert "Products You Make / Product Builder" not in response.body
     assert "Make Next / Batch Queue" not in response.body
     assert "+ Add material to recipe" not in response.body
     assert "+ Create new material" not in response.body
-    assert "Default batch size/yield" not in response.body
     assert "Making notes / steps" not in response.body
     assert "href='#plan-batch-dialog'" not in response.body
     assert "href='#create-purchase-dialog'" not in response.body
@@ -209,7 +214,7 @@ def test_workflow_dialog_forms_use_polished_controls_and_spaced_actions() -> Non
     assert ".modal-card .dialog-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:1rem" in combined
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save product</button>" not in products
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save material</button>" not in products
-    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save product</button>" not in make_buy
+    assert "<div class='dialog-actions'><button class='primary' type='submit'>Save Product</button>" in make_buy
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save Material</button>" in make_buy
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Plan Batch</button>" not in make_buy
     assert "<div class='dialog-actions'><button class='primary' type='submit'>Save purchase</button>" in products
@@ -231,7 +236,8 @@ def test_dashboard_primary_controls_are_links_or_real_post_forms() -> None:
     assert "id='incoming-purchases'" in products
     assert "id='create-purchase-dialog' role='dialog'" in products
     assert "href='#plan-batch-dialog'" not in make_buy
-    assert "href='#create-product-dialog'" not in make_buy
+    assert "href='#create-product-dialog'" in make_buy
+    assert "id='create-product-dialog' role='dialog'" in make_buy
     assert "href='#create-material-dialog'" in make_buy
     assert "href='#create-purchase-dialog'" not in make_buy
     assert "<section class='panel wide workflow-panel' id='make-buy-workflow'>" not in make_buy

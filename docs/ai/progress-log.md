@@ -28,9 +28,33 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 ## Current Status
 Project phase: Post-V1
 Current milestone: Milestone 10.3 — V1 Release (complete)
-Overall status: V1 is declared complete after Milestone 10.3 readiness validation. The post-V1 Workshop material creation workflow milestone is complete. No critical blockers are recorded; product creation, recipe editing, and batch planning remain future scoped milestones.
+Overall status: V1 is declared complete after Milestone 10.3 readiness validation. The post-V1 Workshop material creation and product definition workflow milestones are complete. No critical blockers are recorded; recipe editing and batch planning remain future scoped milestones.
 
 ## Recent Updates
+
+### 2026-06-02 — Post-V1 Workshop product creation milestone
+
+Branch/PR/Issue:
+- direct narrow UI/workflow request for Workshop product creation
+
+Completed:
+- Added a clean Products You Make section to Workshop alongside Workshop Materials.
+- Added a focused Create Product modal with product name, optional SKU/category/selling price, required default batch size/yield, Draft/Active status, and optional notes.
+- Saved products now appear in the Workshop product list with status badges and recipe-not-set-up guidance while remaining available to existing product, Inventory, recipe, batch, Orders, and Money service paths.
+- Kept product creation separate from recipe/BOM setup; no full recipe editor, batch planning, buying/restocking, Orders, or Money work was added.
+- Added regression coverage for product modal copy, product creation/listing, required-field validation, active status display, and saving a product without a recipe.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`127 passed`)
+
+Notes:
+- Recipe/BOM setup and batch planning remain future scoped milestones.
+- Inventory continues to show finished-product stock, but this task did not move product definition ownership out of Workshop.
 
 ### 2026-06-02 — Post-V1 Workshop material creation milestone
 

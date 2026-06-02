@@ -50,20 +50,21 @@ None for V1.
 - Future post-V1 improvements should be explicitly scoped before implementation.
 
 ## Current Post-V1 Task
-Name: Workshop material creation workflow
+Name: Workshop product creation workflow
 Status: complete
 Evidence: `docs/ai/progress-log.md` entry dated 2026-06-02
 
 Completed result:
-- Workshop now focuses on material creation through a Create Material modal and a simple Workshop Materials list.
-- Saved materials remain compatible with Inventory and the existing material service path for future product recipe selection.
-- Product creation, product recipe editing, and batch planning are not implemented in this milestone and remain future scoped work.
+- Workshop now supports product definition through a Create Product modal and a simple Products You Make list.
+- Saved products can be created without recipes/materials and remain compatible with future recipe/BOM setup, batch planning, Inventory stock tracking, Orders, and Money paths.
+- Workshop still includes the completed Create Material modal and Workshop Materials list from the previous milestone.
+- Recipe/BOM setup and batch planning are not implemented in this milestone and remain future scoped work.
 
 ## Current Blockers
 None recorded.
 
 ## Next Required Milestone
-None. V1 is complete; the Workshop material creation milestone is complete. Select a separate scoped post-V1 task before implementing product creation, recipe editing, or batch planning.
+None. V1 is complete; the Workshop material creation and product creation milestones are complete. Select a separate scoped post-V1 task before implementing recipe editing or batch planning.
 
 ## Deferred / Do Not Build
 See `docs/ai/do-not-build-yet.md`.

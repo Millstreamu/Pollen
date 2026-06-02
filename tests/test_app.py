@@ -436,8 +436,10 @@ def test_make_buy_page_shows_material_workflow_empty_state() -> None:
     assert "Workshop Materials" in response.body
     assert "Create Material" in response.body
     assert "Create the materials and parts you use to make products. You’ll use them later when building product recipes." in response.body
-    assert "Next, use these materials to create product recipes." in response.body
-    assert "Create Product" not in response.body
+    assert "Products You Make" in response.body
+    assert "Create Product" in response.body
+    assert "Create the products you make in your workshop. After saving a product, you can add its materials, recipe, and batch size." in response.body
+    assert "Next, add the materials and steps for each product recipe." in response.body
     assert "Make Next" not in response.body
     assert "Plan Batch" not in response.body
     assert "Buy List" not in response.body
@@ -639,3 +641,82 @@ def test_make_buy_ui_edit_ignores_unknown_material_id_without_crashing() -> None
     material = app._material_service.get_material(authorization_header=header, material_id="mat-1")  # noqa: SLF001
     assert material is not None
     assert material.name == "Known Material"
+
+
+def test_make_buy_ui_create_product_from_modal_without_recipe() -> None:
+    header = _auth_header("prod-workshop", "prod-workshop@example.com")
+    app = create_app()
+
+    response = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "create_product",
+            "name": "Lavender Candle",
+            "sku": "LC-8",
+            "category": "Candles",
+            "sale_price": "18.50",
+            "default_batch_size": "12",
+            "workflow_status": "Draft",
+            "notes": "Spring market bestseller",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Product saved. It is ready for recipe setup later." in response.body
+    assert "Products You Make" in response.body
+    assert "Lavender Candle" in response.body
+    assert "LC-8" in response.body
+    assert "Candles" in response.body
+    assert "$18.50" in response.body
+    assert "Spring market bestseller" in response.body
+    assert "Draft" in response.body
+    assert "Recipe not set up yet" in response.body
+    assert "Add recipe later" in response.body
+
+    product = app._product_service.get_product(authorization_header=header, product_id="prd-1")  # noqa: SLF001
+    assert product is not None
+    assert product.default_batch_size == 12
+    assert product.workflow_status == "Draft"
+    assert app._recipe_service.list_recipe_items(authorization_header=header, product_id=product.product_id) == []  # noqa: SLF001
+
+
+def test_make_buy_ui_create_product_validates_required_fields() -> None:
+    header = _auth_header("prod-required", "prod-required@example.com")
+    app = create_app()
+
+    response = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "create_product",
+            "name": "",
+            "default_batch_size": "0",
+            "workflow_status": "Draft",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Product name, default batch size, and status are required" in response.body
+    assert app._product_service.list_products(authorization_header=header) == []  # noqa: SLF001
+
+
+def test_make_buy_ui_create_product_can_be_marked_active() -> None:
+    header = _auth_header("prod-active", "prod-active@example.com")
+    app = create_app()
+
+    response = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "create_product",
+            "name": "Gift Box Set",
+            "default_batch_size": "4",
+            "workflow_status": "Active",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Gift Box Set" in response.body
+    assert "Active" in response.body
+    assert "Recipe not set up yet" in response.body

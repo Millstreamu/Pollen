@@ -229,3 +229,57 @@ def test_estimated_profit_fields_can_be_saved_and_computed() -> None:
     assert updated is not None
     assert updated.estimated_platform_fee == 1.5
     assert updated.estimated_profit_per_sale == 16.5
+
+
+def test_create_product_stores_workshop_definition_fields() -> None:
+    service = ProductService()
+    header = _auth_header("workshop-product", "workshop-product@example.com")
+
+    created = service.create_product(
+        authorization_header=header,
+        name="Honey Lip Balm",
+        sku="HLB-1",
+        stock_on_hand=0,
+        reorder_point=0,
+        sale_price=6.5,
+        category="Balms",
+        default_batch_size=24,
+        workflow_status="Draft",
+        notes="Define recipe after the first sample batch.",
+    )
+
+    assert created is not None
+    assert created.category == "Balms"
+    assert created.default_batch_size == 24
+    assert created.workflow_status == "Draft"
+    assert created.notes == "Define recipe after the first sample batch."
+    assert created.sale_price == 6.5
+
+
+def test_create_product_requires_name_batch_size_and_valid_status() -> None:
+    service = ProductService()
+    header = _auth_header("workshop-product-required", "workshop-product-required@example.com")
+
+    assert service.create_product(authorization_header=header, name="", sku="", stock_on_hand=0, reorder_point=0) is None
+    assert (
+        service.create_product(
+            authorization_header=header,
+            name="Beeswax Wrap",
+            sku="",
+            stock_on_hand=0,
+            reorder_point=0,
+            default_batch_size=0,
+        )
+        is None
+    )
+    assert (
+        service.create_product(
+            authorization_header=header,
+            name="Gift Box Set",
+            sku="",
+            stock_on_hand=0,
+            reorder_point=0,
+            workflow_status="Published",
+        )
+        is None
+    )
