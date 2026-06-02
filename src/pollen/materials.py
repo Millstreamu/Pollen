@@ -14,6 +14,8 @@ class MaterialRecord:
     stock_on_hand: int
     reorder_point: int
     is_active: bool
+    supplier: str | None = None
+    notes: str | None = None
 
     @property
     def is_low_stock(self) -> bool:
@@ -27,7 +29,17 @@ class MaterialRepository:
         self._records: dict[str, MaterialRecord] = {}
         self._next_id = 1
 
-    def create(self, *, shop_id: str, name: str, unit: str, stock_on_hand: int, reorder_point: int) -> MaterialRecord:
+    def create(
+        self,
+        *,
+        shop_id: str,
+        name: str,
+        unit: str,
+        stock_on_hand: int,
+        reorder_point: int,
+        supplier: str | None = None,
+        notes: str | None = None,
+    ) -> MaterialRecord:
         material_id = f"mat-{self._next_id}"
         self._next_id += 1
         created = MaterialRecord(
@@ -38,6 +50,8 @@ class MaterialRepository:
             stock_on_hand=stock_on_hand,
             reorder_point=reorder_point,
             is_active=True,
+            supplier=supplier,
+            notes=notes,
         )
         self._records[material_id] = created
         return created
@@ -63,6 +77,8 @@ class MaterialRepository:
         unit: str,
         stock_on_hand: int,
         reorder_point: int,
+        supplier: str | None = None,
+        notes: str | None = None,
     ) -> MaterialRecord | None:
         existing = self.get_for_shop(shop_id=shop_id, material_id=material_id)
         if existing is None:
@@ -74,6 +90,8 @@ class MaterialRepository:
             unit=unit,
             stock_on_hand=stock_on_hand,
             reorder_point=reorder_point,
+            supplier=supplier,
+            notes=notes,
         )
         self._records[material_id] = updated
         return updated

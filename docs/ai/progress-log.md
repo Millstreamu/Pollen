@@ -28,9 +28,34 @@ Records meaningful completed work. Update after feature completion, bug fix comp
 ## Current Status
 Project phase: Post-V1
 Current milestone: Milestone 10.3 — V1 Release (complete)
-Overall status: V1 is declared complete after Milestone 10.3 readiness validation. The selected post-V1 local readiness check task is complete. No critical blockers are recorded; select a separate scoped post-V1 task before further implementation.
+Overall status: V1 is declared complete after Milestone 10.3 readiness validation. The post-V1 Workshop material creation workflow milestone is complete. No critical blockers are recorded; product creation, recipe editing, and batch planning remain future scoped milestones.
 
 ## Recent Updates
+
+### 2026-06-02 — Post-V1 Workshop material creation milestone
+
+Branch/PR/Issue:
+- direct narrow UI/workflow request for Workshop material creation
+
+Completed:
+- Simplified Workshop to the first clean workflow for creating reusable materials, parts, ingredients, and supplies.
+- Replaced product builder, recipe editor, batch queue/planning, materials-needed calculations, production notes, and debug/admin-style sections with a calm Workshop Materials section.
+- Added a focused Create Material modal with required material name, unit, current stock, reorder point, and optional supplier/notes fields.
+- Saved Workshop materials now appear in the Workshop Materials list and remain shared with Inventory/material services for future product recipe selection.
+- Preserved product creation, recipe editing, and batch planning as future milestones rather than exposing them in Workshop now.
+- Added regression coverage for material creation visibility, Inventory compatibility, optional supplier/notes storage, and required-field validation.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`122 passed`)
+
+Notes:
+- Product creation, product recipe editing, and batch planning remain future scoped milestones.
+- Inventory continues to show materials from the shared material data path, but this task did not redesign Inventory.
 
 ### 2026-06-01 — Post-V1 Workshop vs Inventory IA split
 
