@@ -804,6 +804,30 @@ def test_make_buy_ui_create_material_from_recipe_returns_to_recipe_modal() -> No
     assert "data-unit='g'" in response.body
 
 
+def test_make_buy_ui_targeted_material_dialog_stacks_above_return_recipe_modal() -> None:
+    header = _auth_header("recipe-material-stack", "recipe-material-stack@example.com")
+    app = create_app()
+
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "create_product",
+            "name": "Lavender Candle",
+            "default_batch_size": "12",
+            "workflow_status": "Draft",
+        },
+    )
+
+    response = app.get("/make-buy?return_to_recipe=prd-1", authorization_header=header)
+
+    assert response.status_code == 200
+    assert "href='/make-buy?return_to_recipe=prd-1#create-material-dialog'" in response.body
+    assert "class='modal-popover modal-open' id='recipe-dialog-prd-1'" in response.body
+    assert ".modal-popover.modal-open{display:grid;z-index:50}" in response.body
+    assert ".modal-popover:target{display:grid;z-index:70}" in response.body
+
+
 def test_make_buy_ui_assigns_materials_to_product_recipe_and_updates_status() -> None:
     header = _auth_header("recipe-ready", "recipe-ready@example.com")
     app = create_app()
