@@ -23,6 +23,33 @@ Notes:
 
 # Progress Log
 
+### 2026-06-03 — Workshop recipe setup modal polish
+
+Branch/PR/Issue:
+- direct narrow UI/workflow cleanup request for the Workshop Set Up Recipe modal
+
+Completed:
+- Reworked the Set Up Recipe modal header to name the selected product and explain that recipes define materials and quantities for one finished unit.
+- Replaced the admin-style recipe table with a compact recipe builder empty state, one clear `+ Add Material` action, polished material rows, immediate unit display for selected materials, and a separate `+ Create New Material` action.
+- Removed developer placeholder/admin copy including `Shown after save`, `Remove row action`, and per-row `Add material to recipe` text.
+- Preserved recipe persistence, row removal, status updates between Recipe needed and Recipe ready, and the Create Material flow returning to the recipe modal after saving a reusable material.
+- Added duplicate-material validation so each recipe material is only assigned once.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`133 passed`)
+- `PYTHONPATH=src pytest -q tests/test_app.py -k 'recipe or material'` — pass (`12 passed, 24 deselected`)
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py --output-dir docs/ai/ui-screenshots` — environment-limited because Playwright is not installed
+- `python -m pip install playwright` — environment-limited because the package index/proxy returned 403/no matching distribution
+- `PYTHONPATH=src python scripts/export_ui_review_pages.py --output-dir docs/ai/ui-review-pages` — pass
+
+Notes:
+- Orders, Money, buying/restocking, batch planning, and batch completion remained out of scope.
+
 Records meaningful completed work. Update after feature completion, bug fix completion, milestone completion, release verification, important decision, or server-run evidence that changes status.
 
 ## Current Status
