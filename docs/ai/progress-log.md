@@ -23,6 +23,30 @@ Notes:
 
 # Progress Log
 
+### 2026-06-03 — Workshop material dialog stacking bugfix
+
+Branch/PR/Issue:
+- direct bug report for Create Product/Set Up Recipe → Create New Material popup layering
+
+Completed:
+- Fixed modal stacking so a hash-targeted Create Material dialog opens above an already server-open recipe/product workflow popup.
+- Added regression coverage for the return-to-recipe Create New Material link and modal z-index ordering.
+- Added a durable bugfix report at `docs/ai/reports/post-v1-workshop-material-dialog-stacking-bugfix-report-2026-06-03.md`.
+
+Checks run:
+- `python -m pip install --upgrade pip` — pass with package-index proxy retry warnings; existing pip remained usable
+- `pip install -r requirements.txt` — pass
+- `pip install -r requirements-dev.txt` — pass using installed dependencies
+- `PYTHONPATH=src pytest -q tests/test_app.py -k 'targeted_material_dialog_stacks or create_material_from_recipe'` — pass (`2 passed, 35 deselected`)
+- `python -m compileall -q src tests scripts` — pass
+- `ruff check src tests scripts` — pass
+- `PYTHONDONTWRITEBYTECODE=1 pytest -q` — pass (`134 passed`)
+- `PYTHONPATH=src python scripts/capture_ui_screenshots.py --output-dir docs/ai/ui-screenshots` — environment-limited because Playwright is not installed
+- `PYTHONPATH=src python scripts/export_ui_review_pages.py --output-dir docs/ai/ui-review-pages` — pass
+
+Notes:
+- No Workshop/Inventory information-architecture changes were made.
+
 ### 2026-06-03 — Workshop recipe setup modal polish
 
 Branch/PR/Issue:
