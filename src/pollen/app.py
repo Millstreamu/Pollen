@@ -378,6 +378,9 @@ class AppShell:
             )
             if created_material is None:
                 return AppResponse(status_code=400, body="Material name, unit, current stock, and reorder point are required")
+            return_to_recipe = payload.get("return_to_recipe", "").strip()
+            if return_to_recipe:
+                return self.get(f"/make-buy?created=material&return_to_recipe={return_to_recipe}", authorization_header=authorization_header)
         elif action == "edit":
             material_id = payload.get("material_id")
             if material_id is not None:
@@ -475,11 +478,15 @@ class AppShell:
             indexed_rows.append((1, payload.get("material_id", "").strip(), payload.get("quantity_per_unit", "").strip()))
 
         rows: list[tuple[str, int]] = []
+        seen_material_ids: set[str] = set()
         for _, material_id, quantity_text in sorted(indexed_rows):
             if not material_id and not quantity_text:
                 continue
             if not material_id:
                 return [], "Material is required for each recipe row"
+            if material_id in seen_material_ids:
+                return [], "Each material can only be added once to a recipe"
+            seen_material_ids.add(material_id)
             try:
                 quantity_per_unit = int(quantity_text)
             except ValueError:
@@ -532,9 +539,10 @@ class AppShell:
         return self.get("/orders", authorization_header=authorization_header)
 
 
-    def _render_workflow_dialog(self, *, dialog_id: str, title: str, description: str, body: str) -> str:
+    def _render_workflow_dialog(self, *, dialog_id: str, title: str, description: str, body: str, open_dialog: bool = False) -> str:
+        open_class = " modal-open" if open_dialog else ""
         return (
-            f"<div class='modal-popover' id='{dialog_id}' role='dialog' aria-modal='true' aria-labelledby='{dialog_id}-title'>"
+            f"<div class='modal-popover{open_class}' id='{dialog_id}' role='dialog' aria-modal='true' aria-labelledby='{dialog_id}-title'>"
             "<a class='modal-backdrop' aria-label='Close popup' href='#'></a>"
             "<div class='modal-card'>"
             "<div class='modal-header'>"
@@ -1006,7 +1014,7 @@ class AppShell:
                 f"<input type='hidden' name='product_id' value='{product.product_id}'>"
                 f"<label>Material <select name='material_id'>{material_options}</select></label>"
                 "<label>Qty per unit <input name='quantity_per_unit' type='number' min='1' required></label>"
-                "<a class='outline muted' href='#create-new-material-dialog'>+ Create new material</a><button type='submit'>+ Add material to recipe</button></form>"
+                "<a class='outline muted' href='#create-new-material-dialog'>+ Create New Material</a><button type='submit'>+ Add Material</button></form>"
                 f"<ul>{item_rows}</ul>"
                 "<form class='inline-form recipe-form' method='get' action='/products-stock'>"
                 f"<input type='hidden' name='materials_needed_for' value='{product.product_id}'>"
@@ -1117,6 +1125,7 @@ class AppShell:
             "</header>"
             f"{page_content}"
             "</main></div>"
+            f"{self._render_scripts()}"
             "</body></html>"
         )
 
@@ -1140,6 +1149,33 @@ class AppShell:
 
     def _money(self, amount: float | int) -> str:
         return f"${float(amount):,.2f}"
+
+    def _render_scripts(self) -> str:
+        return (
+            "<script>"
+            "document.addEventListener('change',function(event){"
+            "var select=event.target.closest('select[data-unit-target]');"
+            "if(!select){return;}"
+            "var target=document.getElementById(select.getAttribute('data-unit-target'));"
+            "if(!target){return;}"
+            "var option=select.options[select.selectedIndex];"
+            "target.textContent=(option&&option.dataset.unit)?option.dataset.unit:target.dataset.emptyUnit;"
+            "});"
+            "document.addEventListener('click',function(event){"
+            "var button=event.target.closest('[data-add-recipe-row]');"
+            "if(!button){return;}"
+            "var productId=button.getAttribute('data-add-recipe-row');"
+            "var rows=document.querySelector('[data-recipe-rows=\\\"'+productId+'\\\"]');"
+            "var template=document.querySelector('template[data-recipe-template=\\\"'+productId+'\\\"]');"
+            "if(!rows||!template){return;}"
+            "var index=parseInt(rows.getAttribute('data-next-index')||'1',10);"
+            "rows.insertAdjacentHTML('beforeend',template.innerHTML.replaceAll('__INDEX__',String(index)));"
+            "rows.setAttribute('data-next-index',String(index+1));"
+            "var empty=rows.parentElement.querySelector('[data-recipe-empty]');"
+            "if(empty){empty.remove();}"
+            "});"
+            "</script>"
+        )
 
     def _render_today_dashboard(self, *, authorization_header: str) -> str:
         summary = self._today_summary_service.get_summary(authorization_header=authorization_header)
@@ -1430,7 +1466,9 @@ class AppShell:
         }
         recipes_ready = sum(1 for rows in recipe_items_by_product.values() if rows)
         recipe_saved_product_id = query.get("recipe_saved", [""])[0] if query is not None else ""
+        return_to_recipe_product_id = query.get("return_to_recipe", [""])[0] if query is not None else ""
         created_product = query is not None and query.get("created", [""])[0] == "product"
+        created_material = query is not None and query.get("created", [""])[0] == "material"
         material_rows = "".join(
             "<tr>"
             f"<td><span class='thumb'>◫</span> <strong>{self._h(material.name)}</strong>"
@@ -1472,11 +1510,14 @@ class AppShell:
             success_banner = "<div class='notice success' role='status'>Product saved. It is ready for recipe setup.</div>"
         elif recipe_saved_product_id:
             success_banner = "<div class='notice success' role='status'>Recipe saved. Product recipe status is updated.</div>"
+        elif created_material:
+            success_banner = "<div class='notice success' role='status'>Material saved. Return to the recipe and choose it from the material list.</div>"
         recipe_dialogs = "".join(
             self._render_recipe_dialog(
                 product=product,
                 materials=materials,
                 recipe_items=recipe_items_by_product[product.product_id],
+                open_dialog=product.product_id == return_to_recipe_product_id,
             )
             for product in products
         )
@@ -1499,7 +1540,7 @@ class AppShell:
             "<a class='primary' href='#create-product-dialog'>Create Product</a></div>"
             f"{product_list}"
             "</section>"
-            f"{self._render_create_material_dialog()}"
+            f"{self._render_create_material_dialog(return_to_recipe_product_id=return_to_recipe_product_id)}"
             f"{self._render_create_product_dialog()}"
             f"{recipe_dialogs}"
         )
@@ -1523,77 +1564,91 @@ class AppShell:
             "</tr>"
         )
 
-    def _render_recipe_dialog(self, *, product, materials: list, recipe_items: list) -> str:
-        material_lookup = {material.material_id: material for material in materials}
-        option_items = "".join(
-            f"<option value='{self._h(material.material_id)}'>{self._h(material.name)} ({self._h(material.unit)})</option>"
+    def _render_recipe_dialog(self, *, product, materials: list, recipe_items: list, open_dialog: bool = False) -> str:
+        material_options = "".join(
+            f"<option value='{self._h(material.material_id)}' data-unit='{self._h(material.unit)}'>{self._h(material.name)}</option>"
             for material in materials
         )
-        row_count = max(3, len(recipe_items) + 1)
-        recipe_rows = []
-        for index in range(1, row_count + 1):
-            existing = recipe_items[index - 1] if index <= len(recipe_items) else None
-            selected_material_id = existing.material_id if existing is not None else ""
-            quantity = existing.quantity_per_unit if existing is not None else ""
-            unit = material_lookup[selected_material_id].unit if selected_material_id in material_lookup else "Shown after save"
-            options = "<option value=''>Choose a material</option>" + option_items
-            if selected_material_id:
-                options = options.replace(
-                    f"<option value='{self._h(selected_material_id)}'>",
-                    f"<option value='{self._h(selected_material_id)}' selected>",
+        options = "<option value=''>Choose a material</option>" + material_options
+
+        def recipe_row(*, index: int | str, material_id: str = "", quantity: int | str = "") -> str:
+            selected_options = options
+            unit = "—"
+            if material_id:
+                selected_options = selected_options.replace(
+                    f"<option value='{self._h(material_id)}'",
+                    f"<option value='{self._h(material_id)}' selected",
                     1,
                 )
-            remove_control = (
-                f"<label class='remove-row'><input type='checkbox' name='remove_{index}' value='1'> Remove</label>"
-                if existing is not None
-                else "<span class='muted'>Add material to recipe</span>"
+                selected_material = next((material for material in materials if material.material_id == material_id), None)
+                unit = selected_material.unit if selected_material is not None else "—"
+            return (
+                "<div class='recipe-builder-row' data-recipe-row>"
+                f"<label>Material<select name='material_id_{index}' data-unit-target='unit-{self._h(product.product_id)}-{index}'>{selected_options}</select></label>"
+                f"<label>Qty per unit<input name='quantity_per_unit_{index}' type='number' min='1' value='{self._h(quantity)}'></label>"
+                f"<span class='unit-pill' id='unit-{self._h(product.product_id)}-{index}' data-empty-unit='—'>{self._h(unit)}</span>"
+                "<label class='remove-row'><input type='checkbox' name='remove_"
+                f"{index}' value='1'> Remove</label>"
+                "</div>"
             )
-            recipe_rows.append(
-                "<tr>"
-                f"<td><label class='visually-hidden' for='material-{self._h(product.product_id)}-{index}'>Material</label>"
-                f"<select id='material-{self._h(product.product_id)}-{index}' name='material_id_{index}'>{options}</select></td>"
-                f"<td><label class='visually-hidden' for='quantity-{self._h(product.product_id)}-{index}'>Quantity per unit</label>"
-                f"<input id='quantity-{self._h(product.product_id)}-{index}' name='quantity_per_unit_{index}' type='number' min='1' value='{quantity}'></td>"
-                f"<td><span class='unit-pill'>{self._h(unit)}</span></td>"
-                f"<td>{remove_control}</td>"
-                "</tr>"
-            )
-        material_table = (
-            "<table class='recipe-editor'><thead><tr><th>Material selector</th><th>Quantity per unit</th><th>Unit</th><th>Remove row action</th></tr></thead>"
-            f"<tbody>{''.join(recipe_rows)}</tbody></table>"
-        ) if materials else (
-            "<div class='empty-state chart-empty'><p>No materials added yet. Create a material first, then add it to this product recipe.</p>"
-            "<a class='outline' href='#create-material-dialog'>+ Create new material</a></div>"
+
+        saved_rows = "".join(
+            recipe_row(index=index, material_id=item.material_id, quantity=item.quantity_per_unit)
+            for index, item in enumerate(recipe_items, start=1)
         )
-        empty_copy = (
-            "<div class='empty-state'><p>No materials added yet. Add the materials or parts used to make this product.</p><span class='outline muted'>Add Material to Recipe</span></div>"
+        next_index = len(recipe_items) + 1
+        empty_state = (
+            "<div class='empty-state recipe-empty' data-recipe-empty>"
+            "<p>No materials added yet. Add the materials or parts used to make this product.</p>"
+            "</div>"
             if not recipe_items
             else ""
         )
+        no_materials_state = (
+            "<div class='empty-state chart-empty'><p>No materials added yet. Create a reusable material first, then return to this recipe and add it.</p></div>"
+            if not materials
+            else ""
+        )
+        add_material_button = (
+            f"<button class='outline' type='button' data-add-recipe-row='{self._h(product.product_id)}'>+ Add Material</button>"
+            if materials
+            else "<button class='outline muted' type='button' disabled>+ Add Material</button>"
+        )
+        blank_template = recipe_row(index="__INDEX__") if materials else ""
+        notes_value = self._h(product.notes) if product.notes else ""
         form = (
             "<form class='form-grid compact-form recipe-setup-form' method='post' action='/make-buy'>"
             "<input type='hidden' name='action' value='save_recipe'>"
             f"<input type='hidden' name='product_id' value='{self._h(product.product_id)}'>"
-            f"<section class='full-span'><h4>Selected product name</h4><p><strong>{self._h(product.name)}</strong></p></section>"
-            f"<section class='full-span'><h4>Materials used per unit</h4>{empty_copy}{material_table}</section>"
-            "<p class='full-span'><a class='outline muted' href='#create-material-dialog'>+ Create new material</a> "
-            "<span class='muted'>Return to this recipe after saving the material.</span></p>"
-            "<label class='full-span'>Optional production notes <textarea name='production_notes' placeholder='Notes for making this product later.'></textarea></label>"
-            f"<p class='full-span muted'>Default batch size / yield: {product.default_batch_size}</p>"
-            "<div class='dialog-actions'><button class='primary' type='submit'>Save Recipe</button>"
-            "<a class='outline' href='#'>Cancel</a></div></form>"
+            f"<section class='full-span recipe-product-summary'><h4>Product</h4><p><strong>{self._h(product.name)}</strong></p></section>"
+            "<section class='full-span recipe-builder'>"
+            "<div class='recipe-section-heading'><div><h4>Materials per unit</h4>"
+            "<p>Build the list for one finished item.</p></div>"
+            f"{add_material_button}</div>"
+            f"{no_materials_state}{empty_state}"
+            f"<div class='recipe-builder-rows' data-recipe-rows='{self._h(product.product_id)}' data-next-index='{next_index}'>{saved_rows}</div>"
+            f"<template data-recipe-template='{self._h(product.product_id)}'>{blank_template}</template>"
+            "</section>"
+            f"<p class='full-span recipe-secondary-action'><a class='outline muted' href='/make-buy?return_to_recipe={self._h(product.product_id)}#create-material-dialog'>+ Create New Material</a> "
+            "<span class='muted'>Create a reusable material, then return to this recipe to select it.</span></p>"
+            f"<label class='full-span recipe-secondary-notes'>Production notes <textarea name='production_notes' placeholder='Optional notes for making this product later.'>{notes_value}</textarea></label>"
+            f"<p class='full-span muted recipe-yield-note'>Default batch size / yield: {product.default_batch_size}</p>"
+            "<div class='dialog-actions'><a class='outline' href='#'>Cancel</a>"
+            "<button class='primary' type='submit'>Save Recipe</button></div></form>"
         )
         return self._render_workflow_dialog(
             dialog_id=f"recipe-dialog-{self._h(product.product_id)}",
-            title="Set Up Recipe",
-            description="Choose the materials and quantities needed to make one unit of this product.",
+            title=f"Set Up Recipe: {self._h(product.name)}",
+            description="Choose the materials and quantities needed to make one finished unit.",
             body=form,
+            open_dialog=open_dialog,
         )
 
-    def _render_create_material_dialog(self) -> str:
+    def _render_create_material_dialog(self, *, return_to_recipe_product_id: str = "") -> str:
         add_material_form = (
             "<form class='form-grid compact-form' method='post' action='/make-buy'>"
             "<input type='hidden' name='action' value='create'>"
+            f"<input type='hidden' name='return_to_recipe' value='{self._h(return_to_recipe_product_id)}'>"
             "<label>Material name <input name='name' required></label>"
             "<label>Unit <input name='unit' required></label>"
             "<label>Current stock <input name='stock_on_hand' type='number' min='0' value='0' required></label>"
@@ -1695,7 +1750,7 @@ class AppShell:
             ".metric-grid{display:grid;gap:1.35rem;margin:1.55rem .55rem}.metric-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.metric-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}.metric-card{min-height:120px;border:1px solid var(--line);border-radius:.72rem;background:#fff;box-shadow:var(--shadow);display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto auto;column-gap:1.25rem;align-content:center;padding:1.4rem 1.65rem}.metric-icon{grid-row:1/4;display:grid;place-items:center;width:4rem;height:4rem;border-radius:50%;background:linear-gradient(135deg,#fff7de,#ffe6a6);font-size:2rem;color:#101525}.metric-card.tone-green .metric-icon{background:var(--green-soft);color:var(--green)}.metric-card.tone-alert .metric-icon{background:#fff1cd;color:#ff8900}.metric-card.tone-peach .metric-icon{background:var(--orange-soft)}.metric-label{color:#25283a;font-size:1rem;font-weight:500}.metric-value{font-size:2.45rem;line-height:1;font-weight:800;letter-spacing:-.05em}.tone-alert .metric-value{color:#d80d14}.tone-green .metric-value{color:var(--green)}.metric-card small{color:#777e95;font-size:1rem}"
             ".dashboard-grid{display:grid;gap:1.55rem;margin:1.55rem .55rem}.two-col{grid-template-columns:1fr 1fr}.orders-layout{grid-template-columns:minmax(0,1fr) 265px}.products-layout{grid-template-columns:minmax(0,1.5fr) minmax(340px,.95fr)}.money-layout{grid-template-columns:minmax(0,1fr) 300px;align-items:start}.bottom-grid{grid-template-columns:1.15fr .85fr}.stack{display:grid;gap:1.05rem}.panel{border:1px solid var(--line);border-radius:.72rem;background:#fff;box-shadow:var(--shadow);padding:1.45rem}.panel.wide{margin:1.55rem .55rem}.panel-header,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem}.panel h3{margin:0;font-size:1.35rem;letter-spacing:-.04em}.panel p{color:#68708d;margin:.45rem 0 1rem}.outline,.primary,.tab,.button-link{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:2.55rem;border-radius:.38rem;border:1px solid #d9dce5;background:#fff;color:#111423;padding:.58rem 1rem;font:inherit;font-weight:700;box-shadow:none}.outline{border-color:#ffc21a;color:#e98200}.outline.muted{border-color:#d9dce5;color:#111423}.primary{border-color:var(--honey);background:var(--honey);color:#111423}.small{min-height:2.2rem;padding:.45rem .8rem}.tab{color:#68708d}.tab.active{border-color:#ffc21a;background:#fff8dc;color:#111423}button{cursor:pointer}"
             "table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}th,td{padding:1rem 1.05rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{background:#fffdfa;color:#25283a;font-size:.82rem;font-weight:700}tr:last-child td{border-bottom:0}td:first-child,th:first-child{font-weight:700}.status-badge,.coming-soon{display:inline-flex;width:max-content;align-items:center;border-radius:.32rem;padding:.35rem .62rem;font-size:.88rem;font-weight:600;background:#fff1d6;color:#de7d00}.badge-green{background:var(--green-soft);color:var(--green)}.badge-blue{background:var(--blue-soft);color:var(--blue)}.badge-red{background:var(--red-soft);color:var(--red)}.badge-gold{background:#fff1d6;color:#dc7800}.pill{border-radius:.32rem;padding:.35rem .75rem;font-weight:600}.pill.high{background:#fff1d6;color:#dc7800}.pill.medium{background:#e8f2ff;color:#1266d6}.pill.low{background:#eeeef2;color:#222}.pill.danger{background:var(--red-soft);color:var(--red)}.text-link{display:inline-flex;margin-top:1rem;color:#ec8700}.centered{justify-content:center;width:100%}.thumb{display:inline-grid;place-items:center;width:3.2rem;height:3.2rem;margin-right:.75rem;border-radius:.35rem;background:linear-gradient(135deg,#f8f4ed,#eee7db);vertical-align:middle}.channel{display:inline-grid;place-items:center;width:1.35rem;height:1.35rem;border-radius:.18rem;background:#f26d00;color:#fff;font-weight:800}.ready{color:#27943a;font-weight:700}"
-            ".task-list,.media-list,.queue-list,.profit-list,.channel-list,.pref-list{list-style:none;margin:0;padding:0}.task-list li,.media-list li,.queue-list li,.profit-list li,.channel-list li,.pref-list li{display:grid;align-items:center;gap:.75rem;border-bottom:1px solid var(--line);padding:.85rem 0}.task-list li{grid-template-columns:auto 1fr auto}.media-list li{grid-template-columns:auto 1fr auto auto auto}.media-list.compact li{grid-template-columns:auto 1fr auto auto}.media-list small{display:block;color:#68708d}.queue-list li{grid-template-columns:1fr auto}.queue-list span{grid-column:1;color:#68708d}.profit-list li{grid-template-columns:auto 1fr auto}.profit-list b{color:#168200;font-size:1.1rem}.details-list{display:grid;grid-template-columns:1fr 1fr;margin:1rem 0 0}.details-list dt,.details-list dd{margin:0;padding:1rem 0;border-bottom:1px solid var(--line)}.details-list dt{color:#25283a}.channel-list li{grid-template-columns:auto 1fr auto auto;border:1px solid var(--line);border-radius:.55rem;padding:1rem;margin:.75rem 0}.channel-logo{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:#f26d00;color:#fff;font-size:1.8rem;font-weight:800}.channel-logo.fb{background:#1977f3}.channel-list small,.pref-list small{display:block;color:#68708d;margin-top:.25rem}.info{padding:1rem;border-radius:.45rem;background:#f6f7fa}.pref-list li{grid-template-columns:auto 1fr auto}.small-icon{width:2.4rem;height:2.4rem;font-size:1.1rem}.toggle{width:2.6rem;height:1.35rem;border-radius:999px;background:#d5d8df;position:relative}.toggle:after{content:'';position:absolute;top:.16rem;left:.16rem;width:1.03rem;height:1.03rem;border-radius:50%;background:#fff}.toggle.on{background:var(--honey)}.toggle.on:after{left:1.38rem}.form-actions{display:flex;justify-content:flex-end;gap:1rem;margin-top:1.2rem}.legend{display:flex;justify-content:flex-end;gap:2rem;color:#25283a}.legend span:before{content:'';display:inline-block;width:1.2rem;height:.25rem;border-radius:99px;margin-right:.5rem;vertical-align:middle}.legend .sales:before{background:#83b96f}.legend .costs:before{background:#ff992a}.bar-chart{height:265px;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0 54px,#e9e9e9 55px);display:grid;grid-template-columns:repeat(4,1fr);gap:2.2rem;align-items:end;padding:0 3rem}.bar-chart div{height:100%;display:flex;align-items:end;justify-content:center;gap:.8rem;position:relative}.bar-chart i,.bar-chart b{display:block;width:1.75rem;border-radius:.18rem .18rem 0 0}.bar-chart i{background:linear-gradient(180deg,#91c47d,#cde8bf)}.bar-chart b{background:linear-gradient(180deg,#ff9d37,#ffc079)}.bar-chart span{position:absolute;bottom:-3.1rem;text-align:center;color:#68708d}.bar-chart small{display:block}.money-actions{display:flex;gap:1rem;align-items:start;justify-content:end;flex-wrap:wrap;padding:1rem}.money-actions p{width:100%;text-align:right;color:#68708d}.chart-panel{min-height:330px}.workflow-panel>section,#create-order .workflow-card,.workflow-card{margin:1rem 0;padding:1.25rem;border:1px solid var(--line);border-radius:.72rem;background:#fffdfa}.workflow-intro{margin-bottom:1rem;padding:.25rem 0}.workflow-intro h3,.workflow-card h2,.workflow-card h3,.workflow-card h4{margin-top:0}.workflow-card p{color:#68708d}.form-grid{display:grid;grid-template-columns:repeat(4,minmax(10rem,1fr));gap:1rem;align-items:end;margin:1rem 0}.compact-form{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}.form-grid label,.inline-form label{display:grid;gap:.35rem;color:#25283a;font-weight:700}.form-grid input,.form-grid select,.form-grid textarea,.inline-form input,.inline-form select{width:100%;box-sizing:border-box;min-height:2.45rem;border:1px solid #d9dce5;border-radius:.42rem;background:#fff;padding:.45rem .6rem;font:inherit;color:#111423}.form-grid textarea{min-height:5.6rem;resize:vertical}.form-grid .full-span{grid-column:1/-1}.search input{border:0;min-height:0;padding:0}.inline-form{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin:.85rem 0}.record-tools{padding:1rem;border:1px dashed var(--line);border-radius:.6rem;background:#fff}.segmented-list{display:flex;flex-wrap:wrap;gap:.55rem;list-style:none;margin:.85rem 0 0;padding:0}.segmented-label a{display:inline-flex;margin:.2rem .25rem;padding:.35rem .7rem;border:1px solid #ffc21a;border-radius:.35rem}.empty-state{padding:1rem;border-radius:.6rem;background:#f8f9fc;color:#68708d}.notice{margin:1rem .55rem;padding:1rem 1.2rem;border-radius:.65rem;border:1px solid var(--line);background:#fff}.notice.success{border-color:#b9dcae;background:#f0faeb;color:var(--green);font-weight:700}.chart-empty{display:inline-block;margin:.8rem 0 1rem}.recipe-card{margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:.6rem;background:#fff}.recipe-card ul{margin:.8rem 0;padding-left:1.2rem}.workflow-card table,.panel table{border:1px solid var(--line);border-radius:.6rem;overflow:hidden}.workflow-card td:first-child,.panel td:first-child{white-space:nowrap}.workflow-card td:last-child,.panel td:last-child{white-space:nowrap}.workflow-card form[style*='display:inline'],.panel form[style*='display:inline']{display:inline-flex!important;margin:.15rem .2rem .15rem 0}.workflow-card button,.panel button{border-color:#d9dce5}.workflow-card button:hover,.panel button:hover{border-color:#ffc21a}.workflow-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem}.workflow-actions h3,.workflow-actions p{width:100%;margin-bottom:0}.modal-popover{display:none;position:fixed;inset:0;z-index:50;padding:clamp(1rem,4vw,3rem);place-items:center}.modal-popover:target{display:grid}.modal-backdrop{position:absolute;inset:0;background:rgba(17,20,35,.58);backdrop-filter:blur(2px)}.modal-card{position:relative;z-index:1;width:min(58rem,100%);max-height:min(84vh,52rem);overflow:auto;padding:1.35rem;border:1px solid #ffd262;border-radius:.9rem;background:#fff;box-shadow:0 1.2rem 3.2rem rgba(17,20,35,.24)}.modal-header{display:flex;justify-content:space-between;gap:1rem;align-items:start;margin-bottom:1rem}.modal-header h3{margin:.1rem 0}.modal-header p{margin:.35rem 0 0;color:#68708d}.modal-close{display:grid;place-items:center;flex:0 0 2.35rem;width:2.35rem;height:2.35rem;border:1px solid var(--line);border-radius:50%;background:#fff8df;color:#111423;font-size:1.7rem;line-height:1}.modal-card .form-grid{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1.1rem 1.25rem;margin-bottom:0}.modal-card .dialog-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:1rem;margin-top:.35rem;padding-top:.35rem}.modal-card .dialog-actions .primary,.modal-card .dialog-actions .outline{min-width:13rem}.modal-card .dialog-actions button{border-radius:.38rem;border:1px solid var(--honey);padding:.58rem 1rem;font:inherit;font-weight:700;box-shadow:none}.status-badge{white-space:nowrap}"
+            ".task-list,.media-list,.queue-list,.profit-list,.channel-list,.pref-list{list-style:none;margin:0;padding:0}.task-list li,.media-list li,.queue-list li,.profit-list li,.channel-list li,.pref-list li{display:grid;align-items:center;gap:.75rem;border-bottom:1px solid var(--line);padding:.85rem 0}.task-list li{grid-template-columns:auto 1fr auto}.media-list li{grid-template-columns:auto 1fr auto auto auto}.media-list.compact li{grid-template-columns:auto 1fr auto auto}.media-list small{display:block;color:#68708d}.queue-list li{grid-template-columns:1fr auto}.queue-list span{grid-column:1;color:#68708d}.profit-list li{grid-template-columns:auto 1fr auto}.profit-list b{color:#168200;font-size:1.1rem}.details-list{display:grid;grid-template-columns:1fr 1fr;margin:1rem 0 0}.details-list dt,.details-list dd{margin:0;padding:1rem 0;border-bottom:1px solid var(--line)}.details-list dt{color:#25283a}.channel-list li{grid-template-columns:auto 1fr auto auto;border:1px solid var(--line);border-radius:.55rem;padding:1rem;margin:.75rem 0}.channel-logo{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:#f26d00;color:#fff;font-size:1.8rem;font-weight:800}.channel-logo.fb{background:#1977f3}.channel-list small,.pref-list small{display:block;color:#68708d;margin-top:.25rem}.info{padding:1rem;border-radius:.45rem;background:#f6f7fa}.pref-list li{grid-template-columns:auto 1fr auto}.small-icon{width:2.4rem;height:2.4rem;font-size:1.1rem}.toggle{width:2.6rem;height:1.35rem;border-radius:999px;background:#d5d8df;position:relative}.toggle:after{content:'';position:absolute;top:.16rem;left:.16rem;width:1.03rem;height:1.03rem;border-radius:50%;background:#fff}.toggle.on{background:var(--honey)}.toggle.on:after{left:1.38rem}.form-actions{display:flex;justify-content:flex-end;gap:1rem;margin-top:1.2rem}.legend{display:flex;justify-content:flex-end;gap:2rem;color:#25283a}.legend span:before{content:'';display:inline-block;width:1.2rem;height:.25rem;border-radius:99px;margin-right:.5rem;vertical-align:middle}.legend .sales:before{background:#83b96f}.legend .costs:before{background:#ff992a}.bar-chart{height:265px;border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0 54px,#e9e9e9 55px);display:grid;grid-template-columns:repeat(4,1fr);gap:2.2rem;align-items:end;padding:0 3rem}.bar-chart div{height:100%;display:flex;align-items:end;justify-content:center;gap:.8rem;position:relative}.bar-chart i,.bar-chart b{display:block;width:1.75rem;border-radius:.18rem .18rem 0 0}.bar-chart i{background:linear-gradient(180deg,#91c47d,#cde8bf)}.bar-chart b{background:linear-gradient(180deg,#ff9d37,#ffc079)}.bar-chart span{position:absolute;bottom:-3.1rem;text-align:center;color:#68708d}.bar-chart small{display:block}.money-actions{display:flex;gap:1rem;align-items:start;justify-content:end;flex-wrap:wrap;padding:1rem}.money-actions p{width:100%;text-align:right;color:#68708d}.chart-panel{min-height:330px}.workflow-panel>section,#create-order .workflow-card,.workflow-card{margin:1rem 0;padding:1.25rem;border:1px solid var(--line);border-radius:.72rem;background:#fffdfa}.workflow-intro{margin-bottom:1rem;padding:.25rem 0}.workflow-intro h3,.workflow-card h2,.workflow-card h3,.workflow-card h4{margin-top:0}.workflow-card p{color:#68708d}.form-grid{display:grid;grid-template-columns:repeat(4,minmax(10rem,1fr));gap:1rem;align-items:end;margin:1rem 0}.compact-form{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}.form-grid label,.inline-form label{display:grid;gap:.35rem;color:#25283a;font-weight:700}.form-grid input,.form-grid select,.form-grid textarea,.inline-form input,.inline-form select{width:100%;box-sizing:border-box;min-height:2.45rem;border:1px solid #d9dce5;border-radius:.42rem;background:#fff;padding:.45rem .6rem;font:inherit;color:#111423}.form-grid textarea{min-height:5.6rem;resize:vertical}.form-grid .full-span{grid-column:1/-1}.search input{border:0;min-height:0;padding:0}.inline-form{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin:.85rem 0}.record-tools{padding:1rem;border:1px dashed var(--line);border-radius:.6rem;background:#fff}.segmented-list{display:flex;flex-wrap:wrap;gap:.55rem;list-style:none;margin:.85rem 0 0;padding:0}.segmented-label a{display:inline-flex;margin:.2rem .25rem;padding:.35rem .7rem;border:1px solid #ffc21a;border-radius:.35rem}.empty-state{padding:1rem;border-radius:.6rem;background:#f8f9fc;color:#68708d}.notice{margin:1rem .55rem;padding:1rem 1.2rem;border-radius:.65rem;border:1px solid var(--line);background:#fff}.notice.success{border-color:#b9dcae;background:#f0faeb;color:var(--green);font-weight:700}.chart-empty{display:inline-block;margin:.8rem 0 1rem}.recipe-card{margin:1rem 0;padding:1rem;border:1px solid var(--line);border-radius:.6rem;background:#fff}.recipe-card ul{margin:.8rem 0;padding-left:1.2rem}.workflow-card table,.panel table{border:1px solid var(--line);border-radius:.6rem;overflow:hidden}.workflow-card td:first-child,.panel td:first-child{white-space:nowrap}.workflow-card td:last-child,.panel td:last-child{white-space:nowrap}.workflow-card form[style*='display:inline'],.panel form[style*='display:inline']{display:inline-flex!important;margin:.15rem .2rem .15rem 0}.workflow-card button,.panel button{border-color:#d9dce5}.workflow-card button:hover,.panel button:hover{border-color:#ffc21a}.workflow-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem}.workflow-actions h3,.workflow-actions p{width:100%;margin-bottom:0}.modal-popover{display:none;position:fixed;inset:0;z-index:50;padding:clamp(1rem,4vw,3rem);place-items:center}.modal-popover:target,.modal-popover.modal-open{display:grid}.modal-backdrop{position:absolute;inset:0;background:rgba(17,20,35,.58);backdrop-filter:blur(2px)}.modal-card{position:relative;z-index:1;width:min(58rem,100%);max-height:min(84vh,52rem);overflow:auto;padding:1.35rem;border:1px solid #ffd262;border-radius:.9rem;background:#fff;box-shadow:0 1.2rem 3.2rem rgba(17,20,35,.24)}.modal-header{display:flex;justify-content:space-between;gap:1rem;align-items:start;margin-bottom:1rem}.modal-header h3{margin:.1rem 0}.modal-header p{margin:.35rem 0 0;color:#68708d}.modal-close{display:grid;place-items:center;flex:0 0 2.35rem;width:2.35rem;height:2.35rem;border:1px solid var(--line);border-radius:50%;background:#fff8df;color:#111423;font-size:1.7rem;line-height:1}.modal-card .form-grid{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1.1rem 1.25rem;margin-bottom:0}.modal-card .dialog-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:1rem;margin-top:.35rem;padding-top:.35rem}.modal-card .dialog-actions .primary,.modal-card .dialog-actions .outline{min-width:13rem}.modal-card .dialog-actions button{border-radius:.38rem;border:1px solid var(--honey);padding:.58rem 1rem;font:inherit;font-weight:700;box-shadow:none}.status-badge{white-space:nowrap}.recipe-setup-form{gap:.85rem}.recipe-product-summary,.recipe-builder{padding:.85rem 1rem;border:1px solid var(--line);border-radius:.72rem;background:#fffdfa}.recipe-product-summary h4,.recipe-product-summary p,.recipe-section-heading h4,.recipe-section-heading p{margin:.15rem 0}.recipe-section-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem}.recipe-builder-rows{display:grid;gap:.65rem}.recipe-builder-row{display:grid;grid-template-columns:minmax(14rem,1.5fr) minmax(9rem,.75fr) minmax(4.5rem,.35fr) auto;gap:.65rem;align-items:end;padding:.75rem;border:1px solid #efe7d6;border-radius:.65rem;background:#fff}.recipe-builder-row label{margin:0}.recipe-builder-row .unit-pill{display:inline-flex;align-items:center;justify-content:center;min-height:2.45rem;padding:.45rem .75rem;border-radius:999px;background:var(--green-soft);color:var(--green);font-weight:800}.recipe-builder-row .remove-row{display:flex;align-items:center;gap:.35rem;min-height:2.45rem;color:#68708d;font-weight:700}.recipe-empty{margin:.5rem 0 .75rem;background:#fff8df;border:1px dashed #ffd262}.recipe-secondary-action,.recipe-yield-note{margin:.1rem 0}.recipe-secondary-notes textarea{min-height:4rem}.recipe-editor{display:none}"
             "@media (max-width:1100px){.app-shell{grid-template-columns:1fr}.sidebar{position:static;height:auto}.brand{margin-bottom:1rem}nav ul{display:flex;flex-wrap:wrap}.bee-card{display:none}.topbar{grid-template-columns:1fr}.metric-grid.three,.metric-grid.four,.two-col,.orders-layout,.products-layout,.money-layout,.bottom-grid{grid-template-columns:1fr}.user-tools{justify-content:flex-start}.bar-chart{padding:0 1rem}}@media (max-width:720px){.workspace{padding:0 .5rem 1rem}.topbar{padding:1rem .5rem}.metric-grid,.dashboard-grid,.panel.wide{margin:1rem 0}.metric-card{grid-template-columns:1fr}.metric-icon{grid-row:auto}.panel{padding:1rem}table{display:block;overflow-x:auto;white-space:nowrap}.toolbar,.panel-header{align-items:flex-start;flex-direction:column}.details-list{grid-template-columns:1fr}.channel-list li,.pref-list li{grid-template-columns:1fr}.bar-chart{gap:.7rem}.brand strong{font-size:1.8rem}}"
             "</style>"
         )
