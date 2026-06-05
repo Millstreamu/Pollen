@@ -432,11 +432,13 @@ def test_make_buy_page_shows_material_workflow_empty_state() -> None:
     assert response.status_code == 200
     assert "Materials Defined" in response.body
     assert "Products Defined" in response.body
+    assert response.body.index("Products Defined") < response.body.index("Materials Defined")
     assert "Recipes Ready" in response.body
     assert "Workshop Materials" in response.body
     assert "Create Material" in response.body
     assert "Create the materials and parts you use to make products. You’ll choose from these when setting up recipes." in response.body
     assert "Products You Make" in response.body
+    assert response.body.index("Products You Make") < response.body.index("Workshop Materials")
     assert "Create Product" in response.body
     assert "Create the products you make in your workshop. After saving a product, set up the materials used for one unit." in response.body
     assert "Define the finished products you make, then set up the materials used for one unit." in response.body
@@ -671,7 +673,11 @@ def test_make_buy_ui_create_product_from_modal_without_recipe() -> None:
     assert "$18.50" in response.body
     assert "Spring market bestseller" in response.body
     assert "Draft" in response.body
-    assert "Recipe needed" in response.body
+    assert "No recipe" in response.body
+    assert "No materials assigned yet" not in response.body
+    assert "Recipe needed" not in response.body
+    assert "table-scroll workshop-table-scroll" in response.body
+    assert "workshop-products-table" in response.body
     assert "Set up recipe" in response.body
 
     product = app._product_service.get_product(authorization_header=header, product_id="prd-1")  # noqa: SLF001
@@ -719,7 +725,7 @@ def test_make_buy_ui_create_product_can_be_marked_active() -> None:
     assert response.status_code == 200
     assert "Gift Box Set" in response.body
     assert "Active" in response.body
-    assert "Recipe needed" in response.body
+    assert "No recipe" in response.body
 
 
 def test_make_buy_ui_recipe_needed_status_and_setup_dialog() -> None:
@@ -736,7 +742,7 @@ def test_make_buy_ui_recipe_needed_status_and_setup_dialog() -> None:
 
     assert response.status_code == 200
     assert "Recipes Ready" in response.body
-    assert "Recipe needed" in response.body
+    assert "No recipe" in response.body
     assert "Set up recipe" in response.body
     assert "Set Up Recipe: Lavender Candle" in response.body
     assert "Choose the materials and quantities needed to make one finished unit." in response.body
@@ -863,7 +869,7 @@ def test_make_buy_ui_assigns_materials_to_product_recipe_and_updates_status() ->
 
     assert response.status_code == 200
     assert "Recipe saved. Product recipe status is updated." in response.body
-    assert "Recipe ready" in response.body
+    assert "Materials assigned" in response.body
     assert "Edit recipe" in response.body
     assert "2 materials assigned" in response.body
     assert "Soy Wax" in response.body
@@ -901,7 +907,7 @@ def test_make_buy_ui_removing_recipe_material_updates_status() -> None:
     )
 
     assert response.status_code == 200
-    assert "Recipe needed" in response.body
+    assert "No recipe" in response.body
     assert "Set up recipe" in response.body
     assert app._recipe_service.list_recipe_items(authorization_header=header, product_id="prd-1") == []  # noqa: SLF001
 
