@@ -678,7 +678,8 @@ def test_make_buy_ui_create_product_from_modal_without_recipe() -> None:
     assert "Recipe needed" not in response.body
     assert "table-scroll workshop-table-scroll" in response.body
     assert "workshop-products-table" in response.body
-    assert "Set up recipe" in response.body
+    assert "href='#recipe-dialog-prd-1'>No recipe</a>" in response.body
+    assert "Set up recipe" not in response.body
 
     product = app._product_service.get_product(authorization_header=header, product_id="prd-1")  # noqa: SLF001
     assert product is not None
@@ -743,12 +744,13 @@ def test_make_buy_ui_recipe_needed_status_and_setup_dialog() -> None:
     assert response.status_code == 200
     assert "Recipes Ready" in response.body
     assert "No recipe" in response.body
-    assert "Set up recipe" in response.body
+    assert "href='#recipe-dialog-prd-1'>No recipe</a>" in response.body
+    assert "Set up recipe" not in response.body
     assert "Set Up Recipe: Lavender Candle" in response.body
     assert "Choose the materials and quantities needed to make one finished unit." in response.body
     assert "No materials added yet. Add the materials or parts used to make this product." in response.body
     assert "+ Add Material" in response.body
-    assert "+ Create New Material" in response.body
+    assert "+ Create New Material" not in response.body
     assert "Shown after save" not in response.body
     assert "Remove row action" not in response.body
     assert "Add material to recipe" not in response.body
@@ -810,7 +812,7 @@ def test_make_buy_ui_create_material_from_recipe_returns_to_recipe_modal() -> No
     assert "data-unit='g'" in response.body
 
 
-def test_make_buy_ui_targeted_material_dialog_stacks_above_return_recipe_modal() -> None:
+def test_make_buy_ui_recipe_dialog_omits_create_material_shortcut() -> None:
     header = _auth_header("recipe-material-stack", "recipe-material-stack@example.com")
     app = create_app()
 
@@ -828,7 +830,7 @@ def test_make_buy_ui_targeted_material_dialog_stacks_above_return_recipe_modal()
     response = app.get("/make-buy?return_to_recipe=prd-1", authorization_header=header)
 
     assert response.status_code == 200
-    assert "href='/make-buy?return_to_recipe=prd-1#create-material-dialog'" in response.body
+    assert "href='/make-buy?return_to_recipe=prd-1#create-material-dialog'" not in response.body
     assert "class='modal-popover modal-open' id='recipe-dialog-prd-1'" in response.body
     assert ".modal-popover.modal-open{display:grid;z-index:50}" in response.body
     assert ".modal-popover:target{display:grid;z-index:70}" in response.body
@@ -908,7 +910,8 @@ def test_make_buy_ui_removing_recipe_material_updates_status() -> None:
 
     assert response.status_code == 200
     assert "No recipe" in response.body
-    assert "Set up recipe" in response.body
+    assert "href='#recipe-dialog-prd-1'>No recipe</a>" in response.body
+    assert "Set up recipe" not in response.body
     assert app._recipe_service.list_recipe_items(authorization_header=header, product_id="prd-1") == []  # noqa: SLF001
 
 
