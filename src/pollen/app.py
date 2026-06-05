@@ -1547,20 +1547,25 @@ class AppShell:
 
     def _render_workshop_product_row(self, *, product, recipe_items: list) -> str:
         recipe_ready = bool(recipe_items)
-        recipe_badge = self._badge("Materials assigned" if recipe_ready else "No recipe", "green" if recipe_ready else "gold")
-        recipe_action = "Edit recipe" if recipe_ready else "Set up recipe"
-        recipe_summary = f"{len(recipe_items)} material{'s' if len(recipe_items) != 1 else ''} assigned" if recipe_ready else "No recipe"
+        recipe_summary = f"{len(recipe_items)} material{'s' if len(recipe_items) != 1 else ''} assigned"
+        product_note = self._h(product.notes) if product.notes else (recipe_summary if recipe_ready else "")
+        product_note_markup = f"<small>{product_note}</small>" if product_note else ""
+        recipe_dialog_href = f"#recipe-dialog-{self._h(product.product_id)}"
+        recipe_cell = (
+            f"{self._badge('Materials assigned', 'green')} <small>{recipe_summary}</small> "
+            f"<a class='outline small' href='{recipe_dialog_href}'>Edit recipe</a>"
+            if recipe_ready
+            else f"<a class='status-badge badge-gold' href='{recipe_dialog_href}'>No recipe</a>"
+        )
         return (
             "<tr>"
-            f"<td><span class='thumb'>▧</span> <strong>{self._h(product.name)}</strong>"
-            f"<small>{self._h(product.notes) if product.notes else recipe_summary}</small></td>"
+            f"<td><span class='thumb'>▧</span> <strong>{self._h(product.name)}</strong>{product_note_markup}</td>"
             f"<td>{self._h(product.sku) if product.sku else '—'}</td>"
             f"<td>{self._h(product.category) if product.category else '—'}</td>"
             f"<td>{self._format_currency(product.sale_price) if product.sale_price else '—'}</td>"
             f"<td>{product.default_batch_size}</td>"
             f"<td>{self._badge(product.workflow_status, 'green' if product.workflow_status == 'Active' else 'gold')}</td>"
-            f"<td>{recipe_badge} <small>{recipe_summary}</small> "
-            f"<a class='outline small' href='#recipe-dialog-{self._h(product.product_id)}'>{recipe_action}</a></td>"
+            f"<td>{recipe_cell}</td>"
             "</tr>"
         )
 
@@ -1629,8 +1634,6 @@ class AppShell:
             f"<div class='recipe-builder-rows' data-recipe-rows='{self._h(product.product_id)}' data-next-index='{next_index}'>{saved_rows}</div>"
             f"<template data-recipe-template='{self._h(product.product_id)}'>{blank_template}</template>"
             "</section>"
-            f"<p class='full-span recipe-secondary-action'><a class='outline muted' href='/make-buy?return_to_recipe={self._h(product.product_id)}#create-material-dialog'>+ Create New Material</a> "
-            "<span class='muted'>Create a reusable material, then return to this recipe to select it.</span></p>"
             f"<label class='full-span recipe-secondary-notes'>Production notes <textarea name='production_notes' placeholder='Optional notes for making this product later.'>{notes_value}</textarea></label>"
             f"<p class='full-span muted recipe-yield-note'>Default batch size / yield: {product.default_batch_size}</p>"
             "<div class='dialog-actions'><a class='outline' href='#'>Cancel</a>"
