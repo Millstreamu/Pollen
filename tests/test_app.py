@@ -97,8 +97,11 @@ def test_products_page_renders_product_table_and_low_stock_status() -> None:
     response = app.get("/products-stock", authorization_header=header)
 
     assert response.status_code == 200
-    assert "<th>Product</th><th>SKU</th><th>On Hand</th><th>Reserved</th><th>Reorder Point</th><th>Status</th><th>Stock Control</th>" in response.body
-    assert "Healthy Candle" in response.body
+    assert "<th>Product</th><th>SKU</th><th>On Hand</th><th>Reserved</th><th>Reorder Point</th><th>Status</th>" in response.body
+    assert "<th>Status</th><th>Stock Control</th>" not in response.body
+    assert "<section class='dashboard-grid two-col'>" not in response.body
+    assert response.body.count("<section class='panel wide'") >= 4
+    assert "href='#stock-product-prd-1'>Healthy Candle</a>" in response.body
     assert "Low Candle" in response.body
     assert "Good" in response.body
     assert "Low" in response.body
@@ -166,7 +169,8 @@ def test_products_page_renders_forms_for_create_and_archive_actions() -> None:
 
     assert response.status_code == 200
     assert "<input type='hidden' name='action' value='adjust_stock'>" in response.body
-    assert "Stock Control" in response.body
+    assert "Select a product name for stock control." in response.body
+    assert "id='stock-product-prd-1' role='dialog'" in response.body
     assert "<td>10</td>" in response.body
     assert "<td>2</td>" in response.body
     assert "name='delta' type='number' value='0'" in response.body
@@ -366,7 +370,7 @@ def test_products_ui_renders_bulk_action_controls() -> None:
 
     response = app.get("/products-stock", authorization_header=header)
     assert response.status_code == 200
-    assert "Stock Control" in response.body
+    assert "Select a product name for stock control." in response.body
     assert "name='delta'" in response.body
     assert "value='bulk_archive'" not in response.body
     assert "value='bulk_restore'" not in response.body
@@ -392,7 +396,7 @@ def test_products_ui_detail_edit_mode_shows_all_editable_fields() -> None:
     assert "Save all fields" not in response.body
     assert "Detail Candle" in response.body
     assert "name='delta' type='number' value='0'" in response.body
-    assert "Stock Control" in response.body
+    assert "Select a product name for stock control." in response.body
 
 
 def test_products_stock_materials_panel_adds_material_from_popup_form() -> None:
