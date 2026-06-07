@@ -143,6 +143,7 @@ def test_order_fulfillment_to_make_and_buy_replenishment_journey() -> None:
     assert buy_page.status_code == 200
     assert "Soy Wax" in buy_page.body
     assert "10 g" in buy_page.body
+    assert "Buy 10 g" in buy_page.body
     assert "Add to Purchase" in buy_page.body
 
     add_to_purchase_response = app.post(

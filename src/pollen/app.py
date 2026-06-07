@@ -8,8 +8,8 @@ from urllib.parse import parse_qs, urlsplit
 
 from pollen.auth import AuthService
 from pollen.inventory import ActivityLogRepository, InventoryMovementRepository
-from pollen.materials import MaterialRepository
-from pollen.products import ProductRepository
+from pollen.materials import MaterialRecord, MaterialRepository
+from pollen.products import ProductRecord, ProductRepository
 from pollen.recipes import RecipeRepository
 from pollen.services import (
     BatchService,
@@ -1385,6 +1385,35 @@ class AppShell:
             f"{legacy_create}"
         )
 
+    def _render_inventory_product_status(self, product: ProductRecord) -> str:
+        status = self._badge("Low" if product.is_low_stock else "Good", "gold" if product.is_low_stock else "green")
+        if product.is_low_stock:
+            needed = max(product.reorder_point - product.available_stock, 0)
+            status += f" <span class='status-note'>Make or restock {needed} soon</span>"
+        return status
+
+    def _render_inventory_material_row(self, *, material: MaterialRecord, suggestion: dict[str, object] | None) -> str:
+        status = self._badge("Low" if material.is_low_stock else "Good", "gold" if material.is_low_stock else "green")
+        if suggestion is not None:
+            status += (
+                " <span class='status-note'>"
+                f"Buy {self._h(str(suggestion['suggested_quantity']))} {self._h(material.unit)}</span>"
+                " <form method='post' action='/products-stock' style='display:inline'>"
+                "<input type='hidden' name='action' value='add_to_purchase'>"
+                f"<input type='hidden' name='material_id' value='{self._h(material.material_id)}'>"
+                "<button class='outline muted' type='submit'>Add to Purchase</button></form>"
+            )
+
+        return (
+            "<tr>"
+            "<td><span class='thumb'>◫</span> "
+            f"<a class='inventory-item-link' href='#stock-material-{self._h(material.material_id)}'>{self._h(material.name)}</a></td>"
+            f"<td>{material.stock_on_hand} {self._h(material.unit)}</td>"
+            f"<td>{material.reorder_point} {self._h(material.unit)}</td>"
+            f"<td>{status}</td>"
+            "</tr>"
+        )
+
     def _render_products_dashboard(
         self,
         *,
@@ -1409,18 +1438,13 @@ class AppShell:
             f"<td>{product.stock_on_hand}</td>"
             f"<td>{product.reserved_stock}</td>"
             f"<td>{product.reorder_point}</td>"
-            f"<td>{self._badge('Low' if product.is_low_stock else 'Good', 'gold' if product.is_low_stock else 'green')}</td>"
+            f"<td>{self._render_inventory_product_status(product)}</td>"
             "</tr>"
             for product in products
         ) or "<tr><td colspan='6'>No finished products yet. Create products in Workshop, then track stock here.</td></tr>"
+        material_suggestions = {str(row["material_id"]): row for row in low_materials}
         material_rows = "".join(
-            "<tr>"
-            "<td><span class='thumb'>◫</span> "
-            f"<a class='inventory-item-link' href='#stock-material-{self._h(material.material_id)}'>{self._h(material.name)}</a></td>"
-            f"<td>{material.stock_on_hand} {self._h(material.unit)}</td>"
-            f"<td>{material.reorder_point} {self._h(material.unit)}</td>"
-            f"<td>{self._badge('Low' if material.is_low_stock else 'Good', 'gold' if material.is_low_stock else 'green')}</td>"
-            "</tr>"
+            self._render_inventory_material_row(material=material, suggestion=material_suggestions.get(material.material_id))
             for material in materials
         ) or "<tr><td colspan='4'>No materials yet. Add materials while defining recipes in Workshop.</td></tr>"
         stock_control_dialogs = "".join(
@@ -1448,18 +1472,6 @@ class AppShell:
             )
             for material in materials
         )
-        buy_rows = "".join(
-            "<tr>"
-            f"<td><span class='thumb'>◫</span> {self._h(row['name'])}</td>"
-            f"<td>{row['stock_on_hand']} {self._h(row['unit'])}</td>"
-            f"<td>{row['suggested_quantity']} {self._h(row['unit'])}</td>"
-            "<td><form method='post' action='/products-stock' style='display:inline'>"
-            "<input type='hidden' name='action' value='add_to_purchase'>"
-            f"<input type='hidden' name='material_id' value='{self._h(str(row['material_id']))}'>"
-            "<button class='outline muted' type='submit'>Add to Purchase</button></form></td>"
-            "</tr>"
-            for row in low_materials[:8]
-        ) or "<tr><td colspan='4'>No low materials right now. Reorder suggestions will appear here.</td></tr>"
         purchase_rows = "".join(
             "<tr>"
             f"<td>{self._h(purchase.purchase_id)}</td>"
@@ -1511,19 +1523,16 @@ class AppShell:
         return (
             "<section class='metric-grid three'>"
             f"{self._metric_card('▧', 'Finished Products in Stock', sum(product.stock_on_hand for product in products), 'green', 'Total units')}"
-            f"{self._metric_card('⚠', 'Low Stock Alerts', len(low_materials) + len(low_products), 'alert', 'Need reordering')}"
+            f"{self._metric_card('⚠', 'Items Need Attention', len(low_materials) + len(low_products), 'alert', 'At or below reorder point')}"
             f"{self._metric_card('▰', 'Incoming Purchases', len(purchases), 'gold', 'Open orders')}"
             "</section>"
             "<section class='panel wide'><div class='panel-header'><h3>Finished Products</h3><p>Current stock counts for products you sell. Select a product name for stock control.</p></div>"
             f"<table><thead><tr><th>Product</th><th>SKU</th><th>On Hand</th><th>Reserved</th><th>Reorder Point</th><th>Status</th></tr></thead><tbody>{product_rows}</tbody></table></section>"
             "<section class='panel wide'><div class='panel-header'><h3>Materials</h3><p>Current material stock and low-stock status. Select a material name for stock control.</p></div>"
             f"<table><thead><tr><th>Material</th><th>On Hand</th><th>Reorder Point</th><th>Status</th></tr></thead><tbody>{material_rows}</tbody></table></section>"
-            "<section class='panel wide' id='buy-list'><div class='panel-header'><h3>Low Stock Alerts</h3><a class='outline' href='#create-purchase-dialog'>Create Purchase</a></div>"
-            "<p>Suggested materials to reorder based on stock and reorder points.</p>"
-            f"{draft_note}<table><thead><tr><th>Material</th><th>On Hand</th><th>Suggested Qty</th><th></th></tr></thead><tbody>{buy_rows}</tbody></table></section>"
             "<section class='panel wide' id='incoming-purchases'><div class='panel-header'><h3>Incoming Purchases</h3><a class='outline' href='#create-purchase-dialog'>Create Purchase</a></div>"
             "<p>Track and receive purchases when products or materials arrive.</p>"
-            f"<table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead><tbody>{purchase_rows}</tbody></table></section>"
+            f"{draft_note}<table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead><tbody>{purchase_rows}</tbody></table></section>"
             f"{stock_control_dialogs}"
             f"{create_purchase_dialog}"
         )
