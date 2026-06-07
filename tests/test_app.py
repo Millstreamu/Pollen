@@ -100,7 +100,7 @@ def test_products_page_renders_product_table_and_low_stock_status() -> None:
     assert "<th>Product</th><th>SKU</th><th>On Hand</th><th>Reserved</th><th>Reorder Point</th><th>Status</th>" in response.body
     assert "<th>Status</th><th>Stock Control</th>" not in response.body
     assert "<section class='dashboard-grid two-col'>" not in response.body
-    assert response.body.count("<section class='panel wide'") >= 4
+    assert response.body.count("<section class='panel wide'") >= 3
     assert "href='#stock-product-prd-1'>Healthy Candle</a>" in response.body
     assert "Low Candle" in response.body
     assert "Good" in response.body
@@ -602,8 +602,10 @@ def test_make_buy_ui_buy_list_suggestions_and_add_to_purchase() -> None:
 
     inventory = app.get("/products-stock", authorization_header=header)
     assert inventory.status_code == 200
-    assert "Low Stock Alerts" in inventory.body
-    assert "7 roll" in inventory.body
+    assert "Low Stock Alerts" not in inventory.body
+    assert "id='buy-list'" not in inventory.body
+    assert "Items Need Attention" in inventory.body
+    assert "Buy 7 roll" in inventory.body
     assert "Add to Purchase" in inventory.body
 
     added = app.post(
