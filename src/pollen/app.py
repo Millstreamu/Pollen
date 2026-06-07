@@ -69,11 +69,15 @@ class AppShell:
             auth_service=self._auth_service,
             product_repository=product_repository
         )
+        purchase_product_repository = product_repository
+        if product_service is not None:
+            purchase_product_repository = product_service._product_repository  # noqa: SLF001
         self._material_service = material_service or MaterialService(
             auth_service=self._auth_service,
             material_repository=material_repository,
             movement_repository=movement_repository,
             activity_repository=activity_repository,
+            product_repository=purchase_product_repository,
         )
         self._recipe_service = RecipeService(
             auth_service=self._auth_service,
@@ -274,12 +278,22 @@ class AppShell:
                 material_id=payload.get("material_id", ""),
             )
         elif action == "create_purchase":
-            self._material_service.create_purchase_from_draft(
-                authorization_header=authorization_header,
-                supplier=payload.get("supplier"),
-                expected_date=payload.get("expected_date"),
-                status=payload.get("status", "draft"),
-            )
+            item_reference = payload.get("item_reference", "").strip()
+            if item_reference:
+                self._material_service.create_purchase_for_item(
+                    authorization_header=authorization_header,
+                    item_reference=item_reference,
+                    supplier=payload.get("supplier"),
+                    expected_date=payload.get("expected_date"),
+                    status=payload.get("status", "draft"),
+                )
+            else:
+                self._material_service.create_purchase_from_draft(
+                    authorization_header=authorization_header,
+                    supplier=payload.get("supplier"),
+                    expected_date=payload.get("expected_date"),
+                    status=payload.get("status", "draft"),
+                )
         elif action == "receive_purchase":
             self._material_service.receive_purchase(
                 authorization_header=authorization_header,
@@ -447,12 +461,22 @@ class AppShell:
                 material_id=payload.get("material_id", ""),
             )
         elif action == "create_purchase":
-            self._material_service.create_purchase_from_draft(
-                authorization_header=authorization_header,
-                supplier=payload.get("supplier"),
-                expected_date=payload.get("expected_date"),
-                status=payload.get("status", "draft"),
-            )
+            item_reference = payload.get("item_reference", "").strip()
+            if item_reference:
+                self._material_service.create_purchase_for_item(
+                    authorization_header=authorization_header,
+                    item_reference=item_reference,
+                    supplier=payload.get("supplier"),
+                    expected_date=payload.get("expected_date"),
+                    status=payload.get("status", "draft"),
+                )
+            else:
+                self._material_service.create_purchase_from_draft(
+                    authorization_header=authorization_header,
+                    supplier=payload.get("supplier"),
+                    expected_date=payload.get("expected_date"),
+                    status=payload.get("status", "draft"),
+                )
         elif action == "receive_purchase":
             self._material_service.receive_purchase(
                 authorization_header=authorization_header,
@@ -1373,6 +1397,7 @@ class AppShell:
         products = self._product_service.list_products(authorization_header=authorization_header)
         materials = self._material_service.list_materials(authorization_header=authorization_header)
         low_materials = self._material_service.list_low_stock_suggestions(authorization_header=authorization_header)
+        low_products = [product for product in products if product.is_low_stock]
         purchases = self._material_service.list_purchases(authorization_header=authorization_header)
         draft_items = self._material_service.list_purchase_draft(authorization_header=authorization_header)
 
@@ -1444,27 +1469,40 @@ class AppShell:
             "<td>"
             + (
                 "<form method='post' action='/products-stock' style='display:inline'><input type='hidden' name='action' value='receive_purchase'>"
-                f"<input type='hidden' name='purchase_id' value='{self._h(purchase.purchase_id)}'><button class='outline muted' type='submit'>Receive Materials</button></form>"
+                f"<input type='hidden' name='purchase_id' value='{self._h(purchase.purchase_id)}'><button class='outline muted' type='submit'>Receive Purchase</button></form>"
                 if purchase.status != "Received"
                 else "—"
             )
             + "</td></tr>"
             for purchase in purchases[:8]
-        ) or "<tr><td colspan='5'>No incoming purchases yet. Build a purchase from the Buy List when materials run low.</td></tr>"
+        ) or "<tr><td colspan='5'>No incoming purchases yet. Create a purchase when products or materials run low.</td></tr>"
         draft_note = (
             f"<p class='empty-state'>{len(draft_items)} material(s) staged for the next purchase.</p>"
             if draft_items
             else "<p class='empty-state'>Add low materials to purchase before creating an incoming purchase.</p>"
         )
+        purchase_item_options = "".join(
+            f"<option value='product:{self._h(product.product_id)}'>Product — {self._h(product.name)}</option>"
+            for product in products
+        ) + "".join(
+            f"<option value='material:{self._h(material.material_id)}'>Material — {self._h(material.name)}</option>"
+            for material in materials
+        )
+        purchase_item_select = (
+            "<label>Item to purchase <select name='item_reference' required>"
+            "<option value=''>Select a product or material</option>"
+            f"{purchase_item_options}</select></label>"
+        )
         create_purchase_dialog = self._render_workflow_dialog(
             dialog_id="create-purchase-dialog",
             title="Create purchase",
-            description="Save an incoming restock purchase from the materials staged in your buy list.",
+            description="Save an incoming purchase for an existing product or material.",
             body=(
                 "<form class='form-grid compact-form' method='post' action='/products-stock'>"
                 "<input type='hidden' name='action' value='create_purchase'>"
+                f"{purchase_item_select}"
                 "<label>Supplier <input name='supplier' placeholder='Optional supplier'></label>"
-                "<label>Expected date <input name='expected_date' placeholder='YYYY-MM-DD (optional)'></label>"
+                "<label>Expected date <input type='date' name='expected_date'></label>"
                 "<label>Status <select name='status'><option value='draft'>Draft</option><option value='ordered'>Ordered</option></select></label>"
                 "<div class='dialog-actions'><button class='primary' type='submit'>Save purchase</button>"
                 "<a class='outline' href='#'>Cancel</a></div></form>"
@@ -1473,18 +1511,18 @@ class AppShell:
         return (
             "<section class='metric-grid three'>"
             f"{self._metric_card('▧', 'Finished Products in Stock', sum(product.stock_on_hand for product in products), 'green', 'Total units')}"
-            f"{self._metric_card('⚠', 'Materials Low', len(low_materials), 'alert', 'Need reordering')}"
-            f"{self._metric_card('▰', 'Items to Reorder', len(low_materials), 'gold', 'On buy list')}"
+            f"{self._metric_card('⚠', 'Low Stock Alerts', len(low_materials) + len(low_products), 'alert', 'Need reordering')}"
+            f"{self._metric_card('▰', 'Incoming Purchases', len(purchases), 'gold', 'Open orders')}"
             "</section>"
             "<section class='panel wide'><div class='panel-header'><h3>Finished Products</h3><p>Current stock counts for products you sell. Select a product name for stock control.</p></div>"
             f"<table><thead><tr><th>Product</th><th>SKU</th><th>On Hand</th><th>Reserved</th><th>Reorder Point</th><th>Status</th></tr></thead><tbody>{product_rows}</tbody></table></section>"
             "<section class='panel wide'><div class='panel-header'><h3>Materials</h3><p>Current material stock and low-stock status. Select a material name for stock control.</p></div>"
             f"<table><thead><tr><th>Material</th><th>On Hand</th><th>Reorder Point</th><th>Status</th></tr></thead><tbody>{material_rows}</tbody></table></section>"
-            "<section class='panel wide' id='buy-list'><div class='panel-header'><h3>Buy List</h3><a class='outline' href='#create-purchase-dialog'>Create Purchase</a></div>"
-            "<p>Suggested items to reorder based on material stock and reorder points.</p>"
+            "<section class='panel wide' id='buy-list'><div class='panel-header'><h3>Low Stock Alerts</h3><a class='outline' href='#create-purchase-dialog'>Create Purchase</a></div>"
+            "<p>Suggested materials to reorder based on stock and reorder points.</p>"
             f"{draft_note}<table><thead><tr><th>Material</th><th>On Hand</th><th>Suggested Qty</th><th></th></tr></thead><tbody>{buy_rows}</tbody></table></section>"
             "<section class='panel wide' id='incoming-purchases'><div class='panel-header'><h3>Incoming Purchases</h3><a class='outline' href='#create-purchase-dialog'>Create Purchase</a></div>"
-            "<p>Track and receive purchases when materials arrive.</p>"
+            "<p>Track and receive purchases when products or materials arrive.</p>"
             f"<table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead><tbody>{purchase_rows}</tbody></table></section>"
             f"{stock_control_dialogs}"
             f"{create_purchase_dialog}"

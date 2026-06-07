@@ -688,9 +688,11 @@ class MaterialService:
         material_repository: MaterialRepository | None = None,
         movement_repository: InventoryMovementRepository | None = None,
         activity_repository: ActivityLogRepository | None = None,
+        product_repository: ProductRepository | None = None,
     ) -> None:
         self._auth_service = auth_service or AuthService()
         self._material_repository = material_repository or MaterialRepository()
+        self._product_repository = product_repository or ProductRepository()
         self._movement_repository = movement_repository or InventoryMovementRepository()
         self._activity_repository = activity_repository or ActivityLogRepository()
         self._purchase_draft_by_shop: dict[str, set[str]] = {}
@@ -770,12 +772,66 @@ class MaterialService:
             added = self._purchase_repository.add_item(
                 shop_id=context.shop.shop_id,
                 purchase_id=purchase.purchase_id,
-                material_id=material.material_id,
+                item_id=material.material_id,
+                item_type="material",
                 quantity=quantity,
             )
             if added is None:
                 return None
         self._purchase_draft_by_shop[context.shop.shop_id] = set()
+        return purchase
+
+    def create_purchase_for_item(
+        self,
+        *,
+        authorization_header: str | None,
+        item_reference: str,
+        supplier: str | None,
+        expected_date: str | None,
+        status: str = "draft",
+    ) -> PurchaseRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        normalized_status = (status or "draft").strip().lower()
+        if context is None or normalized_status not in {"draft", "ordered"}:
+            return None
+
+        item_type, separator, item_id = item_reference.partition(":")
+        if separator != ":" or item_type not in {"material", "product"} or not item_id:
+            return None
+
+        quantity = 0
+        if item_type == "material":
+            material = self._material_repository.get_for_shop(
+                shop_id=context.shop.shop_id,
+                material_id=item_id,
+            )
+            if material is None or not material.is_active:
+                return None
+            quantity = max(1, (material.reorder_point * 2) - material.stock_on_hand)
+        else:
+            product = self._product_repository.get_for_shop(
+                shop_id=context.shop.shop_id,
+                product_id=item_id,
+            )
+            if product is None or not product.is_active:
+                return None
+            quantity = max(1, (product.reorder_point * 2) - product.available_stock)
+
+        purchase = self._purchase_repository.create(
+            shop_id=context.shop.shop_id,
+            status=normalized_status.title(),
+            supplier=(supplier or "").strip() or None,
+            expected_date=(expected_date or "").strip() or None,
+        )
+        added = self._purchase_repository.add_item(
+            shop_id=context.shop.shop_id,
+            purchase_id=purchase.purchase_id,
+            item_id=item_id,
+            item_type=item_type,
+            quantity=quantity,
+        )
+        if added is None:
+            return None
         return purchase
 
     def list_purchases(self, *, authorization_header: str | None) -> list[PurchaseRecord]:
@@ -794,44 +850,120 @@ class MaterialService:
 
         items = self._purchase_repository.list_items_for_purchase(shop_id=context.shop.shop_id, purchase_id=purchase_id)
         for item in items:
-            material = self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=item.material_id)
-            if material is None or not material.is_active:
-                return None
-            updated = self._material_repository.update_for_shop(
-                shop_id=context.shop.shop_id,
-                material_id=material.material_id,
-                name=material.name,
-                unit=material.unit,
-                stock_on_hand=material.stock_on_hand + item.quantity,
-                reorder_point=material.reorder_point,
-                supplier=material.supplier,
-                notes=material.notes,
-            )
+            if item.item_type == "material":
+                updated = self._receive_material_purchase_item(context, purchase.purchase_id, item.item_id, item.quantity)
+            else:
+                updated = self._receive_product_purchase_item(context, purchase.purchase_id, item.item_id, item.quantity)
             if updated is None:
                 return None
-            self._movement_repository.create(
-                shop_id=context.shop.shop_id,
-                item_type="material",
-                item_id=material.material_id,
-                reason="purchase_received",
-                delta=item.quantity,
-                before_quantity=material.stock_on_hand,
-                after_quantity=updated.stock_on_hand,
-                actor_user_id=context.user.user_id,
-            )
-            self._activity_repository.create(
-                shop_id=context.shop.shop_id,
-                activity_type="purchase_received",
-                entity_type="purchase",
-                entity_id=purchase.purchase_id,
-                message=f"Purchase {purchase.purchase_id} received for material {material.material_id}",
-                actor_user_id=context.user.user_id,
-            )
 
         return self._purchase_repository.update_status_for_shop(
             shop_id=context.shop.shop_id,
             purchase_id=purchase.purchase_id,
             status="Received",
+        )
+
+    def _receive_material_purchase_item(
+        self,
+        context,
+        purchase_id: str,
+        material_id: str,
+        quantity: int,
+    ) -> MaterialRecord | None:
+        material = self._material_repository.get_for_shop(shop_id=context.shop.shop_id, material_id=material_id)
+        if material is None or not material.is_active:
+            return None
+        updated = self._material_repository.update_for_shop(
+            shop_id=context.shop.shop_id,
+            material_id=material.material_id,
+            name=material.name,
+            unit=material.unit,
+            stock_on_hand=material.stock_on_hand + quantity,
+            reorder_point=material.reorder_point,
+            supplier=material.supplier,
+            notes=material.notes,
+        )
+        if updated is None:
+            return None
+        self._record_purchase_receipt(
+            context=context,
+            purchase_id=purchase_id,
+            item_type="material",
+            item_id=material.material_id,
+            quantity=quantity,
+            before_quantity=material.stock_on_hand,
+            after_quantity=updated.stock_on_hand,
+        )
+        return updated
+
+    def _receive_product_purchase_item(
+        self,
+        context,
+        purchase_id: str,
+        product_id: str,
+        quantity: int,
+    ) -> ProductRecord | None:
+        product = self._product_repository.get_for_shop(shop_id=context.shop.shop_id, product_id=product_id)
+        if product is None or not product.is_active:
+            return None
+        updated = self._product_repository.update_for_shop(
+            shop_id=context.shop.shop_id,
+            product_id=product.product_id,
+            name=product.name,
+            sku=product.sku,
+            stock_on_hand=product.stock_on_hand + quantity,
+            reserved_stock=product.reserved_stock,
+            reorder_point=product.reorder_point,
+            sale_price=product.sale_price,
+            estimated_material_cost=product.estimated_material_cost,
+            estimated_packaging_shipping_cost=product.estimated_packaging_shipping_cost,
+            platform_fee_percent=product.platform_fee_percent,
+            category=product.category,
+            default_batch_size=product.default_batch_size,
+            workflow_status=product.workflow_status,
+            notes=product.notes,
+        )
+        if updated is None:
+            return None
+        self._record_purchase_receipt(
+            context=context,
+            purchase_id=purchase_id,
+            item_type="product",
+            item_id=product.product_id,
+            quantity=quantity,
+            before_quantity=product.stock_on_hand,
+            after_quantity=updated.stock_on_hand,
+        )
+        return updated
+
+    def _record_purchase_receipt(
+        self,
+        *,
+        context,
+        purchase_id: str,
+        item_type: str,
+        item_id: str,
+        quantity: int,
+        before_quantity: int,
+        after_quantity: int,
+    ) -> None:
+        self._movement_repository.create(
+            shop_id=context.shop.shop_id,
+            item_type=item_type,
+            item_id=item_id,
+            reason="purchase_received",
+            delta=quantity,
+            before_quantity=before_quantity,
+            after_quantity=after_quantity,
+            actor_user_id=context.user.user_id,
+        )
+        self._activity_repository.create(
+            shop_id=context.shop.shop_id,
+            activity_type="purchase_received",
+            entity_type="purchase",
+            entity_id=purchase_id,
+            message=f"Purchase {purchase_id} received for {item_type} {item_id}",
+            actor_user_id=context.user.user_id,
         )
 
     def create_material(

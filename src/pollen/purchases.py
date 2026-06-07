@@ -19,8 +19,13 @@ class PurchaseItemRecord:
     purchase_item_id: str
     purchase_id: str
     shop_id: str
-    material_id: str
+    item_type: str
+    item_id: str
     quantity: int
+
+    @property
+    def material_id(self) -> str:
+        return self.item_id
 
 
 class PurchaseRepository:
@@ -46,21 +51,30 @@ class PurchaseRepository:
         return created
 
     def add_item(
-        self, *, shop_id: str, purchase_id: str, material_id: str, quantity: int
+        self,
+        *,
+        shop_id: str,
+        purchase_id: str,
+        item_id: str,
+        quantity: int,
+        item_type: str = "material",
     ) -> PurchaseItemRecord | None:
         purchase = self._purchases.get(purchase_id)
         if purchase is None or purchase.shop_id != shop_id or quantity <= 0:
             return None
-        item_id = f"pit-{self._next_item_id}"
+        if item_type not in {"material", "product"}:
+            return None
+        purchase_item_id = f"pit-{self._next_item_id}"
         self._next_item_id += 1
         item = PurchaseItemRecord(
-            purchase_item_id=item_id,
+            purchase_item_id=purchase_item_id,
             purchase_id=purchase_id,
             shop_id=shop_id,
-            material_id=material_id,
+            item_type=item_type,
+            item_id=item_id,
             quantity=quantity,
         )
-        self._items[item_id] = item
+        self._items[purchase_item_id] = item
         return item
 
     def list_for_shop(self, *, shop_id: str) -> list[PurchaseRecord]:

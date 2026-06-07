@@ -602,7 +602,7 @@ def test_make_buy_ui_buy_list_suggestions_and_add_to_purchase() -> None:
 
     inventory = app.get("/products-stock", authorization_header=header)
     assert inventory.status_code == 200
-    assert "Buy List" in inventory.body
+    assert "Low Stock Alerts" in inventory.body
     assert "7 roll" in inventory.body
     assert "Add to Purchase" in inventory.body
 
