@@ -64,9 +64,9 @@ def test_products_stock_page_uses_beginner_friendly_sections_and_buttons() -> No
     assert response.status_code == 200
     assert "Finished Products" in response.body
     assert "Materials" in response.body
-    assert "Buy List" in response.body
+    assert "Low Stock Alerts" in response.body
     assert "Incoming Purchases" in response.body
-    assert "Items to Reorder" in response.body
+    assert "Low Stock Alerts" in response.body
     assert "Stock Control" in response.body
     assert "action='/products-stock'" in response.body
     assert "Create Product" not in response.body
