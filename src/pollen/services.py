@@ -347,6 +347,32 @@ class ProductService:
             notes=notes,
         )
 
+    def activate_product(self, *, authorization_header: str | None, product_id: str) -> ProductRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+        existing = self._product_repository.get_for_shop(shop_id=context.shop.shop_id, product_id=product_id)
+        if existing is None or existing.workflow_status == "Active":
+            return None
+
+        return self._product_repository.update_for_shop(
+            shop_id=context.shop.shop_id,
+            product_id=product_id,
+            name=existing.name,
+            sku=existing.sku,
+            stock_on_hand=existing.stock_on_hand,
+            reserved_stock=existing.reserved_stock,
+            reorder_point=existing.reorder_point,
+            sale_price=existing.sale_price,
+            estimated_material_cost=existing.estimated_material_cost,
+            estimated_packaging_shipping_cost=existing.estimated_packaging_shipping_cost,
+            platform_fee_percent=existing.platform_fee_percent,
+            category=existing.category,
+            default_batch_size=existing.default_batch_size,
+            workflow_status="Active",
+            notes=existing.notes,
+        )
+
     def archive_product(self, *, authorization_header: str | None, product_id: str) -> ProductRecord | None:
         context = self._auth_service.resolve_context(authorization_header)
         if context is None:
@@ -839,6 +865,19 @@ class MaterialService:
         if context is None:
             return []
         return self._purchase_repository.list_for_shop(shop_id=context.shop.shop_id)
+
+    def order_purchase(self, *, authorization_header: str | None, purchase_id: str) -> PurchaseRecord | None:
+        context = self._auth_service.resolve_context(authorization_header)
+        if context is None:
+            return None
+        purchase = self._purchase_repository.get_for_shop(shop_id=context.shop.shop_id, purchase_id=purchase_id)
+        if purchase is None or purchase.status != "Draft":
+            return None
+        return self._purchase_repository.update_status_for_shop(
+            shop_id=context.shop.shop_id,
+            purchase_id=purchase.purchase_id,
+            status="Ordered",
+        )
 
     def receive_purchase(self, *, authorization_header: str | None, purchase_id: str) -> PurchaseRecord | None:
         context = self._auth_service.resolve_context(authorization_header)

@@ -299,6 +299,11 @@ class AppShell:
                 authorization_header=authorization_header,
                 purchase_id=payload.get("purchase_id", ""),
             )
+        elif action == "order_purchase":
+            self._material_service.order_purchase(
+                authorization_header=authorization_header,
+                purchase_id=payload.get("purchase_id", ""),
+            )
 
         return self.get(path, authorization_header=authorization_header)
 
@@ -481,6 +486,16 @@ class AppShell:
             self._material_service.receive_purchase(
                 authorization_header=authorization_header,
                 purchase_id=payload.get("purchase_id", ""),
+            )
+        elif action == "order_purchase":
+            self._material_service.order_purchase(
+                authorization_header=authorization_header,
+                purchase_id=payload.get("purchase_id", ""),
+            )
+        elif action == "activate_product":
+            self._product_service.activate_product(
+                authorization_header=authorization_header,
+                product_id=payload.get("product_id", ""),
             )
 
         return self.get("/make-buy", authorization_header=authorization_header)
@@ -916,7 +931,7 @@ class AppShell:
         purchase_rows = "".join(
             "<tr>"
             f"<td>{purchase.purchase_id}</td>"
-            f"<td>{purchase.status}</td>"
+            f"<td>{self._render_purchase_status(purchase=purchase)}</td>"
             f"<td>{purchase.supplier or '-'}</td>"
             f"<td>{purchase.expected_date or '-'}</td>"
             "<td>"
@@ -960,7 +975,8 @@ class AppShell:
         if not low_materials:
             return (
                 "<section class='workflow-card' id='create-purchase'><h3>Buy list suggestions</h3><p class='empty-state'>No low materials right now. Add materials and reorder points to unlock suggestions.</p>"
-                f"<p>{draft_summary}</p>{purchase_action}{create_form}{purchase_history}</section>"
+                f"<p>{draft_summary}</p>{purchase_action}{create_form}{purchase_history}"
+                f"{''.join(self._render_purchase_order_dialog(purchase=purchase, action_path='/make-buy') for purchase in purchases if purchase.status == 'Draft')}</section>"
             )
 
         rows = "".join(
@@ -985,6 +1001,7 @@ class AppShell:
             f"<p>{draft_summary}</p>"
             f"{purchase_action}{create_form}"
             f"{purchase_history}"
+            f"{''.join(self._render_purchase_order_dialog(purchase=purchase, action_path='/make-buy') for purchase in purchases if purchase.status == 'Draft')}"
             "</section>"
         )
 
@@ -1202,6 +1219,54 @@ class AppShell:
 
     def _badge(self, text: str, tone: str = "gold") -> str:
         return f"<span class='status-badge badge-{tone}'>{text}</span>"
+
+    def _status_badge_link(self, *, text: str, tone: str, href: str, label: str) -> str:
+        return (
+            f"<a class='status-badge badge-{tone}' href='{self._h(href)}' "
+            f"aria-label='{self._h(label)}'>{self._h(text)}</a>"
+        )
+
+    def _render_product_activation_dialog(self, *, product: ProductRecord) -> str:
+        body = (
+            "<form class='compact-form' method='post' action='/make-buy'>"
+            "<input type='hidden' name='action' value='activate_product'>"
+            f"<input type='hidden' name='product_id' value='{self._h(product.product_id)}'>"
+            f"<p>Activate <strong>{self._h(product.name)}</strong> so it shows as Active in Products You Make?</p>"
+            "<div class='dialog-actions'><button class='primary' type='submit'>Confirm activate</button>"
+            "<a class='outline' href='#'>Cancel</a></div></form>"
+        )
+        return self._render_workflow_dialog(
+            dialog_id=f"activate-product-{self._h(product.product_id)}",
+            title="Activate product?",
+            description="Confirm before changing this product from Draft to Active.",
+            body=body,
+        )
+
+    def _render_purchase_order_dialog(self, *, purchase, action_path: str) -> str:
+        body = (
+            f"<form class='compact-form' method='post' action='{self._h(action_path)}'>"
+            "<input type='hidden' name='action' value='order_purchase'>"
+            f"<input type='hidden' name='purchase_id' value='{self._h(purchase.purchase_id)}'>"
+            f"<p>Move purchase <strong>{self._h(purchase.purchase_id)}</strong> from Draft to Ordered?</p>"
+            "<div class='dialog-actions'><button class='primary' type='submit'>Confirm ordered</button>"
+            "<a class='outline' href='#'>Cancel</a></div></form>"
+        )
+        return self._render_workflow_dialog(
+            dialog_id=f"order-purchase-{self._h(purchase.purchase_id)}",
+            title="Activate incoming purchase?",
+            description="Confirm before changing this incoming purchase from Draft to Ordered.",
+            body=body,
+        )
+
+    def _render_purchase_status(self, *, purchase) -> str:
+        if purchase.status == "Draft":
+            return self._status_badge_link(
+                text="Draft",
+                tone="gold",
+                href=f"#order-purchase-{purchase.purchase_id}",
+                label=f"Activate purchase {purchase.purchase_id}",
+            )
+        return self._badge(purchase.status, "green" if purchase.status == "Received" else "blue")
 
     def _money(self, amount: float | int) -> str:
         return f"${float(amount):,.2f}"
@@ -1477,7 +1542,7 @@ class AppShell:
             f"<td>{self._h(purchase.purchase_id)}</td>"
             f"<td>{self._h(purchase.supplier or '-')}</td>"
             f"<td>{self._h(purchase.expected_date or '-')}</td>"
-            f"<td>{self._badge(purchase.status, 'green' if purchase.status == 'Received' else 'blue')}</td>"
+            f"<td>{self._render_purchase_status(purchase=purchase)}</td>"
             "<td>"
             + (
                 "<form method='post' action='/products-stock' style='display:inline'><input type='hidden' name='action' value='receive_purchase'>"
@@ -1535,6 +1600,7 @@ class AppShell:
             f"{draft_note}<table><thead><tr><th>Purchase</th><th>Supplier</th><th>Expected</th><th>Status</th><th></th></tr></thead><tbody>{purchase_rows}</tbody></table></section>"
             f"{stock_control_dialogs}"
             f"{create_purchase_dialog}"
+            f"{''.join(self._render_purchase_order_dialog(purchase=purchase, action_path='/products-stock') for purchase in purchases if purchase.status == 'Draft')}"
         )
 
     def _render_make_buy_dashboard(
@@ -1612,6 +1678,11 @@ class AppShell:
             )
             for product in products
         )
+        activation_dialogs = "".join(
+            self._render_product_activation_dialog(product=product)
+            for product in products
+            if product.workflow_status == "Draft"
+        )
         return (
             "<section class='metric-grid three'>"
             f"{self._metric_card('▧', 'Products Defined', len(products), 'gold', 'Products you make')}"
@@ -1634,6 +1705,7 @@ class AppShell:
             f"{self._render_create_material_dialog(return_to_recipe_product_id=return_to_recipe_product_id)}"
             f"{self._render_create_product_dialog()}"
             f"{recipe_dialogs}"
+            f"{activation_dialogs}"
         )
 
     def _render_workshop_product_row(self, *, product, recipe_items: list) -> str:
@@ -1655,10 +1727,20 @@ class AppShell:
             f"<td>{self._h(product.category) if product.category else '—'}</td>"
             f"<td>{self._format_currency(product.sale_price) if product.sale_price else '—'}</td>"
             f"<td>{product.default_batch_size}</td>"
-            f"<td>{self._badge(product.workflow_status, 'green' if product.workflow_status == 'Active' else 'gold')}</td>"
+            f"<td>{self._render_workshop_product_status(product=product)}</td>"
             f"<td>{recipe_cell}</td>"
             "</tr>"
         )
+
+    def _render_workshop_product_status(self, *, product) -> str:
+        if product.workflow_status == "Draft":
+            return self._status_badge_link(
+                text="Draft",
+                tone="gold",
+                href=f"#activate-product-{product.product_id}",
+                label=f"Activate product {product.name}",
+            )
+        return self._badge(product.workflow_status, "green")
 
     def _render_recipe_dialog(self, *, product, materials: list, recipe_items: list, open_dialog: bool = False) -> str:
         material_options = "".join(
