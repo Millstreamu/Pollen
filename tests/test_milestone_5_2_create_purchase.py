@@ -143,3 +143,41 @@ def test_inventory_purchase_can_receive_finished_product() -> None:
     product = app._product_service.get_product(authorization_header=header, product_id="prd-1")  # noqa: SLF001
     assert product is not None
     assert product.stock_on_hand == 6
+
+
+def test_inventory_draft_purchase_status_opens_order_popup_and_confirms() -> None:
+    app = create_app()
+    header = _auth_header("p52-order-popup", "p52-order-popup@example.com")
+    app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "create", "name": "Tin", "unit": "each", "stock_on_hand": "1", "reorder_point": "3"},
+    )
+    created = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={
+            "action": "create_purchase",
+            "supplier": "Northwind",
+            "expected_date": "2026-06-30",
+            "status": "draft",
+            "item_reference": "material:mat-1",
+        },
+    )
+
+    assert created.status_code == 200
+    assert "href='#order-purchase-pur-1'" in created.body
+    assert "Activate incoming purchase?" in created.body
+    assert "Confirm ordered" in created.body
+
+    ordered = app.post(
+        "/products-stock",
+        authorization_header=header,
+        form_data={"action": "order_purchase", "purchase_id": "pur-1"},
+    )
+
+    assert ordered.status_code == 200
+    assert "Ordered" in ordered.body
+    assert "href='#order-purchase-pur-1'" not in ordered.body
+    purchases = app._material_service.list_purchases(authorization_header=header)  # noqa: SLF001
+    assert purchases[0].status == "Ordered"

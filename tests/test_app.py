@@ -967,3 +967,40 @@ def test_make_buy_ui_recipe_validation_requires_material_and_positive_quantity()
     assert duplicate_material.status_code == 400
     assert "Each material can only be added once to a recipe" in duplicate_material.body
     assert app._recipe_service.list_recipe_items(authorization_header=header, product_id="prd-1") == []  # noqa: SLF001
+
+
+def test_make_buy_draft_product_status_opens_activation_popup_and_confirms() -> None:
+    header = _auth_header("prod-activate-popup", "prod-activate-popup@example.com")
+    app = create_app()
+
+    created = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={
+            "action": "create_product",
+            "name": "Popup Candle",
+            "default_batch_size": "6",
+            "workflow_status": "Draft",
+        },
+    )
+
+    assert created.status_code == 200
+    assert "href='#activate-product-prd-1'" in created.body
+    assert "Activate product?" in created.body
+    assert "Confirm activate" in created.body
+    product = app._product_service.get_product(authorization_header=header, product_id="prd-1")  # noqa: SLF001
+    assert product is not None
+    assert product.workflow_status == "Draft"
+
+    activated = app.post(
+        "/make-buy",
+        authorization_header=header,
+        form_data={"action": "activate_product", "product_id": "prd-1"},
+    )
+
+    assert activated.status_code == 200
+    assert "Popup Candle" in activated.body
+    assert "href='#activate-product-prd-1'" not in activated.body
+    product = app._product_service.get_product(authorization_header=header, product_id="prd-1")  # noqa: SLF001
+    assert product is not None
+    assert product.workflow_status == "Active"
